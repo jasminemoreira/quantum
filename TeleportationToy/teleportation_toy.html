@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teleportation Toy — Quantum Teleportation Simulator</title>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js"}}
+</script>
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+  options: { skipHtmlTags: ['script','noscript','style','textarea'] },
+  startup: { typeset: true }
+};
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=JetBrains+Mono:wght@300;400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+
+<style>
+/* ── Theme variables ── */
+:root {
+  --bg:           #05101e;
+  --panel-bg:     #091624;
+  --panel-border: rgba(0,229,255,.13);
+  --card-bg:      #0d1f35;
+  --card-border:  rgba(0,229,255,.13);
+  --text:         #dcedf8;
+  --dim:          #6a90b0;
+  --dimmer:       #3a6080;
+  --heading:      #00e5ff;
+  --cyan:         #00e5ff;
+  --violet:       #b57bee;
+  --alice:        #ff7eb3;
+  --bob:          #5bc8fa;
+  --gold:         #ffca28;
+  --green:        #00ffb2;
+  --border:       rgba(0,229,255,.13);
+  --glow:         0 0 18px rgba(0,229,255,.3);
+  --input-bg:     #05101e;
+  --input-border: rgba(0,229,255,.18);
+  --btn-bg:       #101f35;
+  --btn-border:   rgba(0,229,255,.18);
+  --toggle-bg:    #091624;
+  --toggle-border: rgba(0,229,255,.22);
+  --toggle-color: #00e5ff;
+}
+
+body.light {
+  --bg:           #f0f0f6;
+  --panel-bg:     #e4e4ed;
+  --panel-border: #c4c4d6;
+  --card-bg:      #ffffff;
+  --card-border:  #d4d4e4;
+  --text:         #1c1c2e;
+  --dim:          #5050a0;
+  --dimmer:       #5050a0;
+  --heading:      #5050a0;
+  --cyan:         #4040cc;
+  --violet:       #6040a0;
+  --alice:        #cc4488;
+  --bob:          #2080cc;
+  --gold:         #886600;
+  --green:        #228855;
+  --border:       #d4d4e4;
+  --glow:         none;
+  --input-bg:     #f8f8fc;
+  --input-border: #c0c0d8;
+  --btn-bg:       #eaeaf4;
+  --btn-border:   #b0b0cc;
+  --toggle-bg:    #eaeaf4;
+  --toggle-border: #b0b0cc;
+  --toggle-color: #303060;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: var(--panel-bg); }
+::-webkit-scrollbar-thumb { background: var(--card-bg); border-radius: 3px; }
+a { color: var(--cyan); text-decoration: none; }
+
+/* ── Site header ── */
+.title-card { padding: .7rem .9rem .6rem; text-align: center; }
+.title-card .site-title { margin-bottom: .15rem; }
+.title-card .site-sub { max-width: none; margin: 0; }
+.site-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: .26em;
+  text-transform: uppercase;
+  color: var(--heading);
+  opacity: .8;
+  margin-bottom: .3rem;
+  border: 1px solid rgba(0,229,255,.2);
+  padding: .15rem .6rem;
+  border-radius: 4px;
+  background: rgba(0,229,255,.04);
+  display: inline-block;
+}
+body.light .site-tag { border-color: rgba(80,80,160,.3); background: rgba(80,80,160,.06); }
+.site-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.15;
+  margin-bottom: .1rem;
+}
+.site-title em { font-style: italic; color: var(--heading); }
+.site-sub { font-size: .68rem; color: var(--dim); }
+
+/* ── App split layout ── */
+#app {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* ── Left panel ── */
+#panel-left {
+  width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+}
+
+/* ── Right panel ── */
+#panel-right {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg);
+}
+
+/* ── Card ── */
+.card {
+  background: var(--card-bg);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid var(--card-border);
+}
+.card h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--heading);
+  margin-bottom: 8px;
+}
+
+/* ── Bell state selector ── */
+.bell-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.bell-tab {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  padding: .38rem .5rem;
+  border-radius: 6px;
+  border: 1px solid var(--card-border);
+  background: var(--btn-bg);
+  color: var(--dim);
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+}
+.bell-tab:hover { border-color: var(--cyan); color: var(--cyan); }
+.bell-tab.active { font-weight: 500; }
+body:not(.light) .bell-tab[data-bell="0"].active { background: rgba(0,229,255,.12); border-color: #00e5ff; color: #00e5ff; box-shadow: 0 0 8px rgba(0,229,255,.25); }
+body:not(.light) .bell-tab[data-bell="1"].active { background: rgba(181,123,238,.12); border-color: #b57bee; color: #b57bee; box-shadow: 0 0 8px rgba(181,123,238,.25); }
+body:not(.light) .bell-tab[data-bell="2"].active { background: rgba(255,126,179,.12); border-color: #ff7eb3; color: #ff7eb3; box-shadow: 0 0 8px rgba(255,126,179,.25); }
+body:not(.light) .bell-tab[data-bell="3"].active { background: rgba(0,255,178,.12); border-color: #00ffb2; color: #00ffb2; box-shadow: 0 0 8px rgba(0,255,178,.25); }
+body.light .bell-tab.active { background: rgba(80,80,160,.1); border-color: var(--dim); color: var(--dim); }
+
+/* ── Circuit card ── */
+.circuit-card { overflow-x: auto; }
+.circuit-legend {
+  display: flex; align-items: center; flex-wrap: wrap;
+  gap: .6rem; margin-bottom: 10px;
+  font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+}
+.zone-pill {
+  padding: .18rem .55rem; border-radius: 4px; font-size: .65rem;
+  font-family: 'JetBrains Mono', monospace;
+}
+.zone-alice { color: var(--alice); background: rgba(255,126,179,.08); border: 1px solid rgba(255,126,179,.25); }
+.zone-bob   { color: var(--bob);   background: rgba(91,200,250,.08);  border: 1px solid rgba(91,200,250,.25); }
+.legend-ctrl { display: flex; gap: .75rem; margin-left: auto; flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: .35rem; color: var(--dim); }
+#circ-label { font-family: 'JetBrains Mono', monospace; font-size: .65rem; color: var(--cyan); }
+
+/* SVG circuit */
+#cSVG { width: 100%; min-width: 580px; }
+#cSVG .wire  { stroke-width: 2; fill: none; }
+#cSVG .wq1   { stroke: var(--alice); }
+#cSVG .wq2   { stroke: var(--violet); }
+#cSVG .wq3   { stroke: var(--bob); }
+#cSVG .gbox  { fill: var(--card-bg); stroke-width: 1.5; }
+#cSVG .ga    { stroke: var(--alice); }
+#cSVG .gv    { stroke: var(--violet); }
+#cSVG .gb    { stroke: var(--bob); }
+#cSVG .gc    { stroke: var(--cyan); }
+#cSVG .gtxt  { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500;
+               dominant-baseline: middle; text-anchor: middle; }
+#cSVG .ta    { fill: var(--alice); }
+#cSVG .tv    { fill: var(--violet); }
+#cSVG .tb    { fill: var(--bob); }
+#cSVG .tc    { fill: var(--cyan); }
+#cSVG .tgt-c { fill: none; stroke-width: 2; r: 13; }
+#cSVG .tgt-x { stroke-width: 2; }
+#cSVG .wlbl  { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; dominant-baseline: middle; }
+#cSVG .la    { fill: var(--alice); }
+#cSVG .lv    { fill: var(--violet); }
+#cSVG .lb    { fill: var(--bob); }
+
+/* Gate highlight */
+#cSVG .gate-group { transition: opacity .3s, filter .3s; }
+#cSVG.step-active .gate-group { opacity: .2; filter: none; }
+#cSVG.step-active .gate-group.hl { opacity: 1; }
+#cSVG.step-active .gate-group.hl .gbox { filter: drop-shadow(0 0 7px currentColor); }
+
+/* ── Step controls ── */
+.step-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 8px; flex-wrap: wrap; gap: 5px;
+}
+.step-counter {
+  font-family: 'JetBrains Mono', monospace; font-size: .75rem; color: var(--dim);
+}
+.step-counter em { color: var(--cyan); font-style: normal; font-weight: 500; }
+.step-label-text {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--text); padding: .18rem .55rem; border-radius: 4px;
+  background: rgba(0,229,255,.06); border: 1px solid rgba(0,229,255,.15);
+}
+.progress-bar {
+  height: 2px; background: var(--panel-bg); border-radius: 2px; margin-bottom: 10px;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--cyan), var(--violet));
+  transition: width .35s ease; border-radius: 2px;
+}
+.nav-row {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+}
+.btn {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  padding: .35rem .9rem; border-radius: 6px; border: none; cursor: pointer;
+  transition: all .2s;
+}
+.btn-outline {
+  background: transparent; border: 1px solid var(--btn-border); color: var(--dim);
+}
+.btn-outline:hover:not(:disabled) { border-color: var(--cyan); color: var(--cyan); }
+.btn-outline:disabled { opacity: .3; cursor: not-allowed; }
+.btn-primary {
+  background: rgba(0,229,255,.07); border: 1px solid var(--cyan); color: var(--cyan);
+}
+.btn-primary:hover:not(:disabled) { background: rgba(0,229,255,.15); box-shadow: var(--glow); }
+.btn-primary:disabled { opacity: .3; cursor: not-allowed; }
+
+/* ── Measurement panel ── */
+.measure-panel {
+  background: linear-gradient(135deg, rgba(255,202,40,.04), rgba(0,229,255,.04));
+  border: 1px solid rgba(255,202,40,.25); border-radius: 10px;
+  padding: 11px 12px;
+}
+.measure-panel h4 {
+  font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+  color: var(--gold); margin-bottom: 8px; letter-spacing: .05em;
+}
+.measure-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 5px;
+}
+.measure-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+  padding: .45rem .7rem; border-radius: 6px; cursor: pointer; transition: all .2s;
+  background: var(--card-bg); border: 1px solid rgba(255,202,40,.2);
+  color: var(--gold); text-align: left;
+}
+.measure-btn:hover { border-color: var(--gold); background: rgba(255,202,40,.08); }
+.measure-btn .m-prob { font-size: .62rem; color: var(--dim); display: block; margin-top: .12rem; }
+
+/* ── State display ── */
+#state-display {
+  font-size: .95rem; line-height: 2.1; min-height: 2.5rem;
+  transition: opacity .2s;
+  overflow-x: auto; padding-bottom: 4px;
+}
+#state-display.fading { opacity: .2; }
+.state-note {
+  margin-top: 8px; font-size: .75rem; color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  border-top: 1px solid var(--card-border); padding-top: 7px;
+}
+.state-note .hl { color: var(--green); }
+
+/* ── Step description ── */
+#step-desc { font-size: .85rem; color: var(--dim); line-height: 1.7; }
+#step-desc strong { color: var(--text); font-weight: 500; }
+
+/* ── Input config ── */
+.preset-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  margin-bottom: 8px;
+}
+.preset-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: .75rem;
+  padding: .35rem .4rem; border-radius: 6px; cursor: pointer;
+  background: var(--btn-bg); border: 1px solid var(--btn-border);
+  color: var(--dim); transition: all .2s; text-align: center;
+}
+.preset-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+.preset-btn.active { background: rgba(0,229,255,.1); border-color: var(--cyan); color: var(--cyan); }
+.custom-row {
+  display: flex; gap: 5px; align-items: center; flex-wrap: wrap;
+  margin-bottom: 6px;
+}
+.custom-row label {
+  font-family: 'JetBrains Mono', monospace; font-size: .7rem;
+  color: var(--dim); min-width: 18px;
+}
+.custom-row input[type=text] {
+  flex: 1; min-width: 60px; font-family: 'JetBrains Mono', monospace;
+  font-size: .75rem; padding: .3rem .55rem; border-radius: 5px;
+  background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text);
+  outline: none; transition: border-color .2s;
+}
+.custom-row input[type=text]:focus { border-color: var(--cyan); }
+.custom-row input[type=text].invalid { border-color: #ff4444; }
+.kb-wrap { margin-top: 6px; }
+.kb-label { font-family: 'JetBrains Mono', monospace; font-size: .62rem; color: var(--dim); margin-bottom: 4px; }
+.kb-label span { color: var(--cyan); font-weight: 600; }
+.kb-grid { display: flex; flex-wrap: wrap; gap: 3px; }
+.kb-btn {
+  font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+  padding: .22rem .48rem; border-radius: 4px; cursor: pointer;
+  background: var(--btn-bg); border: 1px solid var(--btn-border); color: var(--text);
+  transition: background .15s, border-color .15s;
+}
+.kb-btn:hover { background: rgba(0,229,255,.06); border-color: var(--cyan); color: var(--cyan); }
+.kb-btn.kb-active { border-color: var(--violet); color: var(--violet); }
+.norm-hint {
+  font-family: 'JetBrains Mono', monospace; font-size: .65rem;
+  color: var(--dim); padding: .35rem .65rem; border-radius: 5px;
+  background: var(--btn-bg); border: 1px solid var(--btn-border);
+}
+.norm-hint.ok  { color: var(--green); border-color: rgba(0,255,178,.3); }
+.norm-hint.bad { color: #ff4444; border-color: rgba(255,68,68,.3); }
+
+/* ── Bottom controls ── */
+#bottom-controls {
+  position: fixed;
+  bottom: 14px;
+  left: 14px;
+  z-index: 100;
+  display: flex;
+  gap: 6px;
+}
+#theme-toggle {
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-border);
+  border-radius: 20px;
+  color: var(--toggle-color);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'JetBrains Mono', monospace;
+  transition: all 0.2s;
+}
+#theme-toggle:hover {
+  background: rgba(0,229,255,.07);
+  box-shadow: 0 0 10px rgba(0,229,255,.2);
+}
+body.light #theme-toggle:hover { background: rgba(80,80,160,.08); box-shadow: none; }
+
+/* ── Bloch sphere mini ── */
+.bloch-row { display: flex; gap: 8px; justify-content: center; align-items: flex-start; }
+.bloch-item { flex: 1; text-align: center; min-width: 0; max-width: 150px; }
+.bloch-item canvas { width: 100%; aspect-ratio: 1; display: block; max-height: 135px; }
+.bloch-qlbl { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; margin-top: 3px; }
+
+/* ── Utility ── */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ── LEFT PANEL ── -->
+  <div id="panel-left">
+
+    <!-- Title card -->
+    <div class="card title-card">
+      <div class="site-tag">Quantum Information · BBCJPW 1993</div>
+      <h1 class="site-title"><em>Teleportation</em> Toy</h1>
+      <p class="site-sub">Step-by-step quantum teleportation · all four Bell states · exact symbolic states · user-controlled measurement.</p>
+    </div>
+
+    <!-- Bell state selector -->
+    <div class="card">
+      <h3>Bell State |β<sub>ij</sub>⟩</h3>
+      <div class="bell-grid">
+        <button class="bell-tab active" data-bell="0">|Φ⁺⟩ &nbsp; i=0, j=0</button>
+        <button class="bell-tab"        data-bell="1">|Φ⁻⟩ &nbsp; i=1, j=0</button>
+        <button class="bell-tab"        data-bell="2">|Ψ⁺⟩ &nbsp; i=0, j=1</button>
+        <button class="bell-tab"        data-bell="3">|Ψ⁻⟩ &nbsp; i=1, j=1</button>
+      </div>
+    </div>
+
+    <!-- Input state config -->
+    <div class="card">
+      <h3>Input State |ψ⟩</h3>
+      <div class="preset-grid">
+        <button class="preset-btn active" data-preset="0">|0⟩</button>
+        <button class="preset-btn"        data-preset="1">|1⟩</button>
+        <button class="preset-btn"        data-preset="2">|+⟩</button>
+        <button class="preset-btn"        data-preset="3">|−⟩</button>
+      </div>
+      <div class="custom-row">
+        <label>α</label>
+        <input type="text" id="alpha-in" placeholder="1" value="1">
+        <label>β</label>
+        <input type="text" id="beta-in"  placeholder="0" value="0">
+      </div>
+      <div class="norm-hint ok" id="norm-hint">|α|²+|β|²= 1.000 ✓</div>
+      <div class="kb-wrap">
+        <div class="kb-label">set <span id="kb-target">α</span> →</div>
+        <div class="kb-grid">
+          <button class="kb-btn" data-num="0"                    data-tex="0"                          data-disp="0">0</button>
+          <button class="kb-btn" data-num="1"                    data-tex="1"                          data-disp="1">1</button>
+          <button class="kb-btn" data-num="-1"                   data-tex="-1"                         data-disp="-1">−1</button>
+          <button class="kb-btn" data-num="0.5"                  data-tex="\tfrac{1}{2}"               data-disp="1/2">1/2</button>
+          <button class="kb-btn" data-num="-0.5"                 data-tex="-\tfrac{1}{2}"              data-disp="-1/2">−1/2</button>
+          <button class="kb-btn" data-num="0.7071067811865476"   data-tex="\tfrac{1}{\sqrt{2}}"        data-disp="1/√2">1/√2</button>
+          <button class="kb-btn" data-num="-0.7071067811865476"  data-tex="-\tfrac{1}{\sqrt{2}}"       data-disp="-1/√2">−1/√2</button>
+          <button class="kb-btn" data-num="0.8660254037844387"   data-tex="\tfrac{\sqrt{3}}{2}"        data-disp="√3/2">√3/2</button>
+          <button class="kb-btn" data-num="-0.8660254037844387"  data-tex="-\tfrac{\sqrt{3}}{2}"       data-disp="-√3/2">−√3/2</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step controls -->
+    <div class="card">
+      <div class="step-header">
+        <div class="step-counter">Step <em id="step-num">0</em> of <em>6</em></div>
+        <span class="step-label-text" id="step-label-text">Initial State</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+      <div class="nav-row">
+        <button class="btn btn-outline" id="btn-prev" disabled>← Prev</button>
+        <button class="btn btn-outline" id="btn-next">Next →</button>
+        <button class="btn btn-outline" id="btn-reset">↺ Reset</button>
+      </div>
+    </div>
+
+    <!-- Protocol step description -->
+    <div class="card">
+      <h3>Protocol Step</h3>
+      <div id="step-desc">Alice wants to teleport $|\psi\rangle_1 = \alpha|0\rangle+\beta|1\rangle$ to Bob. A Bell pair $|\beta_{ij}\rangle_{23}$ is pre-shared. No qubit is physically sent.</div>
+    </div>
+
+    <!-- Measurement panel (shown at step 4) -->
+    <div class="card measure-panel hidden" id="measure-panel">
+      <h4>⟳ Choose measurement outcome — Alice sends (m₁, m₂) to Bob</h4>
+      <div class="measure-grid">
+        <button class="measure-btn" data-m1="0" data-m2="0">
+          m₁ = 0, m₂ = 0
+          <span class="m-prob">Probability: 1/4</span>
+        </button>
+        <button class="measure-btn" data-m1="0" data-m2="1">
+          m₁ = 0, m₂ = 1
+          <span class="m-prob">Probability: 1/4</span>
+        </button>
+        <button class="measure-btn" data-m1="1" data-m2="0">
+          m₁ = 1, m₂ = 0
+          <span class="m-prob">Probability: 1/4</span>
+        </button>
+        <button class="measure-btn" data-m1="1" data-m2="1">
+          m₁ = 1, m₂ = 1
+          <span class="m-prob">Probability: 1/4</span>
+        </button>
+      </div>
+    </div>
+
+  </div><!-- end panel-left -->
+
+  <!-- ── RIGHT PANEL ── -->
+  <div id="panel-right">
+
+    <!-- Circuit diagram -->
+    <div class="card circuit-card">
+      <div class="circuit-legend">
+        <span class="zone-pill zone-alice">Alice — q₁, q₂</span>
+        <span class="zone-pill zone-bob">Bob — q₃</span>
+        <div class="legend-ctrl">
+          <div class="legend-item" style="font-family:'JetBrains Mono',monospace;font-size:.65rem">
+            <svg width="20" height="8" style="vertical-align:middle;margin-right:2px"><line x1="0" y1="2.5" x2="20" y2="2.5" stroke="#ffca28" stroke-width="1"/><line x1="0" y1="5.5" x2="20" y2="5.5" stroke="#ffca28" stroke-width="1"/></svg>
+            classical bit
+          </div>
+          <span id="circ-label">|Φ⁺⟩ — ● on Z · ● on X</span>
+        </div>
+      </div>
+
+      <!-- CIRCUIT SVG -->
+      <svg id="cSVG" viewBox="0 0 855 295" role="img" aria-label="Quantum teleportation circuit">
+        <!-- Zone backgrounds -->
+        <rect x="56" y="44" width="452" height="208" rx="7" fill="#ff7eb3" opacity=".018"/>
+        <rect x="530" y="44" width="288" height="208" rx="7" fill="#5bc8fa" opacity=".018"/>
+        <text x="282" y="264" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ff7eb3" opacity=".28">ALICE</text>
+        <text x="674" y="264" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#5bc8fa" opacity=".28">BOB</text>
+
+        <!-- Wire labels -->
+        <text class="wlbl la" x="2"  y="86">|ψ⟩₁</text>
+        <text class="wlbl lv" id="wlq2" x="2" y="156">|0⟩₂</text>
+        <text class="wlbl lb" id="wlq3" x="2" y="228">|0⟩₃</text>
+
+        <!-- Quantum wires (q1, q2 terminate at measurement boxes) -->
+        <line class="wire wq1" x1="56" y1="86"  x2="450" y2="86"/>
+        <line class="wire wq2" x1="56" y1="156" x2="450" y2="156"/>
+        <line class="wire wq3" x1="56" y1="228" x2="818" y2="228"/>
+
+        <!-- H on q2 (Bell pair prep) -->
+        <g class="gate-group" id="gHq2">
+          <rect class="gbox gv" x="112" y="139" width="34" height="34" rx="5"/>
+          <text class="gtxt tv" x="129" y="156">H</text>
+        </g>
+
+        <!-- CNOT q2→q3 (Bell pair prep) -->
+        <g class="gate-group" id="gCNOT23">
+          <line stroke="#b57bee" stroke-width="2" x1="206" y1="156" x2="206" y2="215"/>
+          <circle cx="206" cy="156" r="6" fill="#b57bee"/>
+          <circle class="tgt-c" cx="206" cy="228" stroke="#b57bee"/>
+          <line class="tgt-x" x1="206" y1="215" x2="206" y2="241" stroke="#b57bee"/>
+          <line class="tgt-x" x1="193" y1="228" x2="219" y2="228" stroke="#b57bee"/>
+        </g>
+        <path d="M171 276 Q171 284 206 284 Q241 284 241 276" fill="none" stroke="#b57bee" stroke-width="1" opacity=".22"/>
+        <text id="bellBrace" x="206" y="289" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#b57bee" opacity=".28">|Φ⁺⟩₂₃</text>
+
+        <!-- CNOT q1→q2 (Alice) -->
+        <g class="gate-group" id="gCNOT12">
+          <line stroke="#ff7eb3" stroke-width="2" x1="314" y1="86" x2="314" y2="143"/>
+          <circle cx="314" cy="86" r="6" fill="#ff7eb3"/>
+          <circle class="tgt-c" cx="314" cy="156" stroke="#ff7eb3"/>
+          <line class="tgt-x" x1="314" y1="143" x2="314" y2="169" stroke="#ff7eb3"/>
+          <line class="tgt-x" x1="301" y1="156" x2="327" y2="156" stroke="#ff7eb3"/>
+        </g>
+
+        <!-- H on q1 (Alice) -->
+        <g class="gate-group" id="gHq1">
+          <rect class="gbox ga" x="384" y="69" width="34" height="34" rx="5"/>
+          <text class="gtxt ta" x="401" y="86">H</text>
+        </g>
+
+        <!-- Measure q1 -->
+        <g class="gate-group" id="gMq1">
+          <rect class="gbox gc" x="450" y="68" width="38" height="37" rx="5"/>
+          <path d="M457 90 Q467 74 477 90" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+          <line x1="467" y1="90" x2="474" y2="80" stroke="#00e5ff" stroke-width="1.5"/>
+        </g>
+
+        <!-- Measure q2 -->
+        <g class="gate-group" id="gMq2">
+          <rect class="gbox gc" x="450" y="138" width="38" height="37" rx="5"/>
+          <path d="M457 160 Q467 144 477 160" fill="none" stroke="#00e5ff" stroke-width="1.5"/>
+          <line x1="467" y1="160" x2="474" y2="150" stroke="#00e5ff" stroke-width="1.5"/>
+        </g>
+
+        <!-- Classical double-line wire: m₂ → X gate (Nielsen & Chuang notation) -->
+        <g id="cm2" stroke="#ffca28" stroke-width="1" fill="none">
+          <path d="M488,154 H668 V211"/>
+          <path d="M488,158 H664 V211"/>
+        </g>
+
+        <!-- NOT gate on m₂ wire (shown when Bell state j=1) -->
+        <g id="notX" style="display:none">
+          <rect x="548" y="147" width="28" height="18" rx="3" fill="var(--card-bg)" stroke="#ffca28" stroke-width="1.2"/>
+          <text x="562" y="160" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ffca28">¬</text>
+        </g>
+
+        <!-- X gate on q3 (Bob — classically conditioned on m₂) -->
+        <g class="gate-group" id="gXq3">
+          <rect class="gbox gb" x="649" y="211" width="34" height="34" rx="5"/>
+          <text class="gtxt tb" x="666" y="228">X</text>
+        </g>
+
+        <!-- Classical double-line wire: m₁ → Z gate (Nielsen & Chuang notation) -->
+        <g id="cm1" stroke="#ffca28" stroke-width="1" fill="none">
+          <path d="M488,84 H758 V211"/>
+          <path d="M488,88 H754 V211"/>
+        </g>
+
+        <!-- NOT gate on m₁ wire (shown when Bell state i=1) -->
+        <g id="notZ" style="display:none">
+          <rect x="640" y="77" width="28" height="18" rx="3" fill="var(--card-bg)" stroke="#ffca28" stroke-width="1.2"/>
+          <text x="654" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ffca28">¬</text>
+        </g>
+
+        <!-- Z gate on q3 (Bob — classically conditioned on m₁) -->
+        <g class="gate-group" id="gZq3">
+          <rect class="gbox gb" x="739" y="211" width="34" height="34" rx="5"/>
+          <text class="gtxt tb" x="756" y="228">Z</text>
+        </g>
+
+        <text class="wlbl lb" x="800" y="222">|ψ⟩₃</text>
+        <text x="800" y="237" font-family="JetBrains Mono" font-size="9" fill="#00ffb2" opacity=".8">✓</text>
+
+        <!-- State labels -->
+        <text x="72"  y="75" font-family="JetBrains Mono" font-size="9" fill="#ff7eb3" opacity=".28">|ψ₀⟩</text>
+        <text x="246" y="75" font-family="JetBrains Mono" font-size="9" fill="#ff7eb3" opacity=".28">|ψ₁⟩</text>
+        <text x="350" y="75" font-family="JetBrains Mono" font-size="9" fill="#ff7eb3" opacity=".28">|ψ₂⟩</text>
+        <text x="428" y="75" font-family="JetBrains Mono" font-size="9" fill="#ff7eb3" opacity=".28">|ψ₃⟩</text>
+      </svg>
+      <!-- end SVG -->
+    </div><!-- end circuit-card -->
+
+    <!-- Bloch sphere card -->
+    <div class="card">
+      <h3>Qubit States</h3>
+      <div class="bloch-row">
+        <div class="bloch-item">
+          <canvas id="bq1"></canvas>
+          <div class="bloch-qlbl" style="color:var(--alice)">q₁ · Alice</div>
+        </div>
+        <div class="bloch-item">
+          <canvas id="bq2"></canvas>
+          <div class="bloch-qlbl" style="color:var(--violet)">q₂ · Alice</div>
+        </div>
+        <div class="bloch-item">
+          <canvas id="bq3"></canvas>
+          <div class="bloch-qlbl" style="color:var(--bob)">q₃ · Bob</div>
+        </div>
+      </div>
+      <div id="state-display" style="margin-top:12px;text-align:center;">$\alpha|0\rangle + \beta|1\rangle$</div>
+      <div class="state-note hidden" id="state-note"></div>
+    </div>
+
+
+  </div><!-- end panel-right -->
+
+</div><!-- end app -->
+
+<div id="bottom-controls">
+  <button id="theme-toggle">☀ Light</button>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     JAVASCRIPT
+═══════════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: GateLibrary
+// Pre-derived gate matrix definitions (for StateEngine verification)
+// ──────────────────────────────────────────────────────────────────
+const Gates = (() => {
+  // Complex number helpers
+  const c  = (re, im=0) => ({re, im});
+  const add = (a, b) => c(a.re+b.re, a.im+b.im);
+  const mul = (a, b) => c(a.re*b.re - a.im*b.im, a.re*b.im + a.im*b.re);
+  const s2  = Math.SQRT2;
+
+  // 2×2 gate matrices as flat [00, 01, 10, 11] complex arrays
+  const H  = [c(1/s2), c(1/s2), c(1/s2), c(-1/s2)];
+  const X  = [c(0), c(1), c(1), c(0)];
+  const Z  = [c(1), c(0), c(0), c(-1)];
+  const I2 = [c(1), c(0), c(0), c(1)];
+
+  return { c, add, mul, H, X, Z, I2 };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: StateEngine
+// Floating-point 3-qubit state vector for correctness verification.
+// State: Float64Array[16] (interleaved re,im for 8 amplitudes)
+// Basis: |q1 q2 q3⟩ → index = q1<<2 | q2<<1 | q3
+// ──────────────────────────────────────────────────────────────────
+const StateEngine = (() => {
+  const G = Gates;
+
+  // Create zero state vector
+  const zero  = () => new Float64Array(16);
+  const clone = s => new Float64Array(s);
+
+  // Get/set amplitude at basis index k
+  const getA = (s, k) => ({ re: s[2*k], im: s[2*k+1] });
+  const setA = (s, k, a) => { s[2*k]=a.re; s[2*k+1]=a.im; };
+
+  // Initial state: |ψ⟩₁ ⊗ |q2q3⟩ where |ψ⟩=α|0⟩+β|1⟩
+  function makeInitial(alpha, beta, bellIdx) {
+    // Bell state initial q2q3: 00, 10, 01, 11 for idx 0..3
+    const q23 = [[0,0],[1,0],[0,1],[1,1]][bellIdx];
+    const q2  = q23[0], q3 = q23[1];
+    const s   = zero();
+    // |0⟩₁ component
+    setA(s, (0<<2)|(q2<<1)|q3, G.c(alpha.re, alpha.im));
+    // |1⟩₁ component
+    setA(s, (1<<2)|(q2<<1)|q3, G.c(beta.re, beta.im));
+    return s;
+  }
+
+  // Apply a 2×2 gate to qubit `bit` (0=q1,1=q2,2=q3) of 3-qubit state
+  function apply1(s, gate, bit) {
+    const out = zero();
+    for (let k = 0; k < 8; k++) {
+      const b = (k >> (2-bit)) & 1;  // bit value at position
+      const k0 = k & ~(1 << (2-bit)); // k with bit=0
+      const k1 = k0 | (1 << (2-bit)); // k with bit=1
+      // Output[k] += gate[b,0]*s[k0] + gate[b,1]*s[k1]
+      const a0 = getA(s, k0), a1 = getA(s, k1);
+      const v  = G.add(G.mul(gate[b*2], a0), G.mul(gate[b*2+1], a1));
+      const cur = getA(out, k);
+      setA(out, k, G.add(cur, v));
+    }
+    return out;
+  }
+
+  // Wait – apply1 as written double-counts. Let me use the standard approach:
+  // For each output index k, sum over input indices that differ only in the target bit.
+  function applyGate1(s, gate, bit) {
+    const out = zero();
+    const mask = 1 << (2-bit);
+    for (let k = 0; k < 8; k++) {
+      if ((k & mask) !== 0) continue; // only process pairs once
+      const k0 = k, k1 = k | mask;
+      const a0 = getA(s, k0), a1 = getA(s, k1);
+      // out[k0] = gate[0][0]*a0 + gate[0][1]*a1
+      setA(out, k0, G.add(G.mul(gate[0], a0), G.mul(gate[1], a1)));
+      // out[k1] = gate[1][0]*a0 + gate[1][1]*a1
+      setA(out, k1, G.add(G.mul(gate[2], a0), G.mul(gate[3], a1)));
+    }
+    return out;
+  }
+
+  // CNOT: control=ctrl bit, target=tgt bit
+  function applyCNOT(s, ctrl, tgt) {
+    const out = clone(s);
+    const cmask = 1 << (2-ctrl);
+    const tmask = 1 << (2-tgt);
+    for (let k = 0; k < 8; k++) {
+      if ((k & cmask) !== 0) { // control is 1 → flip target
+        const kf = k ^ tmask;
+        if (kf > k) { // swap to avoid double-processing
+          const ak = getA(out, k), akf = getA(out, kf);
+          setA(out, k, akf); setA(out, kf, ak);
+        }
+      }
+    }
+    return out;
+  }
+
+  // Controlled gate (ctrl qubit, target qubit, 2×2 gate)
+  // Negative control: negCtrl=true means gate fires when ctrl=0
+  function applyControlled(s, ctrl, tgt, gate, negCtrl) {
+    const out = zero();
+    const cmask = 1 << (2-ctrl);
+    const tmask = 1 << (2-tgt);
+    for (let k = 0; k < 8; k++) {
+      const ctrlVal = (k & cmask) !== 0 ? 1 : 0;
+      const fires   = negCtrl ? ctrlVal === 0 : ctrlVal === 1;
+      if (fires) {
+        // Don't apply gate twice; handle pairs
+        if ((k & tmask) !== 0) continue;
+        const k0 = k, k1 = k | tmask;
+        const a0 = getA(s, k0), a1 = getA(s, k1);
+        setA(out, k0, G.add(G.mul(gate[0], a0), G.mul(gate[1], a1)));
+        setA(out, k1, G.add(G.mul(gate[2], a0), G.mul(gate[3], a1)));
+      } else {
+        const cur = getA(out, k);
+        setA(out, k, G.add(cur, getA(s, k)));
+      }
+    }
+    return out;
+  }
+
+  // Measure qubit `bit`; returns projected state (not renormalized for display)
+  // Returns two branches: {s0: state when result=0, s1: state when result=1}
+  function measure(s, bit) {
+    const mask = 1 << (2-bit);
+    const s0 = zero(), s1 = zero();
+    for (let k = 0; k < 8; k++) {
+      const a = getA(s, k);
+      if ((k & mask) === 0) setA(s0, k, a);
+      else                  setA(s1, k, a);
+    }
+    return { s0, s1 };
+  }
+
+  // Get qubit 2 (q3, index 2) state from a post-measurement state
+  // Returns {alpha, beta} as complex amplitudes
+  function extractQ3(s) {
+    // After measuring q1 and q2, only one (q1q2) pair has non-zero amplitudes
+    // Sum over all q1,q2 to get q3
+    let a0 = G.c(0), a1 = G.c(0);
+    for (let k = 0; k < 8; k++) {
+      const a = getA(s, k);
+      if ((k & 1) === 0) a0 = G.add(a0, a);  // q3=0
+      else               a1 = G.add(a1, a);   // q3=1
+    }
+    return { alpha: a0, beta: a1 };
+  }
+
+  // Check if q3 matches |ψ⟩ = expected {alpha,beta} (up to global phase)
+  function matchesPsi(s, expAlpha, expBeta) {
+    const { alpha: ga, beta: gb } = extractQ3(s);
+    // Find phase: if expAlpha ≠ 0, phase = ga/expAlpha
+    const eps = 1e-9;
+    const normA = Math.sqrt(ga.re**2 + ga.im**2);
+    const normB = Math.sqrt(gb.re**2 + gb.im**2);
+    const normGA= Math.sqrt(expAlpha.re**2 + expAlpha.im**2);
+    const normGB= Math.sqrt(expBeta.re**2  + expBeta.im**2);
+    // Compare magnitudes
+    return Math.abs(normA - normGA) < eps && Math.abs(normB - normGB) < eps;
+  }
+
+  return { makeInitial, applyGate1, applyCNOT, applyControlled, measure, extractQ3, matchesPsi };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: Protocol
+// Pre-derived symbolic LaTeX trajectories for all Bell states.
+// Reference: specs/examples/symbolic_trajectories.md
+// Source: BBCJPW 1993 — Phys. Rev. Lett. 70, 1895
+// ──────────────────────────────────────────────────────────────────
+const Protocol = (() => {
+
+  // Bell state definitions
+  const bells = [
+    { name:'|Φ⁺⟩', latex:'\\Phi^+', i:0, j:0, q23init:'|00\\rangle', negZ:false, negX:false,
+      circLabel:'|Φ⁺⟩ — Z^m₁ · X^m₂', brace:'|Φ⁺⟩₂₃', q2w:'|0⟩₂', q3w:'|0⟩₃' },
+    { name:'|Φ⁻⟩', latex:'\\Phi^-', i:1, j:0, q23init:'|10\\rangle', negZ:true,  negX:false,
+      circLabel:'|Φ⁻⟩ — Z^(m₁⊕1) · X^m₂', brace:'|Φ⁻⟩₂₃', q2w:'|1⟩₂', q3w:'|0⟩₃' },
+    { name:'|Ψ⁺⟩', latex:'\\Psi^+', i:0, j:1, q23init:'|01\\rangle', negZ:false, negX:true,
+      circLabel:'|Ψ⁺⟩ — Z^m₁ · X^(m₂⊕1)', brace:'|Ψ⁺⟩₂₃', q2w:'|0⟩₂', q3w:'|1⟩₃' },
+    { name:'|Ψ⁻⟩', latex:'\\Psi^-', i:1, j:1, q23init:'|11\\rangle', negZ:true,  negX:true,
+      circLabel:'|Ψ⁻⟩ — Z^(m₁⊕1) · X^(m₂⊕1)', brace:'|Ψ⁻⟩₂₃', q2w:'|1⟩₂', q3w:'|1⟩₃' },
+  ];
+
+  // Pre-measurement states (steps 0–3) per Bell state
+  // Source: symbolic computation in specs/examples/symbolic_trajectories.md
+  const preMeasureStates = [
+    // |Φ+⟩ (i=0,j=0): initial q2q3=|00⟩
+    [
+      `\\alpha|000\\rangle + \\beta|100\\rangle`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|000\\rangle + \\alpha|011\\rangle + \\beta|100\\rangle + \\beta|111\\rangle\\bigr)`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|000\\rangle + \\alpha|011\\rangle + \\beta|110\\rangle + \\beta|101\\rangle\\bigr)`,
+      `\\tfrac{1}{2}\\Bigl[|00\\rangle(\\alpha|0\\rangle+\\beta|1\\rangle) + |01\\rangle(\\beta|0\\rangle+\\alpha|1\\rangle) + |10\\rangle(\\alpha|0\\rangle-\\beta|1\\rangle) + |11\\rangle(-\\beta|0\\rangle+\\alpha|1\\rangle)\\Bigr]`,
+    ],
+    // |Φ-⟩ (i=1,j=0): initial q2q3=|10⟩
+    [
+      `\\alpha|010\\rangle + \\beta|110\\rangle`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|000\\rangle - \\alpha|011\\rangle + \\beta|100\\rangle - \\beta|111\\rangle\\bigr)`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|000\\rangle - \\alpha|011\\rangle + \\beta|110\\rangle - \\beta|101\\rangle\\bigr)`,
+      `\\tfrac{1}{2}\\Bigl[|00\\rangle(\\alpha|0\\rangle-\\beta|1\\rangle) + |01\\rangle(\\beta|0\\rangle-\\alpha|1\\rangle) + |10\\rangle(\\alpha|0\\rangle+\\beta|1\\rangle) - |11\\rangle(\\beta|0\\rangle+\\alpha|1\\rangle)\\Bigr]`,
+    ],
+    // |Ψ+⟩ (i=0,j=1): initial q2q3=|01⟩
+    [
+      `\\alpha|001\\rangle + \\beta|101\\rangle`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|001\\rangle + \\alpha|010\\rangle + \\beta|101\\rangle + \\beta|110\\rangle\\bigr)`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|001\\rangle + \\alpha|010\\rangle + \\beta|111\\rangle + \\beta|100\\rangle\\bigr)`,
+      `\\tfrac{1}{2}\\Bigl[|00\\rangle(\\beta|0\\rangle+\\alpha|1\\rangle) + |01\\rangle(\\alpha|0\\rangle+\\beta|1\\rangle) + |10\\rangle(-\\beta|0\\rangle+\\alpha|1\\rangle) + |11\\rangle(\\alpha|0\\rangle-\\beta|1\\rangle)\\Bigr]`,
+    ],
+    // |Ψ-⟩ (i=1,j=1): initial q2q3=|11⟩
+    [
+      `\\alpha|011\\rangle + \\beta|111\\rangle`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|001\\rangle - \\alpha|010\\rangle + \\beta|101\\rangle - \\beta|110\\rangle\\bigr)`,
+      `\\tfrac{1}{\\sqrt{2}}\\bigl(\\alpha|001\\rangle - \\alpha|010\\rangle + \\beta|111\\rangle - \\beta|100\\rangle\\bigr)`,
+      `\\tfrac{1}{2}\\Bigl[|00\\rangle(-\\beta|0\\rangle+\\alpha|1\\rangle) + |01\\rangle(-\\alpha|0\\rangle+\\beta|1\\rangle) + |10\\rangle(\\beta|0\\rangle+\\alpha|1\\rangle) - |11\\rangle(\\alpha|0\\rangle+\\beta|1\\rangle)\\Bigr]`,
+    ],
+  ];
+
+  // Post-measurement states indexed by [bellIdx][m1*2+m2]
+  // Each entry: [pre_correction, after_X^(m2⊕j), after_Z^(m1⊕i)]
+  // Circuit order: X applied first (left), Z applied second (right)
+  // Reference: specs/examples/symbolic_trajectories.md, corrected for circuit order
+  const postMeasureStates = [
+    // |Φ+⟩ (i=0,j=0)
+    [
+      [`\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 00: I, I
+      [`\\beta|0\\rangle+\\alpha|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 01: X, I
+      [`\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 10: I, Z
+      [`-\\beta|0\\rangle+\\alpha|1\\rangle`,   `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 11: X, Z
+    ],
+    // |Φ-⟩ (i=1,j=0): Z fires on m1=0 (◦); X fires on m2=1 (●)
+    [
+      [`\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 00: I, Z
+      [`\\beta|0\\rangle-\\alpha|1\\rangle`,    `-\\alpha|0\\rangle+\\beta|1\\rangle`,   `-(\\alpha|0\\rangle+\\beta|1\\rangle)`],// 01: X, Z
+      [`\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 10: I, I
+      [`-(\\beta|0\\rangle+\\alpha|1\\rangle)`, `-(\\alpha|0\\rangle+\\beta|1\\rangle)`, `-(\\alpha|0\\rangle+\\beta|1\\rangle)`],// 11: X, I
+    ],
+    // |Ψ+⟩ (i=0,j=1): X fires on m2=0 (◦); Z fires on m1=1 (●)
+    [
+      [`\\beta|0\\rangle+\\alpha|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 00: X, I
+      [`\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 01: I, I
+      [`-\\beta|0\\rangle+\\alpha|1\\rangle`,   `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 10: X, Z
+      [`\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 11: I, Z
+    ],
+    // |Ψ-⟩ (i=1,j=1): both ◦
+    [
+      [`-\\beta|0\\rangle+\\alpha|1\\rangle`,   `\\alpha|0\\rangle-\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 00: X, Z
+      [`-\\alpha|0\\rangle+\\beta|1\\rangle`,   `-\\alpha|0\\rangle+\\beta|1\\rangle`,   `-(\\alpha|0\\rangle+\\beta|1\\rangle)`],// 01: I, Z
+      [`\\beta|0\\rangle+\\alpha|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`,    `\\alpha|0\\rangle+\\beta|1\\rangle`],   // 10: X, I
+      [`-(\\alpha|0\\rangle+\\beta|1\\rangle)`, `-(\\alpha|0\\rangle+\\beta|1\\rangle)`, `-(\\alpha|0\\rangle+\\beta|1\\rangle)`],// 11: I, I
+    ],
+  ];
+
+  // Step metadata: id, label, description, highlight gates, flags
+  const steps = [
+    { id: 0, label: 'Initial State',
+      desc: (b) => `Alice wants to teleport $|\\psi\\rangle_1 = \\alpha|0\\rangle+\\beta|1\\rangle$ to Bob using only classical communication and the pre-shared Bell pair $|${b.latex}\\rangle_{23}$.`,
+      hl: [], isMeasurement: false, isBlocking: false },
+    { id: 1, label: 'Bell Pair Prep.',
+      desc: (b) => `<strong>H on q₂, then CNOT(q₂→q₃)</strong> prepares the Bell pair $|${b.latex}\\rangle_{23}$ from the initial state $${b.q23init}_{23}$.`,
+      hl: ['gHq2','gCNOT23'], isMeasurement: false, isBlocking: false },
+    { id: 2, label: 'Alice: CNOT',
+      desc: () => `<strong>CNOT(q₁→q₂)</strong>: Alice entangles her input qubit q₁ with her half of the Bell pair q₂. This correlates the input with both branches of the entanglement.`,
+      hl: ['gCNOT12'], isMeasurement: false, isBlocking: false },
+    { id: 3, label: 'Alice: H on q₁',
+      desc: () => `<strong>H on q₁</strong>: Alice maps q₁ to the computational basis. After this, the 3-qubit state factors into a mixture of four equally-probable branches for (m₁, m₂). Bob's qubit is ready for correction.`,
+      hl: ['gHq1'], isMeasurement: false, isBlocking: false },
+    { id: 4, label: 'Measurement',
+      desc: () => `Alice <strong>measures q₁→m₁ and q₂→m₂</strong> and sends both bits to Bob via classical channel. Choose the measurement outcome below — each occurs with probability 1/4.`,
+      hl: ['gMq1','gMq2'], isMeasurement: true, isBlocking: true },
+    { id: 5, label: 'Bob: X gate',
+      desc: (b, m1, m2) => {
+        const j = b.j, fires = (m2 ^ j) === 1;
+        const ctrl = j === 1 ? '\\circ' : '\\bullet';
+        return `<strong>X${fires?'':' (no-op)'}</strong> on q₃: Bob applies $X^{m_2 \\oplus j} = X^{${m2}\\oplus${j}} = X^{${m2^j}}$. Control is $${ctrl}$. ${fires ? 'Gate fires → Bob flips q₃.' : 'Gate does not fire → q₃ unchanged.'}`;
+      },
+      hl: ['gXq3'], isMeasurement: false, isBlocking: false },
+    { id: 6, label: 'Bob: Z gate',
+      desc: (b, m1, m2) => {
+        const i = b.i, fires = (m1 ^ i) === 1;
+        const ctrl = i === 1 ? '\\circ' : '\\bullet';
+        return `<strong>Z${fires?'':' (no-op)'}</strong> on q₃: Bob applies $Z^{m_1 \\oplus i} = Z^{${m1}\\oplus${i}} = Z^{${m1^i}}$. Control is $${ctrl}$. ${fires ? 'Gate fires → Bob phase-flips q₃.' : 'Gate does not fire → q₃ unchanged.'} Bob now has $|\\psi\\rangle_3$ (up to global phase). ✓`;
+      },
+      hl: ['gZq3'], isMeasurement: false, isBlocking: false },
+  ];
+
+  function getBell(idx) { return bells[idx]; }
+  function getStep(idx) { return steps[idx]; }
+  function getPreState(bellIdx, stepIdx) { return preMeasureStates[bellIdx][stepIdx]; }
+  function getPostState(bellIdx, m1, m2, phase) {
+    // phase: 0=pre, 1=after_X, 2=after_Z
+    return postMeasureStates[bellIdx][m1*2+m2][phase];
+  }
+  function stepCount() { return steps.length; }
+
+  return { getBell, getStep, getPreState, getPostState, stepCount, bells };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// Bloch sphere helpers: partial trace → per-qubit Bloch vector
+// ──────────────────────────────────────────────────────────────────
+function getBlochVec(s, bit) {
+  // Reduced density matrix of qubit `bit` (0=q1,1=q2,2=q3) via partial trace.
+  // Returns Bloch vector {x,y,z}; length ≤ 1 (1=pure, <1=mixed/entangled).
+  const mask = 1 << (2 - bit);
+  let r00 = 0, r01re = 0, r01im = 0, r11 = 0;
+  for (let k = 0; k < 8; k++) {
+    if ((k & mask) !== 0) continue;
+    const k0 = k, k1 = k | mask;
+    const a0r = s[2*k0], a0i = s[2*k0+1], a1r = s[2*k1], a1i = s[2*k1+1];
+    r00   += a0r*a0r + a0i*a0i;
+    r11   += a1r*a1r + a1i*a1i;
+    r01re += a0r*a1r + a0i*a1i;
+    r01im += a0i*a1r - a0r*a1i;
+  }
+  // y = -2·Im(ρ₀₁): from ρ = ½(I + r·σ), ρ₀₁ = ½(x − iy) → y = −2·Im(ρ₀₁)
+  return { x: 2*r01re, y: -2*r01im, z: r00 - r11 };
+}
+
+function computeQState(bellIdx, stepIdx, alpha, beta, m1, m2) {
+  // Numerically simulate the 3-qubit state at each protocol step.
+  const bell = Protocol.getBell(bellIdx);
+  let s = StateEngine.makeInitial(alpha, beta, bellIdx);
+  if (stepIdx === 0) return s;
+  s = StateEngine.applyGate1(s, Gates.H, 1);
+  s = StateEngine.applyCNOT(s, 1, 2);
+  if (stepIdx === 1) return s;
+  s = StateEngine.applyCNOT(s, 0, 1);
+  if (stepIdx === 2) return s;
+  s = StateEngine.applyGate1(s, Gates.H, 0);
+  if (stepIdx === 3) return s;
+  if (m1 === null || m2 === null) return s; // pre-measurement: show step-3 state
+  let { s0, s1 } = StateEngine.measure(s, 0);
+  s = m1 === 0 ? s0 : s1;
+  ({ s0, s1 } = StateEngine.measure(s, 1));
+  s = m2 === 0 ? s0 : s1;
+  // Renormalize after projection
+  let n2 = 0;
+  for (let k = 0; k < 8; k++) n2 += s[2*k]**2 + s[2*k+1]**2;
+  if (n2 > 1e-24) {
+    const nf = Math.sqrt(n2), sn = new Float64Array(16);
+    for (let i = 0; i < 16; i++) sn[i] = s[i] / nf;
+    s = sn;
+  }
+  if (stepIdx === 4) return s;
+  if ((m2 ^ bell.j) === 1) s = StateEngine.applyGate1(s, Gates.X, 2);
+  if (stepIdx === 5) return s;
+  if ((m1 ^ bell.i) === 1) s = StateEngine.applyGate1(s, Gates.Z, 2);
+  return s;
+}
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: CircuitRenderer
+// Updates SVG circuit: highlights active gates, toggles ●/◦ controls.
+// ──────────────────────────────────────────────────────────────────
+const CircuitRenderer = (() => {
+  const svg = document.getElementById('cSVG');
+
+  function render(bellIdx, stepIdx) {
+    const bell = Protocol.getBell(bellIdx);
+    const step = Protocol.getStep(stepIdx);
+
+    // Update Bell brace label
+    document.getElementById('bellBrace').textContent = bell.brace;
+    document.getElementById('wlq2').textContent      = bell.q2w;
+    document.getElementById('wlq3').textContent      = bell.q3w;
+
+    // Show/hide NOT gates on classical wires based on Bell state (i,j)
+    _updateBobCircuit(bell.i, bell.j);
+
+    // Update circuit info label
+    document.getElementById('circ-label').textContent = bell.circLabel;
+
+    // Highlight current gates
+    highlightStep(stepIdx, step.hl);
+  }
+
+  function highlightStep(stepIdx, hlIds) {
+    const groups = svg.querySelectorAll('.gate-group');
+    if (!hlIds || hlIds.length === 0) {
+      svg.classList.remove('step-active');
+      groups.forEach(g => g.classList.remove('hl'));
+    } else {
+      svg.classList.add('step-active');
+      groups.forEach(g => g.classList.remove('hl'));
+      hlIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hl');
+      });
+    }
+  }
+
+  function setBlockedState(blocked) {
+    // Dim unmeasured wires when in post-measurement steps
+    // (visual cue that q1,q2 have been measured)
+  }
+
+  function _updateBobCircuit(i, j) {
+    document.getElementById('notX').style.display = j === 1 ? '' : 'none';
+    document.getElementById('notZ').style.display = i === 1 ? '' : 'none';
+  }
+
+  return { render, highlightStep, setBlockedState };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: StatePanel
+// Renders LaTeX state in #state-display via MathJax with onComplete callback.
+// Falls back to plain text if MathJax is unavailable.
+// Minimum render interval: 250ms
+// ──────────────────────────────────────────────────────────────────
+const StatePanel = (() => {
+  const el   = document.getElementById('state-display');
+  const note = document.getElementById('state-note');
+  let   _lastRender = 0;
+
+  function render(latexStr, noteStr, onComplete) {
+    el.classList.add('fading');
+    const target = el;
+
+    setTimeout(() => {
+      target.classList.remove('fading');
+      target.innerHTML = `$${latexStr}$`;
+
+      // Note display
+      if (noteStr) {
+        note.classList.remove('hidden');
+        note.innerHTML = noteStr;
+      } else {
+        note.classList.add('hidden');
+      }
+
+      if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+        MathJax.typesetPromise([target, note]).then(() => {
+          _lastRender = Date.now();
+          if (onComplete) onComplete();
+        }).catch(() => {
+          if (onComplete) onComplete();
+        });
+      } else {
+        // Fallback: plain text (strip LaTeX commands)
+        target.textContent = latexStr
+          .replace(/\\[a-z]+/g,'').replace(/[{}\$]/g,'').replace(/\|/g,'|');
+        _lastRender = Date.now();
+        if (onComplete) onComplete();
+      }
+    }, 80); // brief fade
+  }
+
+  function minDelay() {
+    const elapsed = Date.now() - _lastRender;
+    return Math.max(0, 250 - elapsed);
+  }
+
+  return { render, minDelay };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: MeasurementController
+// Owns the m₁, m₂ picker UI. Appears inline below circuit.
+// ──────────────────────────────────────────────────────────────────
+const MeasurementController = (() => {
+  const panel = document.getElementById('measure-panel');
+  let   _onChoice = null;
+
+  // Attach click handlers once
+  panel.querySelectorAll('.measure-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const m1 = parseInt(btn.dataset.m1, 10);
+      const m2 = parseInt(btn.dataset.m2, 10);
+      const cb = _onChoice; // save before hide() clears it
+      hide();
+      if (cb) cb(m1, m2);
+    });
+  });
+
+  function show(onChoice) {
+    _onChoice = onChoice;
+    panel.classList.remove('hidden');
+  }
+
+  function hide() {
+    panel.classList.add('hidden');
+    _onChoice = null;
+  }
+
+  function isVisible() { return !panel.classList.contains('hidden'); }
+
+  return { show, hide, isVisible };
+})();
+
+
+// ──────────────────────────────────────────────────────────────────
+// MODULE: UIController
+// Orchestrates all modules. Handles Bell selector, step nav, α/β input.
+// ──────────────────────────────────────────────────────────────────
+const UIController = (() => {
+  // ── Simulator state ──
+  let bellIdx  = 0;
+  let stepIdx  = 0;
+  let m1 = null, m2 = null;
+  let alpha = { re: 1, im: 0 };
+  let beta  = { re: 0, im: 0 };
+  let alphaLabel = '1', betaLabel = '0';
+
+  // Preset definitions: [alphaRe, betaRe, display latex for step0]
+  const PRESETS = [
+    { label:'|0⟩',   ar:1,           br:0,          al:'1',              bl:'0',
+      s0a:'1',  s0b:'0' },
+    { label:'|1⟩',   ar:0,           br:1,          al:'0',              bl:'1',
+      s0a:'0',  s0b:'1' },
+    { label:'|+⟩',   ar:1/Math.SQRT2,br:1/Math.SQRT2, al:'\\tfrac{1}{\\sqrt{2}}', bl:'\\tfrac{1}{\\sqrt{2}}',
+      s0a:'\\tfrac{1}{\\sqrt{2}}', s0b:'\\tfrac{1}{\\sqrt{2}}' },
+    { label:'|−⟩',   ar:1/Math.SQRT2,br:-1/Math.SQRT2, al:'\\tfrac{1}{\\sqrt{2}}', bl:'-\\tfrac{1}{\\sqrt{2}}',
+      s0a:'\\tfrac{1}{\\sqrt{2}}', s0b:'-\\tfrac{1}{\\sqrt{2}}' },
+  ];
+  let presetIdx = 0;
+
+  // ── Refs ──
+  const btnPrev  = document.getElementById('btn-prev');
+  const btnNext  = document.getElementById('btn-next');
+  const btnReset = document.getElementById('btn-reset');
+  const stepNum  = document.getElementById('step-num');
+  const stepLbl  = document.getElementById('step-label-text');
+  const progFill = document.getElementById('progress-fill');
+  const stepDesc = document.getElementById('step-desc');
+
+  // ── Bell tab wiring ──
+  document.querySelectorAll('.bell-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.bell-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      bellIdx = parseInt(tab.dataset.bell, 10);
+      _reset();
+    });
+  });
+
+  // ── Prev / Next ──
+  btnPrev.addEventListener('click', () => step('prev'));
+  btnNext.addEventListener('click', () => step('next'));
+  btnReset.addEventListener('click', _reset);
+
+  // ── Preset buttons ──
+  document.querySelectorAll('.preset-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      presetIdx = parseInt(btn.dataset.preset, 10);
+      _applyPreset();
+    });
+  });
+
+  // ── Custom α/β inputs ──
+  const alphaIn  = document.getElementById('alpha-in');
+  const betaIn   = document.getElementById('beta-in');
+  const normHint = document.getElementById('norm-hint');
+  const kbTarget = document.getElementById('kb-target');
+  let   _kbActive = 'alpha'; // 'alpha' | 'beta'
+
+  // Keyboard: clicking a field sets the target; clicking a kb-btn sets the value
+  alphaIn.addEventListener('focus', () => { _kbActive = 'alpha'; kbTarget.textContent = 'α'; });
+  betaIn.addEventListener('focus',  () => { _kbActive = 'beta';  kbTarget.textContent = 'β'; });
+
+  document.querySelectorAll('.kb-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const num = parseFloat(btn.dataset.num);
+      const tex = btn.dataset.tex;
+      const disp = btn.dataset.disp;
+      if (_kbActive === 'alpha') {
+        alpha = { re: num, im: 0 }; alphaLabel = tex;
+        alphaIn.value = disp;
+        alphaIn.classList.remove('invalid');
+      } else {
+        beta = { re: num, im: 0 }; betaLabel = tex;
+        betaIn.value = disp;
+        betaIn.classList.remove('invalid');
+      }
+      // Check normalization
+      const norm = alpha.re**2 + beta.re**2;
+      const ok = Math.abs(norm - 1) < 0.001;
+      normHint.textContent = `|α|²+|β|²= ${norm.toFixed(3)} ${ok ? '✓' : '✗'}`;
+      normHint.className = `norm-hint ${ok ? 'ok' : 'bad'}`;
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      presetIdx = -1; // no preset active — custom keyboard values
+      if (ok) _render();
+    });
+  });
+
+  function _parseInput(str) {
+    str = str.trim();
+    if (!str) return NaN;
+    // Normalise √N → Math.sqrt(N), √(expr) → Math.sqrt(expr)
+    str = str.replace(/√\(([^)]+)\)/g, 'Math.sqrt($1)');
+    str = str.replace(/√(\d+(?:\.\d+)?)/g, 'Math.sqrt($1)');
+    str = str.replace(/sqrt\(/g, 'Math.sqrt(');
+    try {
+      // eslint-disable-next-line no-new-func
+      const v = Function('"use strict"; return (' + str + ')')();
+      return (typeof v === 'number' && isFinite(v)) ? v : NaN;
+    } catch(e) { return NaN; }
+  }
+
+  function _validateCustom() {
+    const ar = _parseInput(alphaIn.value);
+    const br = _parseInput(betaIn.value);
+    const norm = ar**2 + br**2;
+    const ok = Math.abs(norm - 1) < 0.001;
+    normHint.textContent = `|α|²+|β|²= ${norm.toFixed(3)} ${ok ? '✓' : '✗'}`;
+    normHint.className = `norm-hint ${ok ? 'ok' : 'bad'}`;
+    alphaIn.classList.toggle('invalid', !ok);
+    betaIn.classList.toggle('invalid', !ok);
+    if (ok) {
+      alpha = { re: ar, im: 0 };
+      beta  = { re: br, im: 0 };
+      alphaLabel = ar.toFixed(3).replace(/\.?0+$/,'');
+      betaLabel  = br.toFixed(3).replace(/\.?0+$/,'');
+      document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+      _render();
+    }
+  }
+
+  alphaIn.addEventListener('input', _validateCustom);
+  betaIn.addEventListener('input', _validateCustom);
+
+  function _applyPreset() {
+    const p = PRESETS[presetIdx];
+    alpha = { re: p.ar, im: 0 };
+    beta  = { re: p.br, im: 0 };
+    alphaLabel = p.al;
+    betaLabel  = p.bl;
+    alphaIn.value = p.ar.toFixed(5).replace(/\.?0+$/,'');
+    betaIn.value  = p.br.toFixed(5).replace(/\.?0+$/,'');
+    normHint.textContent = '|α|²+|β|²= 1.000 ✓';
+    normHint.className = 'norm-hint ok';
+    alphaIn.classList.remove('invalid');
+    betaIn.classList.remove('invalid');
+    _render();
+  }
+
+  // ── Step navigation ──
+  function step(direction) {
+    if (direction === 'next') {
+      if (stepIdx >= Protocol.stepCount()-1) return { done: true };
+      if (Protocol.getStep(stepIdx).isBlocking && m1 === null) return { blocked: true };
+      stepIdx++;
+    } else {
+      if (stepIdx <= 0) return { done: false };
+      if (stepIdx > 4) { m1 = null; m2 = null; } // going back past measurement
+      stepIdx--;
+    }
+    _render();
+    return { done: stepIdx >= Protocol.stepCount()-1, blocked: false };
+  }
+
+  function _reset() {
+    stepIdx = 0; m1 = null; m2 = null;
+    MeasurementController.hide();
+    _render();
+  }
+
+  function _render() {
+    const bell = Protocol.getBell(bellIdx);
+    const sdef = Protocol.getStep(stepIdx);
+    const total = Protocol.stepCount() - 1;
+
+    // Update progress + counter
+    stepNum.innerHTML  = stepIdx;
+    stepLbl.textContent = sdef.label;
+    progFill.style.width = `${(stepIdx / total) * 100}%`;
+
+    // Prev/Next buttons
+    btnPrev.disabled = stepIdx === 0;
+    btnNext.disabled = stepIdx === total || (sdef.isBlocking && m1 === null);
+
+    // Circuit SVG
+    CircuitRenderer.render(bellIdx, stepIdx);
+
+    // Show/hide measurement panel
+    if (sdef.isBlocking && m1 === null) {
+      MeasurementController.show((rm1, rm2) => {
+        m1 = rm1; m2 = rm2;
+        _render(); // re-render with measurement result shown
+      });
+    } else if (!sdef.isBlocking || m1 !== null) {
+      MeasurementController.hide();
+    }
+
+    // Step description — override step 4 after measurement choice
+    let descHTML = typeof sdef.desc === 'function'
+      ? sdef.desc(bell, m1, m2) : sdef.desc;
+    if (stepIdx === 4 && m1 !== null) {
+      descHTML += ` Alice sends classical bits <strong style="color:var(--gold)">m₁=${m1}, m₂=${m2}</strong> to Bob. Click Next to apply Bob's corrections.`;
+    }
+    stepDesc.innerHTML = descHTML;
+
+    // State display
+    _updateStateDisplay();
+
+    // MathJax on description
+    if (typeof MathJax !== 'undefined' && MathJax.typesetPromise) {
+      MathJax.typesetPromise([stepDesc]).catch(()=>{});
+    }
+
+    // Bloch sphere update — compute per-qubit Bloch vectors and notify module
+    const _qs = computeQState(bellIdx, stepIdx, alpha, beta, m1, m2);
+    const _bd = { bq1: getBlochVec(_qs, 0), bq2: getBlochVec(_qs, 1), bq3: getBlochVec(_qs, 2) };
+    window._lastBlochDetail = _bd;
+    window.dispatchEvent(new CustomEvent('teleport-bloch', { detail: _bd }));
+  }
+
+  function _updateStateDisplay() {
+    const bell = Protocol.getBell(bellIdx);
+    let   latex = '', noteStr = '';
+
+    if (stepIdx <= 3) {
+      // Pre-measurement: use symbolic α, β
+      latex = Protocol.getPreState(bellIdx, stepIdx);
+
+      // For step 0, if preset selected, substitute actual values
+      if (stepIdx === 0) {
+        const p = PRESETS[presetIdx];
+        if (p) {
+          // Show with actual preset values substituted
+          const q23 = bell.q23init;
+          latex = `(${_psi_latex()}) \\otimes ${q23}`;
+        }
+      }
+    } else if (stepIdx === 4 && m1 === null) {
+      // Blocked at measurement
+      latex = Protocol.getPreState(bellIdx, 3);
+      noteStr = '';
+    } else if (stepIdx >= 4 && m1 !== null) {
+      // Post-measurement
+      const phase = stepIdx === 4 ? 0 : stepIdx === 5 ? 1 : 2;
+      latex = Protocol.getPostState(bellIdx, m1, m2, phase);
+
+      if (stepIdx === 4) {
+        noteStr = `Bob's q₃ — state before correction`;
+      } else if (stepIdx === 5) {
+        const j = bell.j, fires = (m2 ^ j) === 1;
+        noteStr = `Bob's q₃ — ${fires ? 'after X correction' : 'X does not fire (no change)'}`;
+      } else if (stepIdx === 6) {
+        const finalStr = Protocol.getPostState(bellIdx, m1, m2, 2);
+        const isNeg = finalStr.startsWith('-');
+        const psiVal = _psi_latex_expanded();
+        noteStr = `<span class="hl">✓ Teleportation complete — $|\\psi\\rangle_3 = ${isNeg ? '-(' : ''}${psiVal}${isNeg ? ')' : ''}$${isNeg ? ' (global phase −1, physically identical)' : ''}</span>`;
+      }
+    }
+
+    StatePanel.render(latex, noteStr);
+  }
+
+  function _psi_latex() {
+    const p = PRESETS[presetIdx];
+    if (p) {
+      if (presetIdx === 0) return '|0\\rangle';
+      if (presetIdx === 1) return '|1\\rangle';
+      if (presetIdx === 2) return '|{+}\\rangle';
+      if (presetIdx === 3) return '|{-}\\rangle';
+    }
+    return `${alphaLabel}|0\\rangle + ${betaLabel}|1\\rangle`;
+  }
+
+  // Returns |ψ⟩ with actual amplitude values substituted (for final display)
+  function _psi_latex_expanded() {
+    if (presetIdx === 0) return '|0\\rangle';
+    if (presetIdx === 1) return '|1\\rangle';
+    if (presetIdx === 2) return '\\tfrac{1}{\\sqrt{2}}|0\\rangle + \\tfrac{1}{\\sqrt{2}}|1\\rangle';
+    if (presetIdx === 3) return '\\tfrac{1}{\\sqrt{2}}|0\\rangle - \\tfrac{1}{\\sqrt{2}}|1\\rangle';
+    // Custom / keyboard: use stored LaTeX labels with proper sign spacing
+    const betaStr = betaLabel.startsWith('-')
+      ? `- ${betaLabel.slice(1)}`   // "- \tfrac{1}{2}" (space after minus for MathJax)
+      : `+ ${betaLabel}`;
+    return `${alphaLabel}|0\\rangle ${betaStr}|1\\rangle`;
+  }
+
+  // ── Init ──
+  function init() {
+    _applyPreset();
+    _render();
+  }
+
+  return { init, step };
+})();
+
+// ──────────────────────────────────────────────────────────────────
+// INIT
+// ──────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  UIController.init();
+});
+</script>
+<script>
+document.getElementById('theme-toggle').addEventListener('click', function() {
+  document.body.classList.toggle('light');
+  this.textContent = document.body.classList.contains('light') ? '☽ Dark' : '☀ Light';
+});
+</script>
+
+<!-- ── Mini Bloch sphere renderer (Three.js module) ── -->
+<script type="module">
+import * as THREE from 'three';
+
+// Trans flag colors — blue ↔ pink cycle for entangled state indicator
+const ENTANGLE_COLOR = 0x55CDFC; // initial (trans blue)
+const _transBlue     = new THREE.Color(0x00D7FF);  // neon blue  (dark mode)
+const _transPink     = new THREE.Color(0xFF4DCA);  // hot pink   (dark mode)
+const _transBlueLight = new THREE.Color(0x0077AA); // deep blue  (light mode)
+const _transPinkLight = new THREE.Color(0xBB0066); // deep pink  (light mode)
+
+function makeMiniBloch(canvas, colorHex) {
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x000000, 0);
+
+  const scene  = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+  camera.position.set(2.4, 1.5, 2.4);
+  camera.lookAt(0, 0, 0);
+
+  // Translucent sphere (depthWrite:false so the center dot isn't occluded)
+  scene.add(new THREE.Mesh(
+    new THREE.SphereGeometry(1, 32, 20),
+    new THREE.MeshBasicMaterial({ color: 0x001830, transparent: true, opacity: 0.20, depthWrite: false })
+  ));
+
+  // Equator
+  const eqPts = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+  });
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(eqPts),
+    new THREE.LineBasicMaterial({ color: 0x004466, transparent: true, opacity: 0.55 })
+  ));
+
+  // One meridian
+  const mePts = Array.from({ length: 65 }, (_, i) => {
+    const a = (i / 64) * 2 * Math.PI;
+    return new THREE.Vector3(Math.sin(a), Math.cos(a), 0);
+  });
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(mePts),
+    new THREE.LineBasicMaterial({ color: 0x003355, transparent: true, opacity: 0.35 })
+  ));
+
+  // Z-axis
+  scene.add(new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, -1.3, 0), new THREE.Vector3(0, 1.3, 0)]),
+    new THREE.LineBasicMaterial({ color: 0x223344, transparent: true, opacity: 0.55 })
+  ));
+
+  // Pole dots |0⟩ (north) / |1⟩ (south)
+  const poleMat = new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.6 });
+  const nd = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), poleMat);
+  nd.position.y = 1; scene.add(nd);
+  const sd = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 6), poleMat.clone());
+  sd.position.y = -1; scene.add(sd);
+
+  // State-vector arrow (ArrowHelper + custom visible shaft)
+  const arrowHelper = new THREE.ArrowHelper(
+    new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0),
+    1.0, colorHex, 0.22, 0.10
+  );
+  arrowHelper.line.visible = false;
+
+  const shaftGeom = new THREE.CylinderGeometry(0.022, 0.022, 0.75, 8, 1);
+  shaftGeom.translate(0, 0.375, 0);
+  const arrowShaft = new THREE.Mesh(shaftGeom, new THREE.MeshBasicMaterial({ color: colorHex }));
+  arrowHelper.add(arrowShaft);
+  scene.add(arrowHelper);
+
+  // Entanglement indicator — neon pulsating dot (same color for all qubits)
+  const _dotCoreMat = new THREE.MeshBasicMaterial({
+    color: ENTANGLE_COLOR, depthTest: false,
+    blending: THREE.AdditiveBlending, transparent: true, opacity: 1.0
+  });
+  const _dotGlowMat = new THREE.MeshBasicMaterial({
+    color: ENTANGLE_COLOR, depthTest: false,
+    blending: THREE.AdditiveBlending, transparent: true, opacity: 0.25
+  });
+  const centerDot = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), _dotCoreMat);
+  const centerGlow = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), _dotGlowMat);
+  centerDot.renderOrder  = 11;
+  centerGlow.renderOrder = 10;
+  centerDot.visible  = false;
+  centerGlow.visible = false;
+  scene.add(centerGlow);
+  scene.add(centerDot);
+
+  // Animation loop — only active while entangled
+  // Color cycles trans blue ↔ trans pink at half the pulse speed
+  const _transCol = new THREE.Color();
+  let _animId = null;
+  function _startPulse() {
+    if (_animId !== null) return;
+    function tick() {
+      const ms   = Date.now();
+      const tPulse = ms * 0.0025;          // pulse scale speed (original)
+      const tColor = ms * 0.0003125;        // color cycle: 1/8 original (4× slower than before)
+      // blue→pink→blue via (sin+1)/2
+      const _light = document.body.classList.contains('light');
+      _transCol.lerpColors(
+        _light ? _transBlueLight : _transBlue,
+        _light ? _transPinkLight : _transPink,
+        (Math.sin(tColor) + 1) * 0.5
+      );
+      _dotCoreMat.color.copy(_transCol);
+      _dotGlowMat.color.copy(_transCol);
+      const p = 0.80 + 0.20 * Math.sin(tPulse * 2.5);
+      centerDot.scale.setScalar(p);
+      _dotGlowMat.opacity = 0.15 + 0.20 * Math.abs(Math.sin(tPulse * 1.3));
+      renderer.render(scene, camera);
+      _animId = requestAnimationFrame(tick);
+    }
+    tick();
+  }
+  function _stopPulse() {
+    if (_animId !== null) { cancelAnimationFrame(_animId); _animId = null; }
+  }
+
+  // Resize observer
+  const ro = new ResizeObserver(() => {
+    const w = canvas.clientWidth || 80, h = canvas.clientHeight || 80;
+    if (!w || !h) return;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.render(scene, camera);
+  });
+  ro.observe(canvas.parentElement || canvas);
+  const iw = canvas.clientWidth || 80;
+  renderer.setSize(iw, iw, false);
+
+  // Same bloch→Three.js coordinate mapping as BlochRenderer.js
+  function blochToThree(theta, phi) {
+    const p = Math.PI / 3 - phi;
+    return new THREE.Vector3(
+      Math.sin(theta) * Math.cos(p),
+      Math.cos(theta),
+      Math.sin(theta) * Math.sin(p)
+    );
+  }
+
+  function update(bvec) {
+    const len = Math.sqrt(bvec.x ** 2 + bvec.y ** 2 + bvec.z ** 2);
+    if (len < 0.08) {
+      arrowHelper.visible = false;
+      centerDot.visible  = true;
+      centerGlow.visible = true;
+      _startPulse();
+      return; // pulse loop handles render
+    } else {
+      _stopPulse();
+      centerDot.visible  = false;
+      centerGlow.visible = false;
+      arrowHelper.visible = true;
+      const theta = Math.acos(Math.max(-1, Math.min(1, bvec.z / len)));
+      const phi   = Math.atan2(bvec.y, bvec.x);
+      arrowHelper.setDirection(blochToThree(theta, phi).normalize());
+      arrowHelper.setLength(len, 0.22, 0.10);
+      arrowShaft.scale.y = Math.max(0, len - 0.22) / 0.75;
+    }
+    renderer.render(scene, camera);
+  }
+
+  renderer.render(scene, camera);
+  return { update };
+}
+
+// ── Init ────────────────────────────────────────────────────────────
+function initBloch() {
+  const c1 = document.getElementById('bq1');
+  const c2 = document.getElementById('bq2');
+  const c3 = document.getElementById('bq3');
+  if (!c1 || !c2 || !c3) return;
+
+  const q1 = makeMiniBloch(c1, 0xff7eb3); // alice
+  const q2 = makeMiniBloch(c2, 0xb57bee); // violet
+  const q3 = makeMiniBloch(c3, 0x5bc8fa); // bob
+
+  function onDetail(d) {
+    if (!d) return;
+    q1.update(d.bq1 || { x: 0, y: 0, z: 1 });
+    q2.update(d.bq2 || { x: 0, y: 0, z: 1 });
+    q3.update(d.bq3 || { x: 0, y: 0, z: 1 });
+  }
+
+  window.addEventListener('teleport-bloch', e => onDetail(e.detail));
+  // Pick up initial state dispatched before this module loaded
+  if (window._lastBlochDetail) onDetail(window._lastBlochDetail);
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initBloch);
+else initBloch();
+</script>
+</body>
+</html>

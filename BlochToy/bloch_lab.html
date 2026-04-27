@@ -1,0 +1,2228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BlochLab · ETFPR Series · 1965</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Special+Elite&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+  <style>
+/* ── Theme variables — Feynman Red Books, afternoon paper ── */
+:root {
+  --bg:               #e8dcc0;   /* aged cream */
+  --panel-bg:         #ddcfb0;   /* shelf paper */
+  --panel-border:     #b89860;
+  --card-bg:          #f4ecd8;   /* bright leaflet */
+  --card-border:      #c8a878;
+  --text:             #2b241a;   /* dark sepia ink */
+  --heading:          #9a1818;   /* Red Books red */
+  --btn-gate-bg:      #ede0c0;
+  --btn-gate-border:  #8b6a30;
+  --btn-gate-color:   #2b241a;
+  --btn-gate-hbg:     #d8c890;
+  --btn-gate-hborder: #9a1818;
+  --input-bg:         #faf2de;
+  --input-border:     #a88a50;
+  --label-dim:        #6a5030;
+  --label-dimmer:     #94774a;
+  --mode-label:       #5a4020;
+  --rot-label:        #5a4020;
+  --overlay-bg:       rgba(244,236,216,0.93);
+  --katex-color:      #2b241a;
+  --formalis-label:   #9a1818;
+  --chip-bg:          #ede0c0;
+  --chip-border:      #8b6a30;
+  --chip-color:       #6a2820;
+  --empty-color:      #94774a;
+  --prob-bar-bg:      #d8c8a0;
+  --prob-label:       #5a4020;
+  --outcome-color:    #3a5a20;   /* olive stamp */
+  --hint-bg:          #f4ecd8;
+  --hint-border:      #9a6030;
+  --hint-title:       #9a1818;
+  --hint-desc:        #5a4020;
+  --phase-border:     #8b3020;
+  --toggle-bg:        #ede0c0;
+  --toggle-border:    #8b6a30;
+  --toggle-color:     #2b241a;
+  --label-shadow:     1px 1px 0 rgba(244,236,216,0.8);
+}
+
+/* Alt theme — night reading by desk lamp */
+body.light {
+  --bg:               #1a1410;
+  --panel-bg:         #261e16;
+  --panel-border:     #5a4030;
+  --card-bg:          #2e2418;
+  --card-border:      #6a5030;
+  --text:             #e8dcc0;
+  --heading:          #e06860;
+  --btn-gate-bg:      #2e2418;
+  --btn-gate-border:  #5a4030;
+  --btn-gate-color:   #e8dcc0;
+  --btn-gate-hbg:     #3a2e1c;
+  --btn-gate-hborder: #e06860;
+  --input-bg:         #1a1410;
+  --input-border:     #5a4030;
+  --label-dim:        #b8a060;
+  --label-dimmer:     #7a6030;
+  --mode-label:       #b8a060;
+  --rot-label:        #b8a060;
+  --overlay-bg:       rgba(46,36,24,0.93);
+  --katex-color:      #e8dcc0;
+  --formalis-label:   #e06860;
+  --chip-bg:          #2e2418;
+  --chip-border:      #6a5030;
+  --chip-color:       #d8b88a;
+  --empty-color:      #7a6030;
+  --prob-bar-bg:      #1e1810;
+  --prob-label:       #b8a060;
+  --outcome-color:    #88b860;
+  --hint-bg:          #2e2418;
+  --hint-border:      #6a5030;
+  --hint-title:       #e06860;
+  --hint-desc:        #b8a060;
+  --phase-border:     #c07050;
+  --toggle-bg:        #2e2418;
+  --toggle-border:    #5a4030;
+  --toggle-color:     #e8dcc0;
+  --label-shadow:     1px 1px 0 rgba(0,0,0,0.9);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Crimson Text', 'Libre Caslon Text', Georgia, serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Brand card — title page ── */
+.brand-card { text-align: center; }
+.site-tag {
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--heading);
+  margin-bottom: 8px;
+  display: block;
+}
+.site-title {
+  font-family: 'Libre Caslon Text', 'Playfair Display', serif;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--heading);
+  margin-bottom: 4px;
+  letter-spacing: 0.01em;
+}
+.site-title em { font-style: normal; font-weight: 700; color: var(--heading); }
+.site-sub {
+  font-size: .85rem;
+  color: var(--label-dim);
+  line-height: 1.4;
+  font-style: italic;
+  margin-top: 4px;
+}
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+#panel-left {
+  width: 360px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow-y: auto;
+  background: var(--panel-bg);
+  border-right: 1px solid var(--panel-border);
+}
+
+#panel-right {
+  flex: 1;
+  position: relative;
+}
+
+#bloch-canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 2px;
+  padding: 12px 14px;
+  border: 1px solid var(--card-border);
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.08);
+}
+
+.card h3 {
+  font-family: 'Libre Caslon Text', 'Playfair Display', serif;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--heading);
+  margin-bottom: 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--heading);
+}
+
+button.primary {
+  background: transparent;
+  border: 1px solid var(--heading);
+  border-radius: 2px;
+  color: var(--heading);
+  padding: 5px 12px;
+  font-size: 12px;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+button.primary:hover { background: var(--heading); color: var(--card-bg); }
+
+button.gate {
+  background: var(--btn-gate-bg);
+  border: 1px solid var(--btn-gate-border);
+  border-radius: 2px;
+  color: var(--btn-gate-color);
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  transition: all 0.1s;
+}
+button.gate:hover { background: var(--btn-gate-hbg); border-color: var(--btn-gate-hborder); color: var(--heading); }
+
+#right-overlay-stack {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+#right-overlay-stack .card { pointer-events: auto; }
+
+#left-overlay-stack {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 10;
+  width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+#left-overlay-stack .card,
+#left-overlay-stack button { pointer-events: auto; }
+#left-overlay-stack .brand-card {
+  background: var(--overlay-bg);
+}
+
+#formalis-panel-container .card {
+  background: var(--overlay-bg);
+  padding: 10px 12px;
+}
+
+.state-card-compact { padding: 8px 10px; }
+
+.state-inputs-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.state-inputs-row .state-inputs-compact { flex: 1; margin-bottom: 0; }
+.state-set-btn { flex-shrink: 0; align-self: stretch; padding: 0 10px !important; font-size: 11px !important; }
+
+.state-mode-selector { display: flex; gap: 10px; }
+.state-mode-selector label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  cursor: pointer;
+  color: var(--mode-label);
+}
+
+.state-inputs-compact {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-bottom: 5px;
+}
+.state-inputs-compact label { display: flex; align-items: center; gap: 4px; font-size: 10px; color: var(--label-dim); }
+.state-inputs-compact input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 3px 5px;
+  font-size: 11px;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+}
+
+.state-inputs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.state-inputs label { display: flex; flex-direction: column; gap: 2px; font-size: 10px; color: var(--label-dim); }
+.state-inputs input {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 3px 6px;
+  font-size: 12px;
+  /* The parent <label> has font-size: 10px, so its computed line-height
+     (~12px) gets inherited as an absolute value — too tight for Special Elite.
+     1.4 unitless gives ~17px, just enough to clear the ascenders without
+     making the box visibly taller than the rotation-row inputs. */
+  line-height: 1.4;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+}
+
+.preset-row { display: flex; flex-wrap: wrap; gap: 4px; margin: 6px 0; }
+
+.gate-group { margin-bottom: 8px; }
+.gate-group-label {
+  font-size: 10px;
+  color: var(--label-dimmer);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 4px;
+}
+.gate-buttons { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.rotation-inputs { display: flex; flex-direction: column; gap: 4px; margin-top: 4px; }
+.rotation-row { display: flex; align-items: center; gap: 6px; }
+.rotation-row label { width: 26px; font-size: 12px; color: var(--rot-label); font-family: 'Special Elite', 'Courier Prime', monospace; }
+.rotation-row input {
+  flex: 1;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+  color: var(--text);
+  padding: 3px 6px;
+  font-size: 12px;
+  line-height: 1.4;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+}
+.rotation-row input.error { border-color: #cc4444; background: #1a0e0e; }
+body.light .rotation-row input.error { background: #fff0f0; }
+
+.error-msg { font-size: 10px; color: #cc6666; min-height: 13px; margin-top: 2px; }
+
+.formalis-row { display: flex; flex-direction: column; gap: 6px; }
+.formalis-label { font-size: 10px; color: var(--formalis-label); text-transform: uppercase; letter-spacing: 0.05em; }
+.katex-wrap {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--katex-color);
+  overflow: hidden;
+  transition: opacity 0.2s;
+}
+.katex-wrap .katex { white-space: normal; }
+.katex-wrap .katex-display { margin: 0; overflow: hidden; }
+/* Force KaTeX glyphs into the v2 typewriter face so the rendered formulas
+   feel typed, not Computer-Modern academic. KaTeX uses several internal font
+   classes (.mathnormal, .mainit, .amsrm, etc.); * catches them all. */
+.katex-wrap .katex,
+.katex-wrap .katex * {
+  font-family: 'Special Elite', 'Courier Prime', monospace !important;
+}
+
+.history-list { display: flex; flex-wrap: wrap; gap: 4px; min-height: 18px; }
+.history-chip {
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  font-size: 11px;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  color: var(--chip-color);
+}
+.history-empty { font-size: 11px; color: var(--empty-color); font-style: italic; }
+
+.measure-section { display: flex; flex-direction: column; gap: 6px; }
+.prob-bar-container { display: flex; flex-direction: column; gap: 4px; }
+.prob-row { display: flex; align-items: center; gap: 6px; font-size: 11px; }
+.prob-label { width: 22px; font-family: 'Special Elite', 'Courier Prime', monospace; color: var(--prob-label); }
+.prob-bar-bg { flex: 1; height: 5px; background: var(--prob-bar-bg); border-radius: 3px; overflow: hidden; }
+.prob-bar { height: 100%; border-radius: 3px; transition: width 0.25s; }
+.prob-bar-0 { background: #9a1818; }  /* Red Books red */
+.prob-bar-1 { background: #5a4020; }  /* sepia */
+.prob-value { width: 46px; text-align: right; color: var(--prob-label); font-size: 11px; font-family: 'Special Elite', 'Courier Prime', monospace; }
+.outcome-display { font-size: 12px; color: var(--outcome-color); font-family: 'Special Elite', 'Courier Prime', monospace; }
+
+.share-row { display: flex; gap: 8px; align-items: center; }
+.share-warn { font-size: 10px; color: #cc8833; min-height: 13px; margin-top: 3px; }
+.share-status { font-size: 11px; color: #88bb88; }
+
+.row-gap { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+
+/* ── Canvas controls (theme + angle unit + γ toggle), nested in left-overlay-stack ── */
+#canvas-controls {
+  display: flex;
+  gap: 6px;
+}
+#theme-toggle, #angle-unit-toggle, #global-phase-toggle, #autorotate-toggle {
+  background: var(--toggle-bg);
+  border: 1px solid var(--toggle-border);
+  border-radius: 20px;
+  color: var(--toggle-color);
+  padding: 4px 12px;
+  font-size: 12px;
+  cursor: pointer;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  transition: all 0.2s;
+}
+#theme-toggle:hover, #angle-unit-toggle:hover, #global-phase-toggle:hover, #autorotate-toggle:hover { background: var(--heading); color: var(--card-bg); border-color: var(--heading); }
+
+#gate-hint {
+  position: fixed;
+  z-index: 200;
+  display: none;
+  background: var(--hint-bg);
+  border: 1px solid var(--hint-border);
+  border-radius: 2px;
+  padding: 7px 11px;
+  pointer-events: none;
+  box-shadow: 2px 3px 0 rgba(0,0,0,0.12);
+  max-width: 200px;
+}
+#gate-hint .hint-title {
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--hint-title);
+  margin-bottom: 3px;
+}
+#gate-hint .hint-desc {
+  font-size: 11px;
+  color: var(--hint-desc);
+  line-height: 1.55;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+}
+
+#phase-canvas {
+  border: 1px solid var(--phase-border);
+  box-shadow: 1px 2px 0 rgba(0,0,0,0.12);
+}
+
+#phase-clock-label {
+  color: var(--rot-label);
+}
+
+/* ── Phase sine panel (overlay on main canvas, below state card) ── */
+#phase-sine-container .card {
+  background: var(--overlay-bg);
+  padding: 10px 12px;
+}
+.phase-sine-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#phase-sine-canvas {
+  width: 100%;
+  height: 120px;
+  display: block;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 4px;
+}
+.phase-sine-legend {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  font-size: 10px;
+}
+.phase-sine-legend .legend-ref { color: var(--heading); }
+.phase-sine-legend .legend-tx  { color: var(--btn-gate-color); }
+.phase-sine-badge {
+  margin-left: auto;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--chip-bg);
+  border: 1px solid var(--chip-border);
+  color: var(--chip-color);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.bloch-label {
+  font-size: 13px;
+  font-family: 'Special Elite', 'Courier Prime', monospace;
+  font-weight: 500;
+  padding: 1px 3px;
+  pointer-events: none;
+  user-select: none;
+  text-shadow: var(--label-shadow);
+}
+  </style>
+</head>
+<body>
+  <div id="app">
+    <div id="panel-left">
+      <div id="state-input-container"></div>
+      <div id="gate-panel-container"></div>
+      <div id="measurement-container"></div>
+      <div id="gate-history-container"></div>
+    </div>
+    <div id="panel-right">
+      <canvas id="bloch-canvas"></canvas>
+      <div id="left-overlay-stack">
+        <div class="card brand-card">
+          <div class="site-tag">ETFPR · Quantum Mechanics · 1965</div>
+          <div class="site-title">The <em>Bloch</em> Lab</div>
+          <p class="site-sub">“Apply a gate and see what happens.”<br>A pedagogical instrument for the single qubit.</p>
+        </div>
+        <div id="canvas-controls">
+          <button id="theme-toggle">☀ Light</button>
+          <button id="angle-unit-toggle">°</button>
+          <button id="global-phase-toggle">γ off</button>
+          <button id="autorotate-toggle"
+            title="Continuously rotate the view around the Bloch z-axis (≈ 1 full orbit per minute).">↻ off</button>
+        </div>
+      </div>
+      <div id="right-overlay-stack">
+        <div id="formalis-panel-container"></div>
+        <div id="phase-sine-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjs@12.4.0/lib/browser/math.js"></script>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+import * as THREE from 'three';
+import { OrbitControls }              from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// complex.js
+// ─────────────────────────────────────────────────────────────────────────────
+const C = {
+  of:    (re, im = 0) => ({ re, im }),
+  add:   (a, b) => ({ re: a.re + b.re, im: a.im + b.im }),
+  sub:   (a, b) => ({ re: a.re - b.re, im: a.im - b.im }),
+  mul:   (a, b) => ({ re: a.re * b.re - a.im * b.im, im: a.re * b.im + a.im * b.re }),
+  scale: (a, s) => ({ re: a.re * s, im: a.im * s }),
+  abs:   (a)    => Math.sqrt(a.re ** 2 + a.im ** 2),
+  arg:   (a)    => Math.atan2(a.im, a.re),
+  conj:  (a)    => ({ re: a.re, im: -a.im }),
+  exp:   (theta) => ({ re: Math.cos(theta), im: Math.sin(theta) }),
+
+  ZERO:    Object.freeze({ re:  0, im:  0 }),
+  ONE:     Object.freeze({ re:  1, im:  0 }),
+  NEG_ONE: Object.freeze({ re: -1, im:  0 }),
+  I:       Object.freeze({ re:  0, im:  1 }),
+  NEG_I:   Object.freeze({ re:  0, im: -1 }),
+};
+
+function matMul(A, B) {
+  const m = (r, c) => C.add(C.mul(A[r][0], B[0][c]), C.mul(A[r][1], B[1][c]));
+  return [[m(0,0), m(0,1)], [m(1,0), m(1,1)]];
+}
+
+function matVec(U, v) {
+  return [
+    C.add(C.mul(U[0][0], v[0]), C.mul(U[0][1], v[1])),
+    C.add(C.mul(U[1][0], v[0]), C.mul(U[1][1], v[1])),
+  ];
+}
+
+function det2(U) {
+  return C.sub(C.mul(U[0][0], U[1][1]), C.mul(U[0][1], U[1][0]));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PiFractionParser.js
+// ─────────────────────────────────────────────────────────────────────────────
+function parsePiFraction(expr) {
+  if (typeof expr !== 'string') return NaN;
+  const s = expr.replace(/π/g, 'pi').trim();
+  if (s === '') return NaN;
+  if (s.length > 30) return NaN;
+  if (/[a-df-hj-oq-zA-DF-HJ-OQ-Z]/.test(s)) return NaN;
+  try {
+    /* global math */
+    const result = math.evaluate(s);
+    if (typeof result !== 'number') return NaN;
+    if (!isFinite(result)) return NaN;
+    return result;
+  } catch {
+    return NaN;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// AnimationEngine.js
+// ─────────────────────────────────────────────────────────────────────────────
+const AnimationEngine = (() => {
+  let _raf = (cb) => requestAnimationFrame(cb);
+  let _caf = (id) => cancelAnimationFrame(id);
+  let _rafId = null;
+
+  function init({ raf, caf } = {}) {
+    if (raf) _raf = raf;
+    if (caf) _caf = caf;
+  }
+
+  function _blochToVec(theta, phi) {
+    return new THREE.Vector3(
+      Math.sin(theta) * Math.cos(phi),
+      Math.sin(theta) * Math.sin(phi),
+      Math.cos(theta)
+    );
+  }
+
+  function _vecToBloch(v) {
+    const theta = Math.acos(Math.max(-1, Math.min(1, v.z)));
+    const phi   = ((Math.atan2(v.y, v.x) % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
+    return { theta, phi };
+  }
+
+  function _quatToDir(dir) {
+    const d = dir.clone();
+    if (d.length() < 1e-9) d.set(0, 0, 1);
+    else d.normalize();
+    return new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), d);
+  }
+
+  function animateTo(from, to, onFrame, onComplete, durationMs = 600,
+                     gateAxis = null, gateAngle = null) {
+    if (_rafId !== null) { _caf(_rafId); _rafId = null; }
+    const start = performance.now();
+
+    if (gateAxis !== null && gateAngle !== null) {
+      const fromVec = _blochToVec(from.theta, from.phi);
+      const axis    = new THREE.Vector3(...gateAxis).normalize();
+      const qGate   = new THREE.Quaternion();
+      function frameGate(now) {
+        const t = Math.min(1, (now - start) / durationMs);
+        qGate.setFromAxisAngle(axis, t * gateAngle);
+        const dir = fromVec.clone().applyQuaternion(qGate);
+        const { theta, phi } = _vecToBloch(dir);
+        onFrame(theta, phi, t);
+        if (t < 1) { _rafId = _raf(frameGate); }
+        else        { _rafId = null; onComplete(); }
+      }
+      _rafId = _raf(frameGate);
+    } else {
+      const qFrom = _quatToDir(_blochToVec(from.theta, from.phi));
+      const qTo   = _quatToDir(_blochToVec(to.theta,   to.phi));
+      const q     = new THREE.Quaternion();
+      const zAxis = new THREE.Vector3(0, 0, 1);
+      function frameSlerp(now) {
+        const t = Math.min(1, (now - start) / durationMs);
+        q.slerpQuaternions(qFrom, qTo, t);
+        const dir = zAxis.clone().applyQuaternion(q);
+        const { theta, phi } = _vecToBloch(dir);
+        onFrame(theta, phi, t);
+        if (t < 1) { _rafId = _raf(frameSlerp); }
+        else        { _rafId = null; onComplete(); }
+      }
+      _rafId = _raf(frameSlerp);
+    }
+  }
+
+  function stop() {
+    if (_rafId !== null) { _caf(_rafId); _rafId = null; }
+  }
+
+  return { init, animateTo, stop };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GateLibrary.js
+// ─────────────────────────────────────────────────────────────────────────────
+const _S2 = 1 / Math.sqrt(2);
+// BlochLab convention: SU(2) (det = +1) lifts of the textbook Pauli/Clifford
+// matrices. These differ from the canonical [[0,1],[1,0]]-style by a global
+// phase factor that, in real transmon hardware, corresponds to actual work
+// done by the synchronization circuit. Tracking γ accordingly makes XXXX|+⟩
+// return to its initial sync state (4·−π/2 ≡ 0) instead of vanishing as
+// "trivial unobservable phase". v1 (bloch_toy.html) keeps the textbook forms.
+const _NAMED_GATES = {
+  X:   [[C.ZERO,                  C.NEG_I                ], [C.NEG_I,                 C.ZERO                 ]],   // Rx(π) = −i·σx
+  Y:   [[C.ZERO,                  C.NEG_ONE              ], [C.ONE,                   C.ZERO                 ]],   // Ry(π) = −i·σy
+  Z:   [[C.NEG_I,                 C.ZERO                 ], [C.ZERO,                  C.I                    ]],   // Rz(π) = −i·σz
+  H:   [[C.of(0,-_S2),            C.of(0,-_S2)           ], [C.of(0,-_S2),            C.of(0, _S2)           ]],   // −i·H, det = +1
+  S:   [[C.exp(-Math.PI/4),       C.ZERO                 ], [C.ZERO,                  C.exp( Math.PI/4)      ]],   // Rz(π/2)
+  Sdg: [[C.exp( Math.PI/4),       C.ZERO                 ], [C.ZERO,                  C.exp(-Math.PI/4)      ]],   // Rz(−π/2)
+  T:   [[C.exp(-Math.PI/8),       C.ZERO                 ], [C.ZERO,                  C.exp( Math.PI/8)      ]],   // Rz(π/4)
+  Tdg: [[C.exp( Math.PI/8),       C.ZERO                 ], [C.ZERO,                  C.exp(-Math.PI/8)      ]],   // Rz(−π/4)
+};
+
+function getMatrix(name, theta = 0) {
+  if (name in _NAMED_GATES) {
+    return _NAMED_GATES[name].map(row => row.map(c => ({ ...c })));
+  }
+  const c = Math.cos(theta / 2);
+  const s = Math.sin(theta / 2);
+  switch (name) {
+    case 'Rx': return [[C.of(c), C.of(0,-s)], [C.of(0,-s), C.of(c)]];
+    case 'Ry': return [[C.of(c), C.of(-s)],   [C.of(s),    C.of(c)]];
+    case 'Rz': return [[C.exp(-theta/2), C.ZERO], [C.ZERO, C.exp(theta/2)]];
+    default: throw new Error(`GateLibrary: unknown gate "${name}"`);
+  }
+}
+
+function getRotationAxisAngle(U) {
+  const d = det2(U);
+  const alpha    = C.arg(d) / 2;
+  const phaseInv = C.exp(-alpha);
+  const a = C.mul(U[0][0], phaseInv);
+  const b = C.mul(U[0][1], phaseInv);
+  const cosHalf = Math.max(-1, Math.min(1, a.re));
+  const angle   = 2 * Math.acos(cosHalf);
+  const sinHalf = Math.sin(angle / 2);
+  if (Math.abs(sinHalf) < 1e-9) return { axis: [0, 0, 1], angle: 0 };
+  const nx = -b.im / sinHalf;
+  const ny = -b.re / sinHalf;
+  const nz = -a.im / sinHalf;
+  const norm = Math.sqrt(nx*nx + ny*ny + nz*nz) || 1;
+  return { axis: [nx/norm, ny/norm, nz/norm], angle };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// QubitState.js
+// ─────────────────────────────────────────────────────────────────────────────
+function createQubitState() {
+  let alpha = { ...C.ONE };
+  let beta  = { ...C.ZERO };
+  const subscribers = new Set();
+
+  function _notify(opts) { const s = getState(); for (const fn of subscribers) fn(s, opts); }
+
+  function getState() {
+    const theta = 2 * Math.acos(Math.min(1, C.abs(alpha)));
+    const phi   = ((C.arg(beta) - C.arg(alpha)) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+    return { alpha: { ...alpha }, beta: { ...beta }, theta, phi };
+  }
+
+  function setState(theta, phi, opts) {
+    alpha = C.of(Math.cos(theta / 2));
+    beta  = C.of(Math.sin(theta / 2) * Math.cos(phi), Math.sin(theta / 2) * Math.sin(phi));
+    _notify(opts);
+  }
+
+  function setAmplitudes(a, b) {
+    const norm = Math.sqrt(C.abs(a) ** 2 + C.abs(b) ** 2);
+    if (norm < 1e-15) { alpha = { ...C.ONE }; beta = { ...C.ZERO }; }
+    else { alpha = C.scale(a, 1/norm); beta = C.scale(b, 1/norm); }
+    _notify();
+  }
+
+  function applyGate(U) {
+    const oldState = getState();
+    const [na, nb] = matVec(U, [alpha, beta]);
+    const norm = Math.sqrt(C.abs(na) ** 2 + C.abs(nb) ** 2) || 1;
+    alpha = C.scale(na, 1/norm);
+    beta  = C.scale(nb, 1/norm);
+    const newState = getState();
+    _notify({ animate: true });
+    return { oldState, newState };
+  }
+
+  function measure() {
+    const p0      = C.abs(alpha) ** 2;
+    const outcome = Math.random() < p0 ? 0 : 1;
+    if (outcome === 0) { alpha = { ...C.ONE };  beta = { ...C.ZERO }; }
+    else               { alpha = { ...C.ZERO }; beta = { ...C.ONE };  }
+    _notify();
+    return { outcome, probability: outcome === 0 ? p0 : 1 - p0 };
+  }
+
+  function subscribe(fn) {
+    subscribers.add(fn);
+    return () => subscribers.delete(fn);
+  }
+
+  return { getState, setState, setAmplitudes, applyGate, measure, subscribe };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GateHistory.js
+// ─────────────────────────────────────────────────────────────────────────────
+function createGateHistory() {
+  let initialState = { theta: 0, phi: 0 };
+  let history = [];
+  const subscribers = new Set();
+
+  function setInitialState(theta, phi) {
+    initialState = { theta, phi };
+    history = [];
+    _notify();
+  }
+
+  function getInitialState() { return { ...initialState }; }
+
+  function push(gate) { history.push(gate); _notify(); }
+
+  function undo() {
+    if (history.length === 0) return null;
+    history.pop();
+    const result = _replayFromInitial();
+    _notify();
+    return result;
+  }
+
+  function clear() { history = []; _notify(); }
+
+  function getHistory() { return [...history]; }
+
+  function subscribe(fn) {
+    subscribers.add(fn);
+    return () => subscribers.delete(fn);
+  }
+
+  function _replayFromInitial() {
+    const { theta: t0, phi: p0 } = initialState;
+    let a = C.of(Math.cos(t0 / 2));
+    let b = C.of(Math.sin(t0 / 2) * Math.cos(p0), Math.sin(t0 / 2) * Math.sin(p0));
+    for (const gate of history) {
+      [a, b] = matVec(gate.matrix, [a, b]);
+      const norm = Math.sqrt(C.abs(a) ** 2 + C.abs(b) ** 2) || 1;
+      a = C.scale(a, 1/norm);
+      b = C.scale(b, 1/norm);
+    }
+    const theta = 2 * Math.acos(Math.min(1, C.abs(a)));
+    const phi   = ((Math.atan2(b.im, b.re) - Math.atan2(a.im, a.re)) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
+    return { theta, phi };
+  }
+
+  function _notify() {
+    const h = getHistory();
+    for (const fn of subscribers) fn(h);
+  }
+
+  return { setInitialState, getInitialState, push, undo, clear, getHistory, subscribe };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FormalisPanel.js
+// ─────────────────────────────────────────────────────────────────────────────
+const FormalisPanel = (() => {
+  let _stateEl, _anglesEl, _gateEl, _rotEl, _wrapEl;
+  let _angleDeg  = false;
+  let _lastState = null;
+  let _lastGate  = null;
+
+  function init(container) {
+    container.innerHTML = `
+      <div class="card">
+        <h3 title="Current pure state |ψ⟩ in the computational basis, its Bloch-sphere coordinates, and the last applied gate (matrix + equivalent axis-angle rotation).">Quantum State</h3>
+        <div class="formalis-row" id="formalis-wrap">
+          <div class="formalis-label"
+            title="Dirac notation: |ψ⟩ = α|0⟩ + β|1⟩ with complex amplitudes α, β. Normalization |α|² + |β|² = 1 is enforced.">|ψ⟩</div>
+          <div id="f-state" class="katex-wrap"></div>
+          <div class="formalis-label"
+            title="Polar θ ∈ [0, π] from the |0⟩ pole; azimuth φ ∈ [0, 2π) around the equator. Together they identify the state up to global phase.">Bloch angles</div>
+          <div id="f-angles" class="katex-wrap"></div>
+          <div class="formalis-label"
+            title="2×2 unitary of the most recent gate, displayed after stripping its global phase so det U = 1.">Last gate matrix</div>
+          <div id="f-gate" class="katex-wrap"></div>
+          <div class="formalis-label"
+            title="Every SU(2) gate is a rotation by γ around some unit axis n̂ in Bloch 3-space. This shows the equivalent axis–angle form of the last gate.">Rotation axis / angle</div>
+          <div id="f-rotation" class="katex-wrap"></div>
+        </div>
+      </div>`;
+    _stateEl  = document.getElementById('f-state');
+    _anglesEl = document.getElementById('f-angles');
+    _gateEl   = document.getElementById('f-gate');
+    _rotEl    = document.getElementById('f-rotation');
+    _wrapEl   = document.getElementById('formalis-wrap');
+  }
+
+  function setLoading(loading) {
+    if (_wrapEl) _wrapEl.style.opacity = loading ? '0.4' : '1';
+  }
+
+  function setAngleUnit(deg) {
+    _angleDeg = deg;
+    if (_lastState) update(_lastState, _lastGate);
+  }
+
+  function update(state, lastGate) {
+    _lastState = state;
+    _lastGate  = lastGate;
+    if (!_stateEl) return;
+    const { alpha, beta, theta, phi } = state;
+    const aLatex = _complexLatex(alpha);
+    const bLatex = _complexLatex(beta);
+    _render(_stateEl, `${aLatex}\\,|0\\rangle + ${bLatex}\\,|1\\rangle`);
+
+    if (_angleDeg) {
+      const tDeg = (theta * 180 / Math.PI).toFixed(2);
+      const pDeg = (phi   * 180 / Math.PI).toFixed(2);
+      _render(_anglesEl, `\\theta = ${tDeg}^\\circ,\\quad \\varphi = ${pDeg}^\\circ`);
+    } else {
+      _render(_anglesEl, `\\theta = ${theta.toFixed(3)},\\quad \\varphi = ${phi.toFixed(3)}`);
+    }
+
+    if (lastGate) {
+      const { name, matrix, axis, angle } = lastGate;
+      const [[a,b],[c,d]] = matrix;
+      const mat = `\\begin{pmatrix}${_cStr(a)}&${_cStr(b)}\\\\${_cStr(c)}&${_cStr(d)}\\end{pmatrix}`;
+      _render(_gateEl, `\\mathrm{${_escapeName(name)}}:\\;${mat}`);
+      const [nx, ny, nz] = axis.map(v => v.toFixed(3));
+      const gammaStr = _angleDeg
+        ? `${(angle * 180 / Math.PI).toFixed(1)}^\\circ`
+        : angle.toFixed(3);
+      _render(_rotEl, `\\hat{n}=(${nx},\\,${ny},\\,${nz}),\\;\\gamma=${gammaStr}`);
+    } else {
+      _gateEl.textContent = '—';
+      _rotEl.textContent  = '—';
+    }
+  }
+
+  function _render(el, latex) {
+    try {
+      katex.render(latex, el, { throwOnError: false, displayMode: false });
+    } catch {
+      el.textContent = latex;
+    }
+  }
+
+  function _complexLatex(c) {
+    const re = Math.abs(c.re) < 5e-4 ? 0 : c.re;
+    const im = Math.abs(c.im) < 5e-4 ? 0 : c.im;
+    if (im === 0) return `${re.toFixed(3)}`;
+    if (re === 0) return `${im.toFixed(3)}i`;
+    const sign = im < 0 ? '-' : '+';
+    return `(${re.toFixed(3)}${sign}${Math.abs(im).toFixed(3)}i)`;
+  }
+
+  function _cStr(c) {
+    const re = Math.abs(c.re) < 5e-4 ? 0 : +c.re.toFixed(3);
+    const im = Math.abs(c.im) < 5e-4 ? 0 : +c.im.toFixed(3);
+    if (im === 0) return `${re}`;
+    if (re === 0) return im === 1 ? 'i' : im === -1 ? '-i' : `${im}i`;
+    const sign = im < 0 ? '' : '+';
+    return `${re}${sign}${im}i`;
+  }
+
+  function _escapeName(name) {
+    const map = { Sdg: 'S^\\dagger', Tdg: 'T^\\dagger' };
+    return map[name] ?? name;
+  }
+
+  return { init, setLoading, setAngleUnit, update };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// BlochRenderer.js
+// ─────────────────────────────────────────────────────────────────────────────
+const BlochRenderer = (() => {
+  let _renderer, _css2dRenderer, _scene, _camera, _controls, _arrowHelper, _arrowShaft;
+  let _phaseGroup, _handGroup;
+  let _phaseCanvas, _phaseCtx;
+  let _phaseLabel = null;
+  let _lightMode = false;
+  let _currentPhase = 0;
+  // Readout basis rotation (rad, around world-y / Bloch-z). Virtual-Z gates
+  // animate the basis by their rotation angle; drives leave it untouched.
+  let _basisGroup, _basisRotY = 0;
+
+  function _blochToThree(theta, phi) {
+    const p = Math.PI / 3 - phi;
+    return new THREE.Vector3(
+      Math.sin(theta) * Math.cos(p),
+      Math.cos(theta),
+      Math.sin(theta) * Math.sin(p)
+    );
+  }
+
+  function _globalPhase(state) {
+    if (!state?.alpha) return 0;
+    const aMag2 = state.alpha.re ** 2 + state.alpha.im ** 2;
+    if (aMag2 > 1e-10) return Math.atan2(state.alpha.im, state.alpha.re);
+    return Math.atan2(state.beta?.im ?? 0, state.beta?.re ?? 1);
+  }
+
+  function init(canvas) {
+    if (!canvas) throw new Error('BlochRenderer: canvas element is required');
+
+    _renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    _renderer.setPixelRatio(window.devicePixelRatio);
+    _renderer.setClearColor(0xe8dcc0);  // cream paper
+
+    _css2dRenderer = new CSS2DRenderer();
+    _css2dRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    _css2dRenderer.domElement.style.position      = 'absolute';
+    _css2dRenderer.domElement.style.top           = '0';
+    _css2dRenderer.domElement.style.left          = '0';
+    _css2dRenderer.domElement.style.pointerEvents = 'none';
+    canvas.parentElement.appendChild(_css2dRenderer.domElement);
+
+    _phaseCanvas = document.createElement('canvas');
+    _phaseCanvas.id     = 'phase-canvas';
+    _phaseCanvas.width  = 88;
+    _phaseCanvas.height = 88;
+    _phaseCanvas.style.cssText =
+      'position:absolute;bottom:12px;right:12px;pointer-events:none;border-radius:50%;';
+    canvas.parentElement.appendChild(_phaseCanvas);
+    _phaseCtx = _phaseCanvas.getContext('2d');
+
+    _phaseLabel = document.createElement('div');
+    _phaseLabel.id = 'phase-clock-label';
+    _phaseLabel.style.cssText = "position:absolute;bottom:2px;right:12px;width:88px;text-align:center;font-size:9px;font-family:'Special Elite','Courier Prime',monospace;pointer-events:none;";
+    canvas.parentElement.appendChild(_phaseLabel);
+
+    _scene  = new THREE.Scene();
+    _camera = new THREE.PerspectiveCamera(50, canvas.clientWidth / canvas.clientHeight, 0.1, 100);
+    _camera.position.set(2.75, 1.75, 2.75);
+    _camera.lookAt(0, 0, 0);
+    // Shift the rendered sphere slightly left to make room for right-overlay cards.
+    _applyCameraShift();
+
+    _controls = new OrbitControls(_camera, canvas);
+    _controls.target.set(0, 0, 0);
+    _controls.enablePan      = false;
+    _controls.enableDamping  = true;
+    _controls.dampingFactor  = 0.08;
+    _controls.minDistance    = 1.8;
+    _controls.maxDistance    = 8;
+    _controls.autoRotate     = false;  // toggled via BlochRenderer.setAutoRotate
+    _controls.autoRotateSpeed = 1.0;    // ≈ 1 full orbit per minute at 60fps
+
+    _scene.add(new THREE.Mesh(
+      new THREE.SphereGeometry(1, 64, 40),
+      new THREE.MeshBasicMaterial({ color: 0xc8a878, transparent: true, opacity: 0.12 })
+    ));
+
+    // Basis group holds equatorial labels + meridians that should co-rotate
+    // with virtual-Z gates. Pole-aligned items (|0⟩/|1⟩) and rotationally
+    // symmetric parallels stay in _scene.
+    _basisGroup = new THREE.Group();
+    _scene.add(_basisGroup);
+
+    _addParallel(Math.PI / 4,     0xa88a50, 0.55);   // sepia latitude
+    _addParallel(3 * Math.PI / 4, 0xa88a50, 0.55);
+    _addParallel(Math.PI / 2,     0x9a1818, 0.75);   // Red Books red equator
+
+    _addMeridian(0,             0x8b6a30, 0.55, _basisGroup);   // dark sepia
+    _addMeridian(Math.PI / 2,   0x8b6a30, 0.55, _basisGroup);
+    _addMeridian(Math.PI / 4,   0xa88a50, 0.30, _basisGroup);
+    _addMeridian(3*Math.PI / 4, 0xa88a50, 0.30, _basisGroup);
+
+    const S3 = Math.sqrt(3) / 2;
+    _addAxis(new THREE.Vector3( 0,      1.5,  0     ), 0x1a3a5a, '|0⟩');                   // navy ink
+    _addAxis(new THREE.Vector3( 0,     -1.5,  0     ), 0x6a2820, '|1⟩');                   // burgundy
+    _addAxis(new THREE.Vector3( 0.75,   0,    S3*1.5), 0x5a6a1a, '|+⟩',  _basisGroup);    // olive
+    _addAxis(new THREE.Vector3(-0.75,   0,   -S3*1.5), 0x3a4a10, '|−⟩',  _basisGroup);    // dark olive
+    _addAxis(new THREE.Vector3( S3*1.5, 0,   -0.75 ), 0x9a6b2a, '|i⟩',  _basisGroup);    // mustard
+    _addAxis(new THREE.Vector3(-S3*1.5, 0,    0.75 ), 0x6a4a1a, '|−i⟩', _basisGroup);    // dark mustard
+
+    _arrowHelper = new THREE.ArrowHelper(
+      new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 0),
+      1.0, 0x9a1818, 0.18, 0.08
+    );
+    _arrowHelper.line.visible = false;
+    const _shaftGeom = new THREE.CylinderGeometry(0.012, 0.012, 0.82, 12, 1);
+    _shaftGeom.translate(0, 0.41, 0);
+    _arrowShaft = new THREE.Mesh(_shaftGeom, new THREE.MeshBasicMaterial({ color: 0x9a1818 }));
+    _arrowHelper.add(_arrowShaft);
+    _scene.add(_arrowHelper);
+
+    const RING_R = 0.11;
+    _phaseGroup = new THREE.Group();
+    _scene.add(_phaseGroup);
+
+    const torus = new THREE.Mesh(
+      new THREE.TorusGeometry(RING_R, 0.005, 8, 48),
+      new THREE.MeshBasicMaterial({
+        color: 0x6a2820, transparent: true, opacity: 0.8,
+        depthTest: false, depthWrite: false,
+      })
+    );
+    torus.renderOrder = 2;
+    _phaseGroup.add(torus);
+
+    // Cross-hairs (fixed in ring plane — do not rotate with hand)
+    const crossMat = new THREE.LineBasicMaterial({
+      color: 0x5a4020, transparent: true, opacity: 0.6,
+      depthTest: false, depthWrite: false,
+    });
+    [
+      [new THREE.Vector3(-RING_R, 0, 0), new THREE.Vector3(RING_R, 0, 0)],
+      [new THREE.Vector3(0, -RING_R, 0), new THREE.Vector3(0,  RING_R, 0)],
+    ].forEach(pts => {
+      const l = new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), crossMat);
+      l.renderOrder = 2;
+      _phaseGroup.add(l);
+    });
+
+    // Reference dot at phase = 0 (local +X direction)
+    const refDot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.008, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0x4a3020, depthTest: false, depthWrite: false })
+    );
+    refDot.position.set(RING_R, 0, 0);
+    refDot.renderOrder = 2;
+    _phaseGroup.add(refDot);
+
+    _handGroup = new THREE.Group();
+    _phaseGroup.add(_handGroup);
+
+    // Cylinder hand (Line ignores linewidth in WebGL)
+    const handGeom = new THREE.CylinderGeometry(0.004, 0.004, RING_R, 8, 1);
+    handGeom.rotateZ(Math.PI / 2);
+    handGeom.translate(RING_R / 2, 0, 0);
+    const hand = new THREE.Mesh(
+      handGeom,
+      new THREE.MeshBasicMaterial({ color: 0x9a1818, depthTest: false, depthWrite: false })
+    );
+    hand.renderOrder = 2;
+    _handGroup.add(hand);
+
+    const tipDot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.009, 6, 6),
+      new THREE.MeshBasicMaterial({ color: 0x9a1818, depthTest: false, depthWrite: false })
+    );
+    tipDot.position.set(RING_R, 0, 0);
+    tipDot.renderOrder = 2;
+    _handGroup.add(tipDot);
+
+    _scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+    const ro = new ResizeObserver(() => {
+      const w = canvas.clientWidth, h = canvas.clientHeight;
+      _renderer.setSize(w, h, false);
+      _css2dRenderer.setSize(w, h);
+      _applyCameraShift();  // also updates aspect + projection matrix
+    });
+    ro.observe(canvas);
+    _renderer.setSize(canvas.clientWidth, canvas.clientHeight, false);
+    _css2dRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+
+    _drawPhaseCircle(0);
+
+    (function loop() {
+      requestAnimationFrame(loop);
+      _controls.update();
+      _renderer.render(_scene, _camera);
+      _css2dRenderer.render(_scene, _camera);
+    })();
+  }
+
+  function updateArrow(theta, phi, globalPhase = 0) {
+    if (!_arrowHelper) return;
+    // Compensate for the readout-basis rotation: virtual-Z gates leave the
+    // arrow world-static by shifting _basisRotY instead of rotating the arrow.
+    const dir3 = _blochToThree(theta, phi - _basisRotY);
+    _arrowHelper.setDirection(dir3.clone().normalize());
+    _arrowHelper.setLength(1.0, 0.18, 0.08);
+
+    const arrowDir = dir3.clone().normalize();
+    _phaseGroup.position.copy(arrowDir.clone().multiplyScalar(0.55));
+
+    const plusDir = new THREE.Vector3(0.5, 0, Math.sqrt(3) / 2);
+    let refX = plusDir.clone().sub(arrowDir.clone().multiplyScalar(arrowDir.dot(plusDir)));
+    if (refX.length() < 0.01) {
+      const iDir = new THREE.Vector3(Math.sqrt(3) / 2, 0, -0.5);
+      refX = iDir.clone().sub(arrowDir.clone().multiplyScalar(arrowDir.dot(iDir)));
+    }
+    refX.normalize();
+    const refY = new THREE.Vector3().crossVectors(arrowDir, refX);
+    _phaseGroup.setRotationFromMatrix(
+      new THREE.Matrix4().makeBasis(refX, refY, arrowDir)
+    );
+    _handGroup.rotation.set(0, 0, globalPhase);
+
+    _currentPhase = globalPhase;
+    _drawPhaseCircle(globalPhase);
+  }
+
+  function animateTransition(fromState, toState, onComplete, gateInfo = null) {
+    const fromPhase = _globalPhase(fromState);
+    const toPhase   = _globalPhase(toState);
+    let dPhase = toPhase - fromPhase;
+    while (dPhase >  Math.PI) dPhase -= 2 * Math.PI;
+    while (dPhase < -Math.PI) dPhase += 2 * Math.PI;
+
+    // Undo path (no gateInfo): infer virtual-Z from a θ-preserving transition
+    // away from the poles. Anything else falls through to a regular drive.
+    if (!gateInfo) {
+      const atPole    = Math.abs(fromState.theta) < 1e-6 || Math.abs(Math.PI - fromState.theta) < 1e-6;
+      const sameTheta = Math.abs(fromState.theta - toState.theta) < 1e-6;
+      if (sameTheta && !atPole) {
+        let dphi = toState.phi - fromState.phi;
+        while (dphi >  Math.PI) dphi -= 2 * Math.PI;
+        while (dphi < -Math.PI) dphi += 2 * Math.PI;
+        if (Math.abs(dphi) > 1e-6) {
+          gateInfo = { axis: [0, 0, Math.sign(dphi)], angle: Math.abs(dphi) };
+        }
+      }
+    }
+
+    const isVirtualZ = !!gateInfo
+      && Math.abs(gateInfo.axis[2]) > 0.999
+      && gateInfo.angle > 1e-6;
+    const dBasis     = isVirtualZ ? gateInfo.axis[2] * gateInfo.angle : 0;
+    const basisFrom  = _basisRotY;
+    const basisTo    = _basisRotY + dBasis;
+
+    AnimationEngine.animateTo(
+      { theta: fromState.theta, phi: fromState.phi },
+      { theta: toState.theta,   phi: toState.phi   },
+      (theta, phi, t) => {
+        if (isVirtualZ) {
+          _basisRotY = basisFrom + (basisTo - basisFrom) * t;
+          _basisGroup.rotation.y = _basisRotY;
+        }
+        updateArrow(theta, phi, fromPhase + dPhase * t);
+      },
+      () => {
+        if (isVirtualZ) {
+          _basisRotY = basisTo;
+          _basisGroup.rotation.y = _basisRotY;
+        }
+        onComplete && onComplete();
+      },
+      600,
+      gateInfo?.axis  ?? null,
+      gateInfo?.angle ?? null
+    );
+  }
+
+  /** Snap the readout basis back to the canonical (unrotated) position. */
+  function resetBasis() {
+    _basisRotY = 0;
+    if (_basisGroup) _basisGroup.rotation.y = 0;
+  }
+
+  function setLightMode(light) {
+    // In v2 the "light" toggle switches between AFTERNOON-PAPER (default root)
+    // and NIGHT-LAMP (body.light). Clear color follows.
+    _lightMode = light;
+    if (_renderer) _renderer.setClearColor(light ? 0x1a1410 : 0xe8dcc0);
+    if (_arrowHelper) _arrowHelper.setColor(light ? 0xe06860 : 0x9a1818);
+    if (_arrowShaft)  _arrowShaft.material.color.setHex(light ? 0xe06860 : 0x9a1818);
+    if (_phaseCtx) _drawPhaseCircle(_currentPhase);
+  }
+
+  function setGlobalPhaseVisible(visible) {
+    if (_phaseGroup)  _phaseGroup.visible = visible;
+    if (_phaseCanvas) _phaseCanvas.style.display = visible ? 'block' : 'none';
+    if (_phaseLabel)  _phaseLabel.style.display  = visible ? 'block' : 'none';
+  }
+
+  /** Continuously rotate the view around Bloch-z (world y). */
+  function setAutoRotate(enabled) {
+    if (_controls) _controls.autoRotate = enabled;
+  }
+
+  // Shift the rendered scene leftward in screen space by extending the virtual
+  // frame to the right of the actual canvas. Pure screen-space translation —
+  // orbit geometry and aspect handling stay correct.
+  const _CAM_SHIFT_PX = 60;
+  function _applyCameraShift() {
+    if (!_camera || !_renderer) return;
+    const w = _renderer.domElement.clientWidth;
+    const h = _renderer.domElement.clientHeight;
+    if (w === 0 || h === 0) return;
+    _camera.setViewOffset(w + 2 * _CAM_SHIFT_PX, h, 2 * _CAM_SHIFT_PX, 0, w, h);
+  }
+
+  function _addParallel(theta, color, opacity) {
+    const y = Math.cos(theta), r = Math.sin(theta);
+    const pts = [];
+    for (let i = 0; i <= 96; i++) {
+      const a = (i / 96) * 2 * Math.PI;
+      pts.push(new THREE.Vector3(r * Math.cos(a), y, r * Math.sin(a)));
+    }
+    _scene.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+    ));
+  }
+
+  function _addMeridian(phi, color, opacity, target) {
+    const pts = [];
+    for (let i = 0; i <= 96; i++) pts.push(_blochToThree((i / 96) * 2 * Math.PI, phi));
+    (target || _scene).add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(pts),
+      new THREE.LineBasicMaterial({ color, transparent: true, opacity })
+    ));
+  }
+
+  function _addAxis(dir, color, label, target) {
+    const t = target || _scene;
+    t.add(new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, 0), dir]),
+      new THREE.LineBasicMaterial({ color })
+    ));
+    const dot = new THREE.Mesh(
+      new THREE.SphereGeometry(0.025, 8, 8),
+      new THREE.MeshBasicMaterial({ color })
+    );
+    dot.position.copy(dir.clone().multiplyScalar(0.96));
+    t.add(dot);
+    if (label) {
+      const div = document.createElement('div');
+      div.className   = 'bloch-label';
+      div.textContent = label;
+      div.style.color = '#' + color.toString(16).padStart(6, '0');
+      const obj = new CSS2DObject(div);
+      obj.position.copy(dir.clone().multiplyScalar(1.08));
+      t.add(obj);
+    }
+  }
+
+  function _drawPhaseCircle(phase) {
+    const ctx = _phaseCtx;
+    const s   = _phaseCanvas.width;
+    const cx  = s / 2, cy = s / 2;
+    const r   = s / 2 - 9;
+
+    // v2 palette: default = bright cream paper; lightMode = night under lamp.
+    const night = _lightMode;
+    const colBg     = night ? 'rgba(26,20,16,0.90)'   : 'rgba(244,236,216,0.96)';
+    const colGrid   = night ? '#5a4030'               : '#b89860';
+    const colCircle = night ? '#6a5030'               : '#8b6a30';
+    const colRef    = night ? '#b8a060'               : '#5a4020';
+    const colArc    = night ? 'rgba(224,104,96,0.45)' : 'rgba(154,24,24,0.35)';
+    const colHand   = night ? '#e06860'               : '#9a1818';
+    const colTip    = night ? '#e87a70'               : '#b02020';
+
+    ctx.clearRect(0, 0, s, s);
+
+    ctx.beginPath(); ctx.arc(cx, cy, s / 2 - 1, 0, 2 * Math.PI);
+    ctx.fillStyle = colBg; ctx.fill();
+
+    ctx.strokeStyle = colGrid; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(cx - r, cy); ctx.lineTo(cx + r, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cx, cy - r); ctx.lineTo(cx, cy + r); ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI);
+    ctx.strokeStyle = colCircle; ctx.lineWidth = 1.5; ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(cx + r, cy, 3, 0, 2 * Math.PI);
+    ctx.fillStyle = colRef; ctx.fill();
+
+    if (Math.abs(phase) > 0.02) {
+      ctx.beginPath();
+      ctx.arc(cx, cy, r * 0.38, 0, -phase, phase > 0);
+      ctx.strokeStyle = colArc; ctx.lineWidth = 2; ctx.stroke();
+    }
+
+    const px = cx + r * Math.cos(phase);
+    const py = cy - r * Math.sin(phase);
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(px, py);
+    ctx.strokeStyle = colHand; ctx.lineWidth = 2.5;
+    ctx.lineCap = 'round'; ctx.stroke();
+
+    ctx.beginPath(); ctx.arc(px, py, 3.5, 0, 2 * Math.PI);
+    ctx.fillStyle = colTip; ctx.fill();
+
+    if (_phaseLabel) {
+      const frac = phase / Math.PI;
+      const abs  = Math.abs(frac);
+      let txt;
+      if (abs < 1e-3)                          txt = 'γ = 0';
+      else if (Math.abs(abs - 1)   < 5e-3)     txt = `γ = ${frac < 0 ? '-' : ''}π`;
+      else if (Math.abs(abs - 0.5) < 5e-3)     txt = `γ = ${frac < 0 ? '-' : ''}π/2`;
+      else if (Math.abs(abs - 0.25) < 5e-3)    txt = `γ = ${frac < 0 ? '-' : ''}π/4`;
+      else if (Math.abs(abs - 0.75) < 5e-3)    txt = `γ = ${frac < 0 ? '-' : ''}3π/4`;
+      else                                      txt = `γ = ${frac.toFixed(3)}π`;
+      _phaseLabel.textContent = txt;
+    }
+  }
+
+  return { init, updateArrow, animateTransition, setLightMode, setGlobalPhaseVisible, setAutoRotate, resetBasis };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// StateInput.js
+// ─────────────────────────────────────────────────────────────────────────────
+const StateInput = (() => {
+  let _angleDeg = false;
+
+  function setAngleUnit(deg) {
+    _angleDeg = deg;
+    const thetaIn = document.getElementById('theta-in');
+    const phiIn   = document.getElementById('phi-in');
+    if (!thetaIn) return;
+
+    const tLabel = document.getElementById('theta-label');
+    const pLabel = document.getElementById('phi-label');
+    if (tLabel) tLabel.textContent = deg ? 'θ (°)' : 'θ (rad)';
+    if (pLabel) pLabel.textContent = deg ? 'φ (°)' : 'φ (rad)';
+
+    thetaIn.placeholder = deg ? '0 … 180' : '0 … π';
+    phiIn.placeholder   = deg ? '0 … 360' : '0 … 2π';
+
+    const tRaw = parsePiFraction(thetaIn.value);
+    const pRaw = parsePiFraction(phiIn.value);
+    if (!isNaN(tRaw))
+      thetaIn.value = deg ? (tRaw * 180 / Math.PI).toFixed(2) : (tRaw * Math.PI / 180).toFixed(6);
+    if (!isNaN(pRaw))
+      phiIn.value = deg ? (pRaw * 180 / Math.PI).toFixed(2) : (pRaw * Math.PI / 180).toFixed(6);
+  }
+
+  function init(container, qubitState, gateHistory, blochRenderer, formalisPanel) {
+    container.innerHTML = `
+      <div class="card">
+        <h3>Initial State</h3>
+        <div class="state-mode-selector">
+          <label><input type="radio" name="state-mode" value="bloch" checked> θ / φ</label>
+          <label><input type="radio" name="state-mode" value="amp"> α / β</label>
+        </div>
+
+        <div id="bloch-inputs" class="state-inputs">
+          <label><span id="theta-label">θ (rad)</span><input id="theta-in" type="text" value="0" placeholder="0 … π"></label>
+          <label><span id="phi-label">φ (rad)</span><input id="phi-in"   type="text" value="0" placeholder="0 … 2π"></label>
+        </div>
+
+        <div id="amp-inputs" class="state-inputs" style="display:none">
+          <label>Re(α)<input id="are" type="text" value="1"></label>
+          <label>Im(α)<input id="aim" type="text" value="0"></label>
+          <label>Re(β)<input id="bre" type="text" value="0"></label>
+          <label>Im(β)<input id="bim" type="text" value="0"></label>
+        </div>
+
+        <div class="preset-row">
+          <button class="gate" data-preset="|0⟩">|0⟩</button>
+          <button class="gate" data-preset="|1⟩">|1⟩</button>
+          <button class="gate" data-preset="|+⟩">|+⟩</button>
+          <button class="gate" data-preset="|-⟩">|−⟩</button>
+          <button class="gate" data-preset="|i⟩">|i⟩</button>
+          <button class="gate" data-preset="|-i⟩">|−i⟩</button>
+        </div>
+
+        <div class="row-gap">
+          <button class="primary" id="set-state-btn">Set State</button>
+        </div>
+        <div class="error-msg" id="state-error"></div>
+      </div>`;
+
+    const PRESETS = {
+      '|0⟩':  [0,           0           ],
+      '|1⟩':  [Math.PI,     0           ],
+      '|+⟩':  [Math.PI/2,   0           ],
+      '|-⟩':  [Math.PI/2,   Math.PI     ],
+      '|i⟩':  [Math.PI/2,   Math.PI/2   ],
+      '|-i⟩': [Math.PI/2, 3*Math.PI/2   ],
+    };
+
+    container.querySelectorAll('input[name=state-mode]').forEach(r => {
+      r.addEventListener('change', () => {
+        const mode = container.querySelector('input[name=state-mode]:checked').value;
+        document.getElementById('bloch-inputs').style.display = mode === 'bloch' ? '' : 'none';
+        document.getElementById('amp-inputs').style.display   = mode === 'amp'   ? '' : 'none';
+      });
+    });
+
+    container.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const [theta, phi] = PRESETS[btn.dataset.preset];
+        document.getElementById('theta-in').value = _angleDeg
+          ? (theta * 180 / Math.PI).toFixed(2) : theta.toFixed(6);
+        document.getElementById('phi-in').value = _angleDeg
+          ? (phi * 180 / Math.PI).toFixed(2) : phi.toFixed(6);
+        container.querySelector('input[value=bloch]').checked = true;
+        document.getElementById('bloch-inputs').style.display = '';
+        document.getElementById('amp-inputs').style.display   = 'none';
+        qubitState.setState(theta, phi);
+        gateHistory.setInitialState(theta, phi);
+        blochRenderer.resetBasis();
+        blochRenderer.updateArrow(theta, phi);
+        formalisPanel.update(qubitState.getState(), null);
+      });
+    });
+
+    document.getElementById('set-state-btn').addEventListener('click', () => {
+      const err = document.getElementById('state-error');
+      err.textContent = '';
+      const mode = container.querySelector('input[name=state-mode]:checked').value;
+
+      if (mode === 'bloch') {
+        let theta = parsePiFraction(document.getElementById('theta-in').value);
+        let phi   = parsePiFraction(document.getElementById('phi-in').value);
+        if (isNaN(theta) || isNaN(phi)) {
+          err.textContent = _angleDeg
+            ? 'Ângulo inválido. Use ex: 90, 45, 180'
+            : 'Ângulo inválido. Use ex: pi/2, π/4, 1.5708';
+          return;
+        }
+        if (_angleDeg) { theta = theta * Math.PI / 180; phi = phi * Math.PI / 180; }
+        qubitState.setState(theta, phi);
+        gateHistory.setInitialState(theta, phi);
+        blochRenderer.resetBasis();
+        blochRenderer.updateArrow(theta, phi);
+        formalisPanel.update(qubitState.getState(), null);
+      } else {
+        const are = parseFloat(document.getElementById('are').value);
+        const aim = parseFloat(document.getElementById('aim').value);
+        const bre = parseFloat(document.getElementById('bre').value);
+        const bim = parseFloat(document.getElementById('bim').value);
+        if ([are,aim,bre,bim].some(isNaN)) { err.textContent = 'Invalid amplitudes.'; return; }
+        if (Math.sqrt(are**2+aim**2+bre**2+bim**2) < 1e-12) {
+          err.textContent = '|ψ⟩ = 0 is not a valid state.'; return;
+        }
+        qubitState.setAmplitudes({ re: are, im: aim }, { re: bre, im: bim });
+        const s = qubitState.getState();
+        gateHistory.setInitialState(s.theta, s.phi);
+        blochRenderer.resetBasis();
+        blochRenderer.updateArrow(s.theta, s.phi);
+        formalisPanel.update(s, null);
+      }
+    });
+  }
+
+  return { init, setAngleUnit };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// GatePanel.js
+// ─────────────────────────────────────────────────────────────────────────────
+const GatePanel = (() => {
+  const _HINTS = {
+    X:   { title: 'Pauli X',     desc: 'π rotation around X-axis<br>|0⟩ ↔ |1⟩' },
+    Y:   { title: 'Pauli Y',     desc: 'π rotation around Y-axis<br>|0⟩ → i|1⟩,  |1⟩ → −i|0⟩' },
+    Z:   { title: 'Pauli Z',     desc: 'π rotation around Z-axis<br>|+⟩ → |−⟩,  |1⟩ → −|1⟩' },
+    H:   { title: 'Hadamard',    desc: 'Creates / collapses superposition<br>|0⟩ → |+⟩,  |1⟩ → |−⟩' },
+    S:   { title: 'Phase S',     desc: 'π/2 rotation around Z-axis<br>|1⟩ → i|1⟩' },
+    Sdg: { title: 'Phase S†',    desc: '−π/2 rotation around Z-axis<br>|1⟩ → −i|1⟩' },
+    T:   { title: 'T gate',      desc: 'π/4 rotation around Z-axis<br>|1⟩ → e^{iπ/4}|1⟩' },
+    Tdg: { title: 'T† gate',     desc: '−π/4 rotation around Z-axis<br>|1⟩ → e^{−iπ/4}|1⟩' },
+    Rx:  { title: 'Rotation Rx', desc: 'Rotation by θ around X-axis' },
+    Ry:  { title: 'Rotation Ry', desc: 'Rotation by θ around Y-axis' },
+    Rz:  { title: 'Rotation Rz', desc: 'Rotation by θ around Z-axis' },
+  };
+
+  let _hintEl   = null;
+  let _angleDeg = false;
+
+  function _ensureHintEl() {
+    if (_hintEl) return;
+    _hintEl = document.createElement('div');
+    _hintEl.id = 'gate-hint';
+    document.body.appendChild(_hintEl);
+  }
+
+  function _showHint(btn, gateName) {
+    _ensureHintEl();
+    const h = _HINTS[gateName];
+    if (!h) return;
+    _hintEl.innerHTML = `<div class="hint-title">${h.title}</div><div class="hint-desc">${h.desc}</div>`;
+    _hintEl.style.display = 'block';
+    const r = btn.getBoundingClientRect();
+    const hintW = _hintEl.offsetWidth;
+    const hintH = _hintEl.offsetHeight;
+    let left = r.right + 8;
+    let top  = r.top + (r.height - hintH) / 2;
+    if (left + hintW > window.innerWidth - 8) left = r.left - hintW - 8;
+    if (top < 8) top = 8;
+    _hintEl.style.left = `${left}px`;
+    _hintEl.style.top  = `${top}px`;
+  }
+
+  function _hideHint() {
+    if (_hintEl) _hintEl.style.display = 'none';
+  }
+
+  function setAngleUnit(deg) {
+    _angleDeg = deg;
+    const ph = deg ? 'e.g. 90' : 'e.g. pi/4';
+    ['Rx', 'Ry', 'Rz'].forEach(g => {
+      const inp = document.getElementById(`angle-${g}`);
+      if (!inp) return;
+      inp.placeholder = ph;
+      const val = parsePiFraction(inp.value);
+      if (!isNaN(val))
+        inp.value = deg ? (val * 180 / Math.PI).toFixed(2) : (val * Math.PI / 180).toFixed(6);
+    });
+  }
+
+  function init(container, qubitState, gateHistory, blochRenderer, formalisPanel) {
+    container.innerHTML = `
+      <div class="card">
+        <h3>Gates</h3>
+
+        <div class="gate-group">
+          <div class="gate-group-label"
+            title="Resonant microwave pulse on the qubit — moves population between |0⟩ and |1⟩. Requires physical pulse energy and does not commute with H.">Drive · XY pulse</div>
+          <div class="gate-buttons">
+            <button class="gate" data-gate="X">X</button>
+            <button class="gate" data-gate="Y">Y</button>
+            <button class="gate" data-gate="H">H</button>
+          </div>
+          <div class="rotation-inputs">
+            <div class="rotation-row">
+              <label>Rx</label>
+              <input type="text" id="angle-Rx" class="angle-input" placeholder="e.g. pi/4" value="pi/16">
+              <button class="gate" data-gate="Rx">Apply</button>
+            </div>
+            <div class="rotation-row">
+              <label>Ry</label>
+              <input type="text" id="angle-Ry" class="angle-input" placeholder="e.g. pi/4" value="pi/16">
+              <button class="gate" data-gate="Ry">Apply</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="gate-group">
+          <div class="gate-group-label"
+            title="Software-only frame rotation — updates the phase of subsequent drive pulses. θ-invariant, no physical pulse, commutes with H.">Virtual Z · shifts readout basis</div>
+          <div class="gate-buttons">
+            <button class="gate" data-gate="Z">Z</button>
+            <button class="gate" data-gate="S">S</button>
+            <button class="gate" data-gate="Sdg">S†</button>
+            <button class="gate" data-gate="T">T</button>
+            <button class="gate" data-gate="Tdg">T†</button>
+          </div>
+          <div class="rotation-inputs">
+            <div class="rotation-row">
+              <label>Rz</label>
+              <input type="text" id="angle-Rz" class="angle-input" placeholder="e.g. pi/4" value="pi/16">
+              <button class="gate" data-gate="Rz">Apply</button>
+            </div>
+          </div>
+          <div class="error-msg" id="rot-error"></div>
+        </div>
+      </div>`;
+
+    container.querySelectorAll('[data-gate]').forEach(btn => {
+      btn.addEventListener('click',      () => _handleGateClick(btn.dataset.gate));
+      btn.addEventListener('mouseenter', () => _showHint(btn, btn.dataset.gate));
+      btn.addEventListener('mouseleave', _hideHint);
+    });
+
+    container.querySelectorAll('.angle-input').forEach(inp => {
+      inp.addEventListener('input', () => {
+        inp.classList.remove('error');
+        document.getElementById('rot-error').textContent = '';
+      });
+    });
+
+    function _handleGateClick(gateName) {
+      let theta;
+      if (['Rx', 'Ry', 'Rz'].includes(gateName)) {
+        const inp = document.getElementById(`angle-${gateName}`);
+        theta = parsePiFraction(inp.value);
+        if (!isNaN(theta) && _angleDeg) theta = theta * Math.PI / 180;
+        if (isNaN(theta)) {
+          inp.classList.add('error');
+          document.getElementById('rot-error').textContent = _angleDeg
+            ? `Invalid angle for ${gateName} — enter degrees, e.g. 90`
+            : `Invalid angle for ${gateName} — use expressions like pi/4 or 1.5708`;
+          return;
+        }
+        inp.classList.remove('error');
+        document.getElementById('rot-error').textContent = '';
+      }
+
+      const U        = getMatrix(gateName, theta);
+      const gateInfo = getRotationAxisAngle(U);
+      const { oldState, newState } = qubitState.applyGate(U);
+
+      gateHistory.push({
+        name:   gateName,
+        params: theta !== undefined ? { theta } : {},
+        matrix: U,
+      });
+
+      formalisPanel.setLoading(true);
+      blochRenderer.animateTransition(oldState, newState, () => {
+        formalisPanel.setLoading(false);
+        formalisPanel.update(newState, {
+          name:   gateName,
+          matrix: U,
+          axis:   gateInfo.axis,
+          angle:  gateInfo.angle,
+        });
+      }, gateInfo);
+    }
+  }
+
+  return { init, setAngleUnit };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MeasurementController.js
+// ─────────────────────────────────────────────────────────────────────────────
+const MeasurementController = (() => {
+  function init(container, qubitState, gateHistory, formalisPanel, blochRenderer) {
+    container.innerHTML = `
+      <div class="card">
+        <h3>Measurement</h3>
+        <div class="measure-section">
+          <div class="prob-bar-container">
+            <div class="prob-row">
+              <span class="prob-label">|0⟩</span>
+              <div class="prob-bar-bg">
+                <div class="prob-bar prob-bar-0" id="bar-0" style="width:100%"></div>
+              </div>
+              <span class="prob-value" id="p0-val">1.0000</span>
+            </div>
+            <div class="prob-row">
+              <span class="prob-label">|1⟩</span>
+              <div class="prob-bar-bg">
+                <div class="prob-bar prob-bar-1" id="bar-1" style="width:0%"></div>
+              </div>
+              <span class="prob-value" id="p1-val">0.0000</span>
+            </div>
+          </div>
+          <div class="row-gap">
+            <button class="primary" id="measure-btn">Measure</button>
+            <span class="outcome-display" id="outcome-disp"></span>
+          </div>
+        </div>
+      </div>`;
+
+    qubitState.subscribe(state => {
+      const p0 = state.alpha.re ** 2 + state.alpha.im ** 2;
+      const p1 = 1 - p0;
+      document.getElementById('bar-0').style.width = `${(p0 * 100).toFixed(1)}%`;
+      document.getElementById('bar-1').style.width = `${(p1 * 100).toFixed(1)}%`;
+      document.getElementById('p0-val').textContent = p0.toFixed(4);
+      document.getElementById('p1-val').textContent = p1.toFixed(4);
+    });
+
+    document.getElementById('measure-btn').addEventListener('click', () => {
+      const oldState = qubitState.getState();
+      const { outcome, probability } = qubitState.measure();
+      const newState = qubitState.getState();
+
+      gateHistory.clear();
+      gateHistory.setInitialState(newState.theta, newState.phi);
+
+      document.getElementById('outcome-disp').textContent =
+        `→ |${outcome}⟩  (p = ${probability.toFixed(4)})`;
+
+      formalisPanel.setLoading(true);
+      blochRenderer.animateTransition(oldState, newState, () => {
+        formalisPanel.setLoading(false);
+        formalisPanel.update(newState, null);
+      });
+    });
+  }
+
+  return { init };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PhaseSinePanel.js
+// ─────────────────────────────────────────────────────────────────────────────
+const PhaseSinePanel = (() => {
+  const TWO_PI     = 2 * Math.PI;
+  const OMEGA      = TWO_PI * 0.5;   // 0.5 Hz artificial carrier
+  const SLIP_MS    = 600;            // phase-slip duration; matches BlochRenderer animation
+  const SHOT_RATE  = 24;             // average shots per second
+  const WINDOW_SEC = 2.5;            // seconds of shot history visible
+  const DOT_RADIUS = 2.0;
+
+  let _canvas, _ctx, _badgeEl, _angleDeg = false;
+  let _rafId = null, _t0 = 0, _lastFrameSec = 0;
+  let _thetaFrom = 0, _thetaTo = 0;
+  let _phiFrom   = 0, _phiTo   = 0;
+  let _slipStart = -Infinity;
+  let _shots     = [];
+  let _shotAccum = 0;
+
+  function init(container) {
+    container.innerHTML = `
+      <div class="card">
+        <h3>Phase · State and Measurement</h3>
+        <div class="phase-sine-wrap">
+          <canvas id="phase-sine-canvas"
+            title="Left — phasor of the coherence ρ₀₁ in the rotating frame (length = sin θ / 2, angle = ωt − φ). Right — Ramsey σₓ readout: smooth curves are the expectations, dots are individual Bernoulli-sampled binary measurements."></canvas>
+          <div class="phase-sine-legend">
+            <span class="legend-ref"
+              title="Classical LO reference: unit amplitude, zero phase. Drawn smooth because classical oscillators have no shot noise.">— reference</span>
+            <span class="legend-tx"
+              title="Quantum expectation ⟨σₓ⟩(t) = sin(θ) · cos(ωt − φ). Amplitude sin(θ) is twice the coherence magnitude |ρ₀₁| — maximum on the equator, zero at the poles. Dots are actual ±1 Ramsey outcomes; the smooth curve is the theoretical fit.">— transmon</span>
+            <span id="phase-sine-badge" class="phase-sine-badge"
+              title="Relative phase between the |0⟩ and |1⟩ amplitudes. Equals the Bloch azimuth φ (mod 2π).">Δφ = 0.000</span>
+          </div>
+        </div>
+      </div>`;
+
+    _canvas  = document.getElementById('phase-sine-canvas');
+    _ctx     = _canvas.getContext('2d');
+    _badgeEl = document.getElementById('phase-sine-badge');
+
+    _resize();
+    window.addEventListener('resize', _resize);
+
+    _t0 = performance.now();
+    _rafId = requestAnimationFrame(_tick);
+  }
+
+  function update(state, opts) {
+    const animate = opts && opts.animate === true;
+    if (animate) {
+      _thetaFrom = _currentTheta();
+      _phiFrom   = _currentPhi();
+      _thetaTo   = state.theta;
+      let d = state.phi - _phiFrom;
+      while (d >  Math.PI) d -= TWO_PI;
+      while (d < -Math.PI) d += TWO_PI;
+      _phiTo     = _phiFrom + d;
+      _slipStart = performance.now();
+    } else {
+      _thetaFrom = _thetaTo = state.theta;
+      _phiFrom   = _phiTo   = state.phi;
+      _slipStart = -Infinity;
+    }
+    _updateBadge();
+  }
+
+  function setAngleUnit(deg) { _angleDeg = deg; _updateBadge(); }
+
+  function _slipProgress() {
+    const elapsed = performance.now() - _slipStart;
+    return Math.max(0, Math.min(1, elapsed / SLIP_MS));
+  }
+  function _currentTheta() { return _thetaFrom + (_thetaTo - _thetaFrom) * _slipProgress(); }
+  function _currentPhi()   { return _phiFrom   + (_phiTo   - _phiFrom)   * _slipProgress(); }
+
+  function _resize() {
+    if (!_canvas) return;
+    const dpr = window.devicePixelRatio || 1;
+    const w   = _canvas.clientWidth;
+    const h   = _canvas.clientHeight;
+    _canvas.width  = Math.max(1, Math.floor(w * dpr));
+    _canvas.height = Math.max(1, Math.floor(h * dpr));
+    _ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function _tick(now) {
+    _rafId = requestAnimationFrame(_tick);
+    const nowSec = (now - _t0) / 1000;
+    const dtSec  = _lastFrameSec === 0 ? 0 : nowSec - _lastFrameSec;
+    _lastFrameSec = nowSec;
+    _emitShots(nowSec, dtSec);
+    _pruneShots(nowSec);
+    _draw(nowSec);
+  }
+
+  function _emitShots(nowSec, dtSec) {
+    if (dtSec <= 0) return;
+    _shotAccum += SHOT_RATE * dtSec;
+    const count = Math.floor(_shotAccum);
+    if (count <= 0) return;
+    _shotAccum -= count;
+    // Each shot stores a fixed seed r ∈ [0,1]; y is resolved each frame against
+    // the current P(t, θ, φ), so phase changes slide the whole cluster coherently.
+    for (let i = 0; i < count; i++) {
+      const tEmit = nowSec - (i / count) * dtSec;
+      _shots.push({ t: tEmit, r: Math.random() });
+    }
+  }
+
+  function _pruneShots(nowSec) {
+    const cutoff = nowSec - WINDOW_SEC;
+    while (_shots.length > 0 && _shots[0].t < cutoff) _shots.shift();
+  }
+
+  function _themeColors() {
+    const css = getComputedStyle(document.body);
+    const dim = (css.getPropertyValue('--label-dim') || '#6a90b0').trim();
+    return {
+      ref:  (css.getPropertyValue('--heading')        || '#00e5ff').trim(),
+      tx:   (css.getPropertyValue('--btn-gate-color') || '#b57bee').trim(),
+      axis: dim,
+    };
+  }
+
+  function _draw(nowSec) {
+    const W = _canvas.clientWidth;
+    const H = _canvas.clientHeight;
+    if (W === 0 || H === 0) return;
+
+    const { ref, tx, axis } = _themeColors();
+    _ctx.clearRect(0, 0, W, H);
+
+    const padX    = 6, padY = 6;
+    const plotH   = H - 2 * padY;
+    const phasorW = Math.min(plotH, W * 0.4);
+    const gap     = 10;
+    const shotX0  = padX + phasorW + gap;
+    const shotW   = W - shotX0 - padX;
+
+    const theta  = _currentTheta();
+    const phi    = _currentPhi();
+    const sinTh  = Math.sin(theta);
+    const phase0 = OMEGA * nowSec;
+
+    _drawPhasor(padX, padY, phasorW, plotH, phase0, sinTh, phi, ref, tx, axis);
+    _drawShotPlot(shotX0, padY, shotW, plotH, nowSec, sinTh, phi, ref, tx, axis);
+
+    if (Math.abs(sinTh) < 0.02) {
+      _ctx.fillStyle    = axis;
+      _ctx.globalAlpha  = 0.55;
+      _ctx.font         = "10px 'Special Elite', 'Courier Prime', monospace";
+      _ctx.textAlign    = 'center';
+      _ctx.textBaseline = 'middle';
+      _ctx.fillText('no coherence · energy eigenstate', shotX0 + shotW / 2, padY + plotH / 2);
+      _ctx.globalAlpha  = 1;
+    }
+  }
+
+  function _drawPhasor(x0, y0, w, h, phase0, sinTh, phi, refC, txC, axisC) {
+    const cx = x0 + w / 2;
+    const cy = y0 + h / 2;
+    const R  = Math.min(w, h) / 2 * 0.82;
+
+    _ctx.strokeStyle = axisC;
+    _ctx.globalAlpha = 0.3;
+    _ctx.lineWidth   = 1;
+    _ctx.beginPath();
+    _ctx.arc(cx, cy, R, 0, TWO_PI);
+    _ctx.stroke();
+    _ctx.globalAlpha = 1;
+
+    _drawArrow(cx, cy, cx + R * Math.cos(phase0), cy - R * Math.sin(phase0), refC);
+    const txAng = phase0 - phi;
+    _drawArrow(cx, cy, cx + R * sinTh * Math.cos(txAng), cy - R * sinTh * Math.sin(txAng), txC);
+  }
+
+  function _drawArrow(x1, y1, x2, y2, color) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 2) {
+      _ctx.fillStyle = color;
+      _ctx.beginPath();
+      _ctx.arc(x1, y1, 2.8, 0, TWO_PI);
+      _ctx.fill();
+      return;
+    }
+    _ctx.strokeStyle = color;
+    _ctx.fillStyle   = color;
+    _ctx.lineWidth   = 1.6;
+    _ctx.beginPath();
+    _ctx.moveTo(x1, y1);
+    _ctx.lineTo(x2, y2);
+    _ctx.stroke();
+    const head = 5.5;
+    const ang  = Math.atan2(dy, dx);
+    _ctx.beginPath();
+    _ctx.moveTo(x2, y2);
+    _ctx.lineTo(x2 - head * Math.cos(ang - Math.PI / 6), y2 - head * Math.sin(ang - Math.PI / 6));
+    _ctx.lineTo(x2 - head * Math.cos(ang + Math.PI / 6), y2 - head * Math.sin(ang + Math.PI / 6));
+    _ctx.closePath();
+    _ctx.fill();
+  }
+
+  function _drawShotPlot(x0, y0, w, h, nowSec, sinTh, phi, refC, txC, axisC) {
+    const midY = y0 + h / 2;
+    const ampY = h / 2 * 0.85;
+
+    _ctx.strokeStyle = axisC;
+    _ctx.globalAlpha = 0.2;
+    _ctx.lineWidth   = 1;
+    _ctx.beginPath();
+    _ctx.moveTo(x0, midY);
+    _ctx.lineTo(x0 + w, midY);
+    _ctx.stroke();
+    _ctx.globalAlpha = 1;
+
+    const steps = Math.max(40, Math.floor(w));
+
+    _ctx.strokeStyle = refC;
+    _ctx.globalAlpha = 0.55;
+    _ctx.lineWidth   = 1.2;
+    _ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const u    = i / steps;
+      const tAt  = nowSec - WINDOW_SEC * (1 - u);
+      const yRef = Math.cos(OMEGA * tAt);
+      const px   = x0 + u * w;
+      const py   = midY - yRef * ampY;
+      if (i === 0) _ctx.moveTo(px, py); else _ctx.lineTo(px, py);
+    }
+    _ctx.stroke();
+
+    // Transmon expected value ⟨σ_x⟩(t) — theoretical fit, kept very faint so
+    // the dots (actual measurements) are the visual anchor.
+    _ctx.strokeStyle = txC;
+    _ctx.globalAlpha = 0.15;
+    _ctx.lineWidth   = 1.2;
+    _ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const u   = i / steps;
+      const tAt = nowSec - WINDOW_SEC * (1 - u);
+      const yTx = sinTh * Math.cos(OMEGA * tAt - phi);
+      const px  = x0 + u * w;
+      const py  = midY - yTx * ampY;
+      if (i === 0) _ctx.moveTo(px, py); else _ctx.lineTo(px, py);
+    }
+    _ctx.stroke();
+    _ctx.globalAlpha = 1;
+
+    _ctx.fillStyle = txC;
+    for (const shot of _shots) {
+      const age = nowSec - shot.t;
+      if (age < 0 || age > WINDOW_SEC) continue;
+      const u     = 1 - age / WINDOW_SEC;
+      const pPlus = 0.5 * (1 + sinTh * Math.cos(OMEGA * shot.t - phi));
+      const yBit  = shot.r < pPlus ? +1 : -1;
+      const px    = x0 + u * w;
+      const py    = midY - yBit * ampY;
+      const alpha = Math.min(1, 2.5 * u);
+      _ctx.globalAlpha = alpha * 0.92;
+      _ctx.beginPath();
+      _ctx.arc(px, py, DOT_RADIUS, 0, TWO_PI);
+      _ctx.fill();
+    }
+    _ctx.globalAlpha = 1;
+  }
+
+  function _updateBadge() {
+    if (!_badgeEl) return;
+    const phiTarget = ((_phiTo % TWO_PI) + TWO_PI) % TWO_PI;
+    const val = _angleDeg
+      ? `${(phiTarget * 180 / Math.PI).toFixed(1)}°`
+      : phiTarget.toFixed(3);
+    _badgeEl.textContent = `Δφ = ${val}`;
+  }
+
+  return { init, update, setAngleUnit };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// URLCodec.js
+// ─────────────────────────────────────────────────────────────────────────────
+const URLCodec = (() => {
+  function decode() {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('t') || !params.has('p')) return null;
+    const theta = parseFloat(params.get('t'));
+    const phi   = parseFloat(params.get('p'));
+    if (isNaN(theta) || isNaN(phi)) return null;
+    const gateSequence = [];
+    const gStr = params.get('g') || '';
+    if (gStr) {
+      for (const token of gStr.split(',')) {
+        if (!token.trim()) continue;
+        const [name, thetaStr] = token.split(':');
+        const gParams = thetaStr !== undefined ? { theta: parseFloat(thetaStr) } : {};
+        if (!isNaN(gParams.theta ?? 0)) {
+          gateSequence.push({ name: name.trim(), params: gParams });
+        }
+      }
+    }
+    return { initialState: { theta, phi }, gateSequence };
+  }
+
+  return { decode };
+})();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// App.js — Bootstrap
+// ─────────────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const qubitState  = createQubitState();
+  const gateHistory = createGateHistory();
+
+  BlochRenderer.init(document.getElementById('bloch-canvas'));
+  FormalisPanel.init(document.getElementById('formalis-panel-container'));
+
+  StateInput.init(
+    document.getElementById('state-input-container'),
+    qubitState, gateHistory, BlochRenderer, FormalisPanel
+  );
+
+  GatePanel.init(
+    document.getElementById('gate-panel-container'),
+    qubitState, gateHistory, BlochRenderer, FormalisPanel
+  );
+
+  MeasurementController.init(
+    document.getElementById('measurement-container'),
+    qubitState, gateHistory, FormalisPanel, BlochRenderer
+  );
+
+  PhaseSinePanel.init(document.getElementById('phase-sine-container'));
+  PhaseSinePanel.update(qubitState.getState());
+  qubitState.subscribe((s, opts) => PhaseSinePanel.update(s, opts));
+
+  // Gate history card
+  const histCont = document.getElementById('gate-history-container');
+  histCont.innerHTML = `
+    <div class="card">
+      <h3>Gate History</h3>
+      <div class="row-gap" style="margin-bottom:8px">
+        <button class="primary" id="undo-btn">↩ Undo</button>
+        <button class="primary" id="clear-btn">Clear</button>
+      </div>
+      <div class="history-list" id="history-list">
+        <span class="history-empty">No gates applied</span>
+      </div>
+    </div>`;
+
+  gateHistory.subscribe(history => {
+    const el = document.getElementById('history-list');
+    if (!el) return;
+    if (history.length === 0) {
+      el.innerHTML = '<span class="history-empty">No gates applied</span>';
+      return;
+    }
+    const MAX_VISIBLE = 5;
+    const start   = Math.max(0, history.length - MAX_VISIBLE);
+    const visible = history.slice(start);
+    const chips   = visible.map((g, j) => {
+      const i = start + j;
+      const label = g.params?.theta !== undefined
+        ? `${g.name}(${g.params.theta.toFixed(3)})`
+        : g.name;
+      return `<span class="history-chip">${i + 1}.${label}</span>`;
+    });
+    if (start > 0) {
+      chips.unshift(`<span class="history-chip" title="${start} earlier gate(s) hidden">…</span>`);
+    }
+    el.innerHTML = chips.join('');
+  });
+
+  document.getElementById('undo-btn').addEventListener('click', () => {
+    const oldState = qubitState.getState();
+    const undoResult = gateHistory.undo();
+    if (!undoResult) return;
+    qubitState.setState(undoResult.theta, undoResult.phi, { animate: true });
+    const newState = qubitState.getState();
+    FormalisPanel.setLoading(true);
+    BlochRenderer.animateTransition(oldState, newState, () => {
+      FormalisPanel.setLoading(false);
+      FormalisPanel.update(newState, null);
+    });
+  });
+
+  document.getElementById('clear-btn').addEventListener('click', () => {
+    const init = gateHistory.getInitialState();
+    gateHistory.clear();
+    qubitState.setState(init.theta, init.phi);
+    BlochRenderer.resetBasis();
+    BlochRenderer.updateArrow(init.theta, init.phi);
+    FormalisPanel.update(qubitState.getState(), null);
+  });
+
+  // URL state restore
+  const urlData = URLCodec.decode();
+  if (urlData) {
+    const { initialState, gateSequence } = urlData;
+    qubitState.setState(initialState.theta, initialState.phi);
+    gateHistory.setInitialState(initialState.theta, initialState.phi);
+    for (const gate of gateSequence) {
+      try {
+        const U = getMatrix(gate.name, gate.params?.theta);
+        qubitState.applyGate(U);
+        gateHistory.push({ name: gate.name, params: gate.params, matrix: U });
+      } catch { /* skip unknown/invalid gates */ }
+    }
+  }
+
+  // Initial render
+  const initState = qubitState.getState();
+  BlochRenderer.resetBasis();
+  BlochRenderer.updateArrow(initState.theta, initState.phi);
+  FormalisPanel.update(initState, null);
+
+  // ── Theme toggle ──────────────────────────────────────────────────────────
+  const toggleBtn = document.getElementById('theme-toggle');
+  if (localStorage.getItem('blocktoy-theme') === 'light') {
+    document.body.classList.add('light');
+    BlochRenderer.setLightMode(true);
+    toggleBtn.textContent = '☾ Dark';
+  }
+  toggleBtn.addEventListener('click', () => {
+    const isLight = document.body.classList.toggle('light');
+    BlochRenderer.setLightMode(isLight);
+    localStorage.setItem('blocktoy-theme', isLight ? 'light' : 'dark');
+    toggleBtn.textContent = isLight ? '☾ Dark' : '☀ Light';
+  });
+
+  // ── Angle unit toggle ─────────────────────────────────────────────────────
+  const angleBtn = document.getElementById('angle-unit-toggle');
+  let _angleDeg  = localStorage.getItem('blocktoy-angle-unit') === 'deg';
+
+  function _applyAngleUnit() {
+    FormalisPanel.setAngleUnit(_angleDeg);
+    StateInput.setAngleUnit(_angleDeg);
+    GatePanel.setAngleUnit(_angleDeg);
+    PhaseSinePanel.setAngleUnit(_angleDeg);
+    angleBtn.textContent = _angleDeg ? 'rad' : '°';
+  }
+
+  if (_angleDeg) _applyAngleUnit();
+
+  angleBtn.addEventListener('click', () => {
+    _angleDeg = !_angleDeg;
+    localStorage.setItem('blocktoy-angle-unit', _angleDeg ? 'deg' : 'rad');
+    _applyAngleUnit();
+  });
+
+  // ── Global phase ring toggle ─────────────────────────────────────────────
+  // The global phase γ = arg(α) is unobservable on an isolated qubit — it only
+  // becomes relative (and measurable) in multi-qubit / interferometric settings.
+  // Default off; user can opt in for pedagogy around T/S and phase-kickback.
+  const phaseBtn = document.getElementById('global-phase-toggle');
+  let _phaseOn   = localStorage.getItem('blocktoy-global-phase') === 'on';
+  function _applyPhaseVisible() {
+    BlochRenderer.setGlobalPhaseVisible(_phaseOn);
+    phaseBtn.textContent = _phaseOn ? 'γ on' : 'γ off';
+  }
+  _applyPhaseVisible();
+  phaseBtn.addEventListener('click', () => {
+    _phaseOn = !_phaseOn;
+    localStorage.setItem('blocktoy-global-phase', _phaseOn ? 'on' : 'off');
+    _applyPhaseVisible();
+  });
+
+  // ── Auto-rotate toggle ───────────────────────────────────────────────────
+  const spinBtn = document.getElementById('autorotate-toggle');
+  let _spinOn   = localStorage.getItem('blocktoy-autorotate') === 'on';
+  function _applyAutoRotate() {
+    BlochRenderer.setAutoRotate(_spinOn);
+    spinBtn.textContent = _spinOn ? '↻ on' : '↻ off';
+  }
+  _applyAutoRotate();
+  spinBtn.addEventListener('click', () => {
+    _spinOn = !_spinOn;
+    localStorage.setItem('blocktoy-autorotate', _spinOn ? 'on' : 'off');
+    _applyAutoRotate();
+  });
+});
+  </script>
+</body>
+</html>
