@@ -1,0 +1,44 @@
+{
+  "_source": "Vetores de verdade-base para a Fase 6. Derivados de specs/examples/worked-examples.md (E1–E8) e literatura (Nielsen-Chuang). Convenção big-endian |q0..q_{n-1}|, q0 mais à esquerda/significativo.",
+  "exact_amplitudes": {
+    "E1_H_on_0": { "circuit": [["H",[0]]], "n": 1, "dirac_exp": "(1/√2)|0⟩ + (1/√2)|1⟩" },
+    "E2_T_on_1": { "init": "1", "circuit": [["T",[0]]], "amp1_exp": "e^{iπ/4}" },
+    "E2_S_on_1": { "init": "1", "circuit": [["S",[0]]], "amp1_exp": "i" },
+    "E3_bell_phi+": { "preset": "bell_phi+", "dirac_exp": "(1/√2)|00⟩ + (1/√2)|11⟩" },
+    "E7_ghz3": { "preset": "ghz", "dirac_exp": "(1/√2)|000⟩ + (1/√2)|111⟩" }
+  },
+  "probabilities": {
+    "bell_phi+": { "00": "1/2", "11": "1/2", "01": "0", "10": "0" }
+  },
+  "entanglement": {
+    "bell_concurrence": 1.0,
+    "bell_vonNeumann_bits": 1.0,
+    "product_concurrence": 0.0,
+    "product_vonNeumann_bits": 0.0
+  },
+  "basis_change": {
+    "bell_phi+_in_hadamard": "(1/√2)|++⟩ + (1/√2)|−−⟩",
+    "zero_in_hadamard": "(1/√2)|+⟩ + (1/√2)|−⟩",
+    "_note": "|0⟩ = (|+⟩+|−⟩)/√2 re-expresso na base {|+⟩,|−⟩}. O estado que SE EXIBE como |+⟩ é H|0⟩."
+  },
+  "presets_expected_dirac_rect": {
+    "bell_phi+": "(1/√2)|00⟩ + (1/√2)|11⟩",
+    "bell_phi-": "(1/√2)|00⟩ − (1/√2)|11⟩",
+    "bell_psi+": "(1/√2)|01⟩ + (1/√2)|10⟩",
+    "bell_psi-": "(1/√2)|01⟩ − (1/√2)|10⟩",
+    "ghz": "(1/√2)|000⟩ + (1/√2)|111⟩"
+  },
+  "qft3_uniform_amp_magnitude": 0.35355339059327373,
+  "zomega_rules": {
+    "omega_sq_is_i": true,
+    "omega_4th_is_neg1": true,
+    "conj_a_b_c_d": "(a,-d,-c,-b)",
+    "sqrt2_is": "(0,1,0,-1)",
+    "omega_times_omega3": "-1"
+  },
+  "numeric_fallback": {
+    "Rx_0.3_is_approx": true,
+    "Rx_pi_is_exact": true,
+    "Rx_pi_half_is_exact": true
+  }
+}

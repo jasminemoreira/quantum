@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Quantum Calculator">
+  <!-- Full-bleed background (maskable safe-area: the glyph stays within the central 80% circle). -->
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f3eff6"/>
+      <stop offset="1" stop-color="#e3dceb"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <!-- Subtle Bloch-sphere motif (within safe area). -->
+  <g fill="none" stroke="#9bb6d4" stroke-width="6">
+    <circle cx="256" cy="256" r="150"/>
+    <ellipse cx="256" cy="256" rx="150" ry="50"/>
+  </g>
+  <!-- The state ket |ψ⟩ in the light-theme accent color. -->
+  <text x="256" y="300" text-anchor="middle"
+        font-family="'Segoe UI', system-ui, 'DejaVu Sans', sans-serif"
+        font-size="150" font-weight="700" fill="#3f6f9c">|ψ⟩</text>
+</svg>

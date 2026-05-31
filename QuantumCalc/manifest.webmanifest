@@ -1,0 +1,20 @@
+{
+  "name": "Quantum Calculator",
+  "short_name": "QCalc",
+  "description": "Symbolic quantum-state calculator — exact algebraic manipulation of circuits, offline.",
+  "lang": "en",
+  "start_url": "./quantum_calc.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#e5dfe9",
+  "theme_color": "#3f6f9c",
+  "icons": [
+    {
+      "src": "./icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

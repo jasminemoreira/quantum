@@ -1,0 +1,14 @@
+{
+  "name": "quantum-calc-tests",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Phase 6 test suites for quantum_calc.html (not part of the deliverable)",
+  "scripts": {
+    "test:core": "node --test core.test.mjs",
+    "test:ui": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.60.0"
+  },
+  "type": "module"
+}

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "versus-claude": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/jasmine/Doutorado/quantum/QuantumCalc/.versus/server.js"
+      ],
+      "env": {}
+    }
+  }
+}
