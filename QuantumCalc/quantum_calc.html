@@ -919,6 +919,10 @@ const Gate = (() => {
   const NEG_ONE = NEG(ONE);
   const INV_R2  = exact(A.Z_ONE, 1);                         // 1/√2
   const NEG_INV_R2 = exact(new Z16([-1,0,0,0,0,0,0,0]), 1);  // −1/√2
+  // v22: √X/√Y exatos. (1±i)/2 = e^{±iπ/4}/√2 = ω^{±1}/√2 ∈ ℤ[ζ₁₆] (convenção SX do Qiskit: √X²=X exato).
+  const HALF_1PI = A.reduceExact(A.MUL(INV_R2, OMEGA));      // (1+i)/2
+  const HALF_1MI = A.reduceExact(A.MUL(INV_R2, OMEGA7));     // (1−i)/2
+  const NEG_HALF_1PI = NEG(HALF_1PI);                        // −(1+i)/2
 
   // v6: e^{iα} exato quando α múltiplo de π/8 (ζ₁₆), senão numérico (via recognize)
   const expI = (alpha) => { const k = A.angleIndex16(alpha); return (k !== null) ? exact(A.zpow16(k), 0) : recognize(Math.cos(alpha), Math.sin(alpha)); };
@@ -936,6 +940,8 @@ const Gate = (() => {
     Sdg: [[ONE, ZERO],[ZERO, NEG_I]],
     T:   [[ONE, ZERO],[ZERO, OMEGA]],
     Tdg: [[ONE, ZERO],[ZERO, OMEGA7]],
+    SX:  [[HALF_1PI, HALF_1MI],[HALF_1MI, HALF_1PI]],        // √X (SX²=X)
+    SY:  [[HALF_1PI, NEG_HALF_1PI],[HALF_1PI, HALF_1PI]],    // √Y (SY²=Y)
   };
   // bases de 2 qubits (ordem |t0 t1⟩, índice = t0·2 + t1)
   const SWAP_M = [
@@ -973,6 +979,7 @@ const Gate = (() => {
     I:{t:1,c:0,p:[],base:'I'}, X:{t:1,c:0,p:[],base:'X'}, Y:{t:1,c:0,p:[],base:'Y'},
     Z:{t:1,c:0,p:[],base:'Z'}, H:{t:1,c:0,p:[],base:'H'}, S:{t:1,c:0,p:[],base:'S'},
     Sdg:{t:1,c:0,p:[],base:'Sdg'}, T:{t:1,c:0,p:[],base:'T'}, Tdg:{t:1,c:0,p:[],base:'Tdg'},
+    SX:{t:1,c:0,p:[],base:'SX'}, SY:{t:1,c:0,p:[],base:'SY'},
     P:{t:1,c:0,p:['φ'],base:'P'}, Rx:{t:1,c:0,p:['θ'],base:'Rx'},
     Ry:{t:1,c:0,p:['θ'],base:'Ry'}, Rz:{t:1,c:0,p:['θ'],base:'Rz'},
     U:{t:1,c:0,p:['θ','φ','λ'],base:'U'},
@@ -2797,7 +2804,8 @@ const Keymap = (() => {
   // ---- coluna ESQUERDA — camada 2nd (cauda longa, raras) ----
   const Q_LEFT_2 = [
     { label:'gate variants', n:4, keys:[                                    // v12: removido o botão I (identidade — não muda o estado); melhora o layout do 2nd no PWA. A porta I permanece no catálogo do motor.
-      ['gate:Sdg','S†','gate'],['gate:Tdg','T†','gate'],['gate:P','P(φ)','gate'],['gate:U','U(θφλ)','gate'] ] },
+      ['gate:Sdg','S†','gate'],['gate:Tdg','T†','gate'],['gate:P','P(φ)','gate'],['gate:U','U(θφλ)','gate'],
+      ['gate:SX','√X','gate'],['gate:SY','√Y','gate'] ] },   // v22: √X/√Y EXATOS em ℤ[ζ₁₆] (SX²=X, SY²=Y)
     { label:'2 qubits +', n:4, keys:[                                       // v12: removido o SP (espaço em branco no 2nd mobile); 4 teclas → 2 linhas (alinha com gate variants)
       ['gate:SWAP','SWAP','g2'],['gate:iSWAP','iSWAP','g2'],['gate:CCX','CCX','g2'],['gate:CSWAP','CSWAP','g2'] ] },
     { label:'operations', n:2, keys:[                                       // v12: renomeado de 'entanglement / product'; ‖ψ‖/factor entram, ⟨φ|ψ⟩/⊗/save-φ saíram. v14: SP,SP removidos (8 teclas = 4 linhas exatas em 2-col; eram p/ o layout 5-col antigo)

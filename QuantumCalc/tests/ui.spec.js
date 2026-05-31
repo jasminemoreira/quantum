@@ -1262,6 +1262,14 @@ test('v21-35 sem duplicação: pointerup + click no MESMO botão aplica UMA vez 
   expect(await dirac(page)).toBe('|1⟩');                                           // X uma vez: |0⟩→|1⟩ (se dobrasse, |1⟩→|0⟩)
 });
 
+test('v22 √X (pág.2): aplicar duas vezes = X (|0⟩→|1⟩)', async ({ page }) => {
+  await act(page,'key:1'); await act(page,'key:Q'); await act(page,'key:SET');   // |0⟩ (1 qubit)
+  await act(page,'page:1');                                                       // pág.2
+  await act(page,'gate:SX'); await act(page,'gate:SX');                           // √X·√X = X
+  expect(await dirac(page)).toBe('|1⟩');
+  await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);             // √X é EXATO (sem badge ≈)
+});
+
 test('v21-26 preset no estado default ALL executa SEM re-apertar ALL (Bell)', async ({ page }) => {
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩ (2 qubits) — indicador ALL (default, allFlag=false)
   await expect(page.locator('#selection')).toContainText('ALL');
