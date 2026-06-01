@@ -53,7 +53,7 @@ test('manual.html: vendored KaTeX renders offline (no degradation)', async ({ pa
   expect(katex).toBe(kets);
 });
 
-test('manual.html: structure (Part I reference + Part II cookbook 21 + Part III algorithms 5, links)', async ({ page }) => {
+test('manual.html: structure (Part I reference + Part II cookbook 21 + Part III algorithms 9, links)', async ({ page }) => {
   await page.goto(DOC);
   // Part I — reference (static EN sections)
   await expect(page.locator('#part-reference')).toBeVisible();
@@ -61,15 +61,15 @@ test('manual.html: structure (Part I reference + Part II cookbook 21 + Part III 
   await expect(page.locator('#exactness')).toBeVisible();   // §12 Exactness & conventions (v13: calc mode §10 removed)
   // Part II — cookbook (v21: 4 algorithm cards moved to Part III as E1–E5 + advanced renumbered A1–A9; 25 − 4 = 21)
   await expect(page.locator('#part-cookbook')).toBeVisible();
-  expect(await page.locator('.ex').count()).toBe(26);          // 21 cookbook + 5 algorithm cards
-  expect(await page.locator('article.algo').count()).toBe(5);  // Part III
+  expect(await page.locator('.ex').count()).toBe(30);          // 21 cookbook + 9 algorithm cards (v23: +E6,E7,E8,E10; E9 deferred)
+  expect(await page.locator('article.algo').count()).toBe(9);  // Part III (v23: E1–E8 + E10)
   expect(await page.locator('.ex:not(.algo)').count()).toBe(21);
   await expect(page.locator('#tier-basic')).toBeVisible();
   await expect(page.locator('#tier-intermediate')).toBeVisible();
   await expect(page.locator('#tier-advanced')).toBeVisible();
-  // Part III — classic algorithms (v21)
+  // Part III — classic algorithms (v21: E1–E5; v23: + E6,E7,E8,E10 — E9 Quantum counting deferred to next cycle)
   await expect(page.locator('#part-algorithms')).toBeVisible();
-  for (const id of ['E1','E2','E3','E4','E5']) await expect(page.locator(`#ex-${id}`)).toBeVisible();
+  for (const id of ['E1','E2','E3','E4','E5','E6','E7','E8','E10']) await expect(page.locator(`#ex-${id}`)).toBeVisible();
   // back link goes to the calculator (the consolidated doc no longer links to a separate examples page)
   await expect(page.locator('a.back', { hasText: 'back to the calculator' })).toBeVisible();
   // v21: floating quick-nav (index + calc) is present and stays fixed while scrolling

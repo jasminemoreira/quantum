@@ -125,14 +125,25 @@
      ficam paradas enquanto display já cresceu → app cresce momentaneamente → salto. Solução: animar HEIGHT
      real (JS captura natural antes do toggle, CSS transiciona height linearmente). Curves sincronizadas. */
   .display{transition:height .25s cubic-bezier(.4,0,.2,1)}
-  .zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits{
+  .zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view{
     transition:height .25s cubic-bezier(.4,0,.2,1), opacity .25s cubic-bezier(.4,0,.2,1),
                padding .25s cubic-bezier(.4,0,.2,1), margin .25s cubic-bezier(.4,0,.2,1);
     overflow:hidden}
   body.display-expanded .zone-kets-prepare-factor,
   body.display-expanded .zone-gates,
   body.display-expanded .zone-gate-variants,
-  body.display-expanded .zone-2-qubits{height:0 !important;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;pointer-events:none}     /* v19-L17: !important p/ a class vencer o inline z.style.height = natural */
+  body.display-expanded .zone-2-qubits,
+  body.display-expanded .zone-input,
+  body.display-expanded .zone-measure-view{height:0 !important;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;pointer-events:none}     /* v22-20: ANIMA o colapso (height:0 .25s) — restaura a animação que o v22-19 perdeu */
+  /* v22-20: ao ASSENTAR a animação (~280ms, classe adicionada em JS), tira a zona do FLUXO do grid (display:none)
+     → some a linha vazia + o row-gap de 7px (o "vão extra"). Combina animação suave + vão zero; o resíduo é doado
+     ao display. No collapse, a classe é removida ANTES de animar a volta (zona reaparece em height:0 → anima p/ natural). */
+  body.display-expanded-settled .zone-kets-prepare-factor,
+  body.display-expanded-settled .zone-gates,
+  body.display-expanded-settled .zone-gate-variants,
+  body.display-expanded-settled .zone-2-qubits,
+  body.display-expanded-settled .zone-input,
+  body.display-expanded-settled .zone-measure-view{display:none !important}
   /* v21-4: ao EXPANDIR, empilha o painel principal — esfera centralizada EM CIMA, estado em largura cheia EMBAIXO
      (evita o estado espremido ao lado da esfera no layout em linha). Só no modo expandido; normal segue lado a lado. */
   body.display-expanded #dispMain{flex-direction:column;align-items:center}
@@ -216,6 +227,8 @@
   .angle-sheet.open{transform:translateY(0)}
   .angle-sheet.dragging{transition:none}                 /* segue o dedo sem lag durante o arrasto */
   .sheet-handle{width:40px;height:4px;border-radius:3px;background:var(--line);margin:1px auto 7px;flex:0 0 auto}
+  /* v22-3: a entrada de amplitudes (amp) reusa A MESMA gaveta/pad da entrada de ângulo (sem campos nativos /
+     sem teclado do celular) — 4 valores reais digitados em sequência. Nenhum CSS próprio necessário. */
   .kp-dimmed{opacity:.42;filter:saturate(.7);transition:opacity .2s}
   .kp-L{flex:1.45;min-width:0} .kp-R{flex:1;min-width:0}
   .kp-panel{border:1px solid var(--line);border-radius:11px;padding:9px 9px 10px;
@@ -263,15 +276,18 @@
   .kp-page[data-page="0"] .zone-controlled{order:5;grid-column:span 1}
   .kp-page[data-page="0"] .zone-operations .kp-grid,
   .kp-page[data-page="0"] .zone-controlled .kp-grid{grid-template-columns:1fr!important}   /* tiras de 1/4 (vertical): 5 botões = 5 linhas, batem c/ o numeric ao lado */
-  /* PÁGINA 2 (cauda-longa): gate-variants|2-qubit no topo; operations | presets embaixo */
-  .kp-page[data-page="1"] .zone-gate-variants{grid-column:span 2}
-  .kp-page[data-page="1"] .zone-2-qubits{grid-column:span 2}
-  .kp-page[data-page="1"] .zone-operations{grid-column:span 2}
-  .kp-page[data-page="1"] .zone-presets-blocks{grid-column:span 2}
+  /* PÁGINA 2 (cauda-longa) — v22-4 (operadora): 2 COLUNAS REAIS de alturas INDEPENDENTES (override do
+     display:contents base p/ a pág.2): col ESQ = input + operations · col DIR = gate variants + 2 qubits +
+     presets/blocks. Cada coluna empilha seus grupos por conta própria → a página NÃO cresce além da coluna
+     mais alta (≤ pág.1; o carrossel compartilha a altura, então a pág.1 fica intocada). */
+  .kp-page[data-page="1"] .kp-L{display:flex;flex-direction:column;gap:7px;grid-column:1/3}
+  .kp-page[data-page="1"] .kp-R{display:flex;flex-direction:column;gap:7px;grid-column:3/5}
   .kp-page[data-page="1"] .zone-gate-variants .kp-grid{grid-template-columns:repeat(2,1fr)!important}
   .kp-page[data-page="1"] .zone-2-qubits .kp-grid{grid-template-columns:repeat(2,1fr)!important}
-  .kp-page[data-page="1"] .zone-operations .kp-grid{grid-template-columns:repeat(2,1fr)!important}
+  .kp-page[data-page="1"] .zone-density-entanglement .kp-grid,
+  .kp-page[data-page="1"] .zone-measure-view .kp-grid{grid-template-columns:repeat(2,1fr)!important}   /* v22-16: 'operations' dividido em 2 blocos */
   .kp-page[data-page="1"] .zone-presets-blocks .kp-grid{grid-template-columns:repeat(3,1fr)!important}
+  .kp-page[data-page="1"] .zone-input .kp-grid{grid-template-columns:repeat(3,1fr)!important}
   .kp-dots{display:flex;justify-content:center;gap:9px;margin-top:1px}
   .kp-dot{width:9px;height:9px;border-radius:50%;border:none;padding:0;cursor:pointer;background:var(--line);transition:background .15s,transform .15s}
   .kp-dot.on{background:var(--accent);transform:scale(1.3)}
@@ -301,13 +317,15 @@
     button.kk{font-size:12.5px;padding:6px 2px;min-height:40px}     /* compacto p/ caber 1 tela */
     .kk.fn{font-size:12.5px}                                        /* COMMAND 5-col (CTRL/SET) */
     .kk.op{font-size:12.5px}
-    .mode-quantum.paged .kp-page[data-page="1"] .zone-operations .kk{font-size:11.5px}      /* bloco denso da pág.2 (ρ/Schmidt/S(ρ)/C/‖ψ‖/factor) — escopo por [data-page] (não afeta operations da pág.1) */
+    .mode-quantum.paged .kp-page[data-page="1"] .zone-density-entanglement .kk,
+    .mode-quantum.paged .kp-page[data-page="1"] .zone-measure-view .kk{font-size:11.5px}    /* v22-16: blocos densos da pág.2 (Schmidt/S(ρ)/⟨ZZ⟩/…) — não afeta operations da pág.1 */
     .kk.dg{font-size:17px} .kk.eq{font-size:17px}
   }
   /* phones estreitos (≤380px: 360–375 Android comuns, iPhone SE/mini) — fonte menor p/ |−i⟩, 1/√2, etc. */
   @media(max-width:380px){
     button.kk{font-size:11.5px} .kk.fn{font-size:11px} .kk.op{font-size:11px}
-    .mode-quantum.paged .kp-page[data-page="1"] .zone-operations .kk{font-size:10.5px}
+    .mode-quantum.paged .kp-page[data-page="1"] .zone-density-entanglement .kk,
+    .mode-quantum.paged .kp-page[data-page="1"] .zone-measure-view .kk{font-size:10.5px}
     .kk.dg{font-size:16px} .kk.eq{font-size:16px}
   }
   /* v12/v14: PWA INSTALADO (standalone) — sem barra de título (o nome do app já está na barra do SO). v14: o appbar
@@ -2802,15 +2820,24 @@ const Keymap = (() => {
       ['op:prob','prob','op'],['op:measure','measure','op'],['op:bloch','Bloch','op'],['op:inner','⟨φ|ψ⟩','op'],['op:tensor','⊗','op'] ] },
   ];
   // ---- coluna ESQUERDA — camada 2nd (cauda longa, raras) ----
-  const Q_LEFT_2 = [
+  // v22-4 (operadora): pág.2 em 2 COLUNAS reais (alturas independentes).
+  // col ESQUERDA = input + operations · col DIREITA = gate variants + 2 qubits + presets/blocks.
+  const Q2_COL_L = [
+    { label:'input', n:3, keys:[                                     // v22: composição de estado de 1 qubit (FRESCO, como SET)
+      ['input:T','|T⟩','ket'],['input:rand','rand','ket'],['input:amp','amp','ket'] ] },   // v22-5: input = COR DE KET (rosa) — são preparação de estado, não operação. |T⟩ EXATO (H·T); rand=Haar ≈; amp=α,β diretas ≈
+    // v22-16/17: 'operations' (9 teclas) SPLIT em 2 blocos; v22-17 ORDEM = input → measure&view → density&entanglement
+    // (os dois de cima — input + measure&view — COLAPSAM ao expandir o display; density&entanglement permanece embaixo).
+    { label:'measure & view', n:2, keys:[                                    // correlação, norma, fase global, vista fatorada
+      ['op:corr','⟨ZZ⟩','op'],['op:norm','‖ψ‖','op'],['op:globalPhase','phase','op'],['evidence','factor','op'] ] },   // ⟨ZZ⟩ = correlação por paridade (ALL → ⟨Z⊗…⟩; n Q → ⟨Z_n⟩; i Q j Q → ⟨Z_i Z_j⟩)
+    { label:'density & entanglement', n:2, keys:[                            // família da matriz densidade + medidas de emaranhamento
+      ['op:density','ρ','op'],['op:partial','ρ_A','op'],['op:schmidt','Schmidt','op'],['op:vonneumann','S(ρ)','op'],['op:concurrence','C','op'] ] },
+  ];
+  const Q2_COL_R = [
     { label:'gate variants', n:4, keys:[                                    // v12: removido o botão I (identidade — não muda o estado); melhora o layout do 2nd no PWA. A porta I permanece no catálogo do motor.
       ['gate:Sdg','S†','gate'],['gate:Tdg','T†','gate'],['gate:P','P(φ)','gate'],['gate:U','U(θφλ)','gate'],
       ['gate:SX','√X','gate'],['gate:SY','√Y','gate'] ] },   // v22: √X/√Y EXATOS em ℤ[ζ₁₆] (SX²=X, SY²=Y)
     { label:'2 qubits +', n:4, keys:[                                       // v12: removido o SP (espaço em branco no 2nd mobile); 4 teclas → 2 linhas (alinha com gate variants)
       ['gate:SWAP','SWAP','g2'],['gate:iSWAP','iSWAP','g2'],['gate:CCX','CCX','g2'],['gate:CSWAP','CSWAP','g2'] ] },
-    { label:'operations', n:2, keys:[                                       // v12: renomeado de 'entanglement / product'; ‖ψ‖/factor entram, ⟨φ|ψ⟩/⊗/save-φ saíram. v14: SP,SP removidos (8 teclas = 4 linhas exatas em 2-col; eram p/ o layout 5-col antigo)
-      ['op:density','ρ','op'],['op:partial','ρ_A','op'],['op:schmidt','Schmidt','op'],['op:vonneumann','S(ρ)','op'],['op:concurrence','C','op'],['op:corr','⟨ZZ⟩','op'],
-      ['op:globalPhase','phase','op'],['op:norm','‖ψ‖','op'],['evidence','factor','op'] ] },   // v21-32: ⟨ZZ⟩ = correlação quântica por paridade (ALL → ⟨Z⊗…⟩; n Q → ⟨Z_n⟩; i Q j Q → ⟨Z_i Z_j⟩)
     { label:'presets / blocks', n:3, keys:[                          // v9: macros (ALL preset | i Q j Q preset)
       ['preset:QFT','QFT','g2'],['preset:QFTinv','QFT†','g2'],['preset:Bell','Bell','g2'],
       ['preset:GHZ','GHZ','g2'],['preset:Grover','Grover','g2'],['preset:W','W','g2'] ] },
@@ -2832,13 +2859,62 @@ const Keymap = (() => {
 
   ];
   const C_STRIP = [];   // v13: sem tecla de modo (calc aposentada); 'calc' agora é só a superfície de entrada de ângulo/λ
+  // v22-6: pad CIENTÍFICO da entrada de AMPLITUDE (amp) — amplitude é número COMPLEXO (≠ ângulo, que é real),
+  // então precisa de √, sin, cos, exp (e^{iθ} via Euler — exp() trata expoente complexo; '^' o truncaria ao real),
+  // e (constante), i, π. Cada amplitude (α, β) é UMA expressão complexa avaliada por Calc.evaluate.
+  const C_AMP = [
+    { label:'', n:6, keys:[
+      ['calc:√','√','k'],['calc:sin','sin','k'],['calc:cos','cos','k'],['calc:exp','exp','k'],['calc:1/√2','1/√2','k'],['calc:i','i','k'] ] },   // v22-13: "e" (constante) trocado por 1/√2 (amplitude exata mais comum); fase = exp(iθ), não e^()
+    { label:'', n:4, keys:[
+      ['calc:(','(','op'],['calc:)',')','op'],['key:BKSP','⌫','fn'],['calc:/','/','g2'],
+      ['calc:7','7','dg'],['calc:8','8','dg'],['calc:9','9','dg'],['calc:*','×','g2'],
+      ['calc:4','4','dg'],['calc:5','5','dg'],['calc:6','6','dg'],['calc:-','−','g2'],
+      ['calc:1','1','dg'],['calc:2','2','dg'],['calc:3','3','dg'],['calc:+','+','g2'],
+      ['calc:0','0','dg'],['calc:.','.','dg'],['calc:π','π','k'],['eval','=','eq'] ] },
+  ];
   function layout(mode, page){
+    if (mode === 'amp') return { strip:C_STRIP, cols:{ L:[], R:C_AMP } };             // v22-6: pad científico p/ entrada de amplitude complexa
     if (mode === 'calc') return { strip:C_STRIP, cols:{ L:C_LEFT, R:C_RIGHT } };   // entrada inline de ângulo/λ — 2 colunas, SEM paginação
     // v14: modo quântico = carrossel de 2 páginas + bloco de comando fixo.
     // pág.1 = paleta frequente (Q_LEFT_1) + numérico; pág.2 = cauda-longa (Q_LEFT_2) full-width, sem numérico.
-    return { strip:Q_STRIP, command:Q_COMMAND, pages:[ { L:Q_LEFT_1, R:Q_NUMERIC }, { L:Q_LEFT_2, R:null } ] };
+    return { strip:Q_STRIP, command:Q_COMMAND, pages:[ { L:Q_LEFT_1, R:Q_NUMERIC }, { L:Q2_COL_L, R:Q2_COL_R } ] };
   }
   return { MODES, layout };
+})();
+
+/* =====================================================================
+   v22 (M-input) — Prep : preparação de estados de 1 qubit (teclas de input
+   |T⟩ / rand / amp da pág.2). Núcleo PURO (sem DOM). |T⟩ é EXATO (macro H·T,
+   reaproveita o motor ℤ[ζ₁₆]); rand/amp são NUMÉRICOS (≈) — alimentam o mesmo
+   caminho aproximado + badge ≈ já existente. Os três SUBSTITUEM por um estado
+   FRESCO de 1 qubit (decisão P1/P3 — como SET), não atuam dentro de registro.
+   ===================================================================== */
+const Prep = (() => {
+  // |T⟩ EXATO = T·H|0⟩ = (|0⟩ + e^{iπ/4}|1⟩)/√2 ∈ ℤ[ζ₁₆]. Macro atômico: |0⟩ → H → T.
+  // (P2/P3 achado B: reseta p/ |0⟩ 1 qubit; nunca aplica sobre estado pré-existente → sempre exato.)
+  function tState(){
+    let s = State.computational(1);
+    s = Engine.apply(s, 'H', { targets:[0] });
+    s = Engine.apply(s, 'T', { targets:[0] });
+    return s;
+  }
+  // rand: ponto Haar-uniforme na esfera de Bloch (P2/P3 achado D — NÃO θ uniforme).
+  // θ = acos(1−2u), φ = 2πv  (u,v ∈ [0,1)) → |ψ⟩ = cos(θ/2)|0⟩ + e^{iφ}sin(θ/2)|1⟩. Numérico (≈).
+  function randAmps(u, v){
+    const theta = Math.acos(1 - 2*u), phi = 2*Math.PI*v;
+    const c = Math.cos(theta/2), s = Math.sin(theta/2);
+    return [[0, c, 0], [1, s*Math.cos(phi), s*Math.sin(phi)]];
+  }
+  // amp: amplitudes diretas α|0⟩+β|1⟩, normalizadas (‖ψ‖=1). Numérico (≈).
+  // α=β=0 (vetor nulo) → null (estado inválido; a UI rejeita com erro).
+  function normAmps(aRe, aIm, bRe, bIm){
+    const n = Math.hypot(aRe, aIm, bRe, bIm);
+    if (n < 1e-12) return null;
+    return [[0, aRe/n, aIm/n], [1, bRe/n, bIm/n]];
+  }
+  // v22-14: polarToRect REMOVIDO (morto) — a entrada polar/exp do amp passou a ser via exp(i·θ) no pad
+  // científico (Calc.evaluate complexo), então o helper r∠θ→a+bi não é mais usado pelo app.
+  return { tState, randAmps, normAmps };
 })();
 
 /* =====================================================================
@@ -2870,6 +2946,7 @@ const UI = (() => {
   let _preExpandBlochCss = '';   // v21-3: tamanho colapsado da esfera guardado no expand → no collapse, a esfera encolhe ANTES do display
   let angleEntry = null;   // v2: entrada inline de ângulo {gate, meta, params, idx}
   let lambdaEntry = null;  // v4: entrada inline de autovalor λ {cmd, label, gate} (porta sobre ket abstrato)
+  let ampEntry = null;     // v22-3: entrada guiada de amplitudes {fmt:'rect'|'polar', idx:0..3, vals:[]} — reusa o pad da gaveta de ângulo (sem teclado nativo)
   const CARDINAL_KETS = ['0','1','+','-','i','-i'];
 
   // --- avaliador de expressões de ângulo (entrada do próprio usuário, local) ---
@@ -2901,7 +2978,7 @@ const UI = (() => {
   function captureExpansionGeometry(){
     const kp = $('keypad'); if (!kp) return;
     const body = document.body;
-    const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits');
+    const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
     if (!zones.length) return;
     // Disable transitions durante a medição (sem flash visível)
     const origTrans = [];
@@ -2943,6 +3020,10 @@ const UI = (() => {
   // re-mediu/re-setou a altura, congelava na altura INICIAL (~340) porque getBoundingClientRect retorna o
   // valor pré-animação ao começar a transição. Fix: só toggleExpand mexe em altura/classe; observer só
   // atualiza a affordance via applyExpand. (v19-L4 contrato bilateral height-fixo-no-reload mantido.)
+  // v22-21: fillExpandedDisplay REMOVIDO — era no-op sob zoom-fit (slack negativo) e, quando atuava, crescia o
+  // display COM transição no settle, contribuindo p/ o "pulinho". O ganho de espaço vem do `extra` (recuperação do
+  // row-gap colapsado), aplicado INSTANTANEAMENTE no settle (sem movimento). Folga real do fundo, se houver, é
+  // assunto do fitViewport (que não roda expandido) — não vale o custo de motion aqui.
   function applyExpand(){
     const ab = $('dispArrowBottom');
     if (ab){
@@ -2986,7 +3067,7 @@ const UI = (() => {
       // v19-L9 + L16: medição REAL via flip-flop (transitions off) + EXPLICIT HEIGHT nos zones antes
       // da classe (CSS transiciona height linearmente).
       if (kp){
-        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits');
+        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
         const dispTrans = disp ? disp.style.transition : '';
         const zonesTrans = [];
         zones.forEach((z, i) => { zonesTrans[i] = z.style.transition; z.style.transition = 'none'; });
@@ -3016,17 +3097,40 @@ const UI = (() => {
       playBlochSlide(blochFirst, 'x');         // v21-5: expand = só horizontal direita→centro (vertical já fica bom; expand "perfeito")
       applyExpand();
       setTimeout(() => renderBloch(), 300);   // v21-1: esfera cresce DEPOIS do display assentar
+      // v22-20/21: ao ASSENTAR a animação de colapso (.25s), tira as zonas do fluxo (display:none via classe settled)
+      // → some o row-gap vazio; o resíduo liberado é doado ao display. v22-21: o display:none é INSTANTÂNEO (blocos
+      // sobem o resíduo), então o crescimento compensatório do display TAMBÉM tem de ser instantâneo (transition:none,
+      // mesmo frame) — senão o display anima .25s e os blocos "dão um pulinho" (sobem e voltam). Guard: colapso antes => no-op.
+      setTimeout(() => {
+        if (!_expanded || !kp || !disp) return;
+        const before = kp.offsetHeight;
+        document.body.classList.add('display-expanded-settled');
+        void kp.offsetHeight;
+        const extra = before - kp.offsetHeight;          // resíduo (linha vazia + row-gap) removido pelo display:none
+        if (extra > 0){
+          const cur = parseFloat(getComputedStyle(disp).height) || disp.getBoundingClientRect().height;
+          const t = disp.style.transition;
+          disp.style.transition = 'none';                // INSTANTÂNEO: casa com o display:none (zero movimento líquido → sem pulinho)
+          disp.style.height = (cur + extra) + 'px';
+          void disp.offsetHeight;                         // commit no mesmo frame
+          disp.style.transition = t;
+        }
+      }, 280);
     } else {
       // COLLAPSE — v21-3: INVERTE a ordem (pedido operadora) → a esfera encolhe PRIMEIRO, depois o display.
       const collapseDisplay = () => {
         const blochFirst = blochRect();           // v21-5: posição ANTES (coluna, centro-topo)
         lockApp();
+        // v22-20: tira o display:none (settled) ANTES — as zonas voltam ao fluxo ainda em height:0 (classe
+        // display-expanded), um reflow fixa esse estado; só então removemos display-expanded p/ animar height 0→natural.
+        document.body.classList.remove('display-expanded-settled');
+        if (kp) void kp.offsetHeight;
         document.body.classList.remove('display-expanded');
         if (disp) disp.style.height = _preExpandDispH;
         _preExpandDispH = '';
         playBlochSlide(blochFirst, 'xy');         // v21-6: collapse = diagonal (centro-topo→direita-centro) — elimina o "pulo para baixo"
         // Limpa inline heights após a animação para o layout retomar naturalmente
-        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits');
+        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
         setTimeout(() => { zones.forEach(z => { z.style.height = ''; }); }, 270);
         applyExpand();
         setTimeout(() => renderBloch(), 300);   // finaliza o tamanho exato após o display assentar
@@ -3090,8 +3194,9 @@ const UI = (() => {
       History.init(ns, labelOf(cmd), cmd);
       qbasis = (cmd.spec.kets && !hasAbs) ? cmd.spec.kets.map(ketBasis) : Array(ns.n).fill('comp');   // v3: preparação fixa a base por qubit (concreto)
     } else if (cmd.kind === 'prepare'){
-      const m = new Map(); for (const [i, re, im] of cmd.amps) m.set(i, Algebra.numeric(re, im));
-      History.init(new State(cmd.n, m), labelOf(cmd), cmd);
+      // v22: cmd.state = estado EXATO pré-computado (|T⟩ via macro H·T); senão amplitudes numéricas (rand/amp, ≈)
+      const st = cmd.state || (() => { const m = new Map(); for (const [i, re, im] of cmd.amps) m.set(i, Algebra.numeric(re, im)); return new State(cmd.n, m); })();
+      History.init(st, labelOf(cmd), cmd);
     } else if (cmd.kind === 'apply'){
       const cur = History.current();
       const ns = cur.sym ? SymEngine.apply(cur, { gate:cmd.gate, targets:cmd.targets, controls:cmd.controls, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
@@ -3104,17 +3209,26 @@ const UI = (() => {
       History.push(ns, labelOf(cmd), cmd);
     } else if (cmd.kind === 'preset'){                                   // v9: macro/preset (bloco atômico)
       const cur = History.current();
-      if (cur.sym) throw new Error('preset requires a concrete state (unavailable in symbolic mode)');
       const n = cur.n;
       let qubits;
       if (cmd.all) qubits = Array.from({ length:n }, (_, i) => i);        // ALL → registro inteiro
       else { const lo = Math.min(...cmd.qsel), hi = Math.max(...cmd.qsel); qubits = []; for (let q = lo; q <= hi; q++) qubits.push(q); }   // dois Q → range contíguo [min..max]
       for (const q of qubits) if (q < 0 || q >= n) throw new Error(`qubit Q${q} out of range (n=${n})`);
+      // v22-15: preset roda sobre os qubits CONCRETOS de um estado simbólico (ex.: |ψ⟩⊗|0⟩|0⟩ → Bell em Q1,Q2);
+      // recusa só se algum alvo for o slot abstrato |ψ⟩ (o preset age na parte concreta — as portas H/CNOT/… já
+      // funcionam sobre qubits concretos de um SymState; antes do v22-15 todo preset era concrete-only, v9).
+      if (cur.sym){
+        const abs = qubits.find(q => cur.layout[q] === 'a');
+        if (abs !== undefined) throw new Error(`preset target Q${abs} is the abstract |ψ⟩ — presets act on concrete qubits only`);
+      }
       const need = Presets.MIN_QUBITS[cmd.name];
       if (cmd.name === 'Bell' && qubits.length !== 2) throw new Error('Bell requires exactly 2 qubits (e.g. 0 Q 1 Q Bell)');
       if (qubits.length < need) throw new Error(`${cmd.name} requires ≥${need} qubit(s)`);
       const { ops } = Presets.expand(cmd.name, qubits);
-      let ns = cur; for (const o of ops) ns = Engine.applyN(ns, o.gate, o);   // dobra as primitivas (incl. MCZ)
+      let ns = cur;
+      for (const o of ops) ns = cur.sym                                  // dobra as primitivas (incl. MCZ no caminho concreto)
+        ? SymEngine.apply(ns, { gate:o.gate, targets:o.targets || [], controls:o.controls || [], params:o.params || [] }, SymRules)
+        : Engine.applyN(ns, o.gate, o);
       const tag = qubits.length > 1 ? `q${qubits[0]}..q${qubits[qubits.length-1]}` : `q${qubits[0]}`;
       History.push(ns, `${cmd.name === 'QFTinv' ? 'QFT†' : cmd.name} ${tag}`, cmd);
     }
@@ -3126,24 +3240,9 @@ const UI = (() => {
     // volta à pág.1 é só por swipe/seta/dot. (v14 voltava sozinho assumindo uso único — atrito ao encadear.)
   }
 
-  // --- coleta de parâmetros de portas (expr na FSM → 1º param; prompt p/ resto) ---
-  function collectParams(meta){
-    if (!meta.params.length) return [];
-    const exprRaw = Parser.getExprRaw(); Parser.clearExpr();
-    const defs = { 'θ':'pi/2', 'φ':'0', 'λ':'0' };
-    const res = [];
-    for (let i = 0; i < meta.params.length; i++){
-      let val;
-      if (i === 0 && exprRaw){ val = parseExpr(exprRaw); }
-      else {
-        const inp = window.prompt(`${meta.name} — angle ${meta.params[i]} (rad; use π, sqrt, /):`, defs[meta.params[i]] || '0');
-        if (inp === null) return null;
-        val = parseExpr(inp);
-      }
-      res.push(val);
-    }
-    return res;
-  }
+  // v22-14: collectParams REMOVIDO (código morto) — coletava o 2º/3º parâmetro de U/CU via window.prompt
+  // nativo, mas NUNCA era chamado: a entrada inline de ângulo (startAngleEntry/doEval, idx 0..n-1) já coleta
+  // TODOS os parâmetros pelo pad do app. Era o último window.prompt do projeto.
 
   function onGate(name){
     const meta = Gate.meta(name);
@@ -3173,6 +3272,50 @@ const UI = (() => {
     if (r.error){ showError(r.error); refresh(); return; }
     try { execute(r.command); } catch (e){ showError(e.message); }
     refresh();
+  }
+  // v22: teclas de INPUT (pág.2) — substituem por estado FRESCO de 1 qubit (como SET; History.init).
+  // |T⟩ = EXATO (macro H·T); rand = Haar-uniforme ≈; amp = abre a gaveta de amplitudes (α,β diretas) ≈.
+  function onInput(which){
+    if (which === 'T'){
+      try { execute({ kind:'prepare', state:Prep.tState(), label:'|T⟩' }); }   // EXATO ℤ[ζ₁₆], 1 entrada de histórico (atômico)
+      catch (e){ showError(e.message); }
+      qbasis = ['comp']; Parser.clear(); refresh();
+    } else if (which === 'rand'){
+      const amps = Prep.randAmps(Math.random(), Math.random());                // numérico (≈); badge acende sozinho
+      try { execute({ kind:'prepare', n:1, amps, label:'rand' }); }
+      catch (e){ showError(e.message); }
+      qbasis = ['comp']; Parser.clear(); refresh();
+    } else if (which === 'amp'){
+      startAmpEntry();   // entrada guiada pelo PAD do app (sem teclado nativo), no idioma da entrada de ângulo
+    }
+  }
+  // v22-6: ENTRADA DE AMPLITUDE — pad CIENTÍFICO próprio (amplitude é número COMPLEXO, ≠ ângulo real).
+  // Cada amplitude (α, β) é UMA EXPRESSÃO COMPLEXA avaliada por Calc.evaluate (que já suporta √ sin cos exp
+  // e i π e aritmética complexa): retangular (a+b·i), polar/exp (r·exp(i·θ)), exato quando recai em ℤ[ζ₁₆]
+  // (1/√2, exp(iπ/4)…), ≈ quando não (√3, ângulos fora de π/8). 2 passos: α |0⟩ → '='; β |1⟩ → '='; normaliza.
+  // O FORMATO de saída (rect/polar/exp) é o toggle 'fmt' do visor — a entrada cobre os três pela expressão.
+  const AMP_FIELDS = ['α |0⟩', 'β |1⟩'];
+  function startAmpEntry(){
+    ampEntry = { idx:0, vals:[] };
+    Parser.clearExpr(); calcBuf = ''; calcResult = '';
+    applySheet(true); refresh();   // abre a gaveta com o pad científico; o buffer aparece no #display
+  }
+  function cancelAmp(){ ampEntry = null; calcBuf = ''; calcResult = ''; clearError(); applySheet(false); renderKeypad(); refresh(); }
+  function doAmpEval(){
+    if (!calcBuf.trim()){ calcResult = '⚠ enter a complex expression (e.g. 1/√2, (√3+i)/2, exp(i·π/3))'; refresh(); return; }
+    const r = Calc.evaluate(calcBuf.trim(), null);            // avaliador COMPLEXO completo (√ sin cos exp e i π …)
+    if (r.error){ calcResult = '⚠ ' + r.error; refresh(); return; }
+    const c = r.isPi ? { re: r.piNum, im: 0 } : Algebra.toComplex(r.value);   // π solto = real; senão complexo
+    ampEntry.vals.push(c);
+    calcBuf = ''; calcResult = '';
+    if (ampEntry.idx + 1 < 2){ ampEntry.idx++; refresh(); return; }   // próxima amplitude (β)
+    const [a, b] = ampEntry.vals;
+    const amps = Prep.normAmps(a.re, a.im, b.re, b.im);
+    if (!amps){ showError('α and β cannot both be zero (null vector) — re-enter'); ampEntry.idx = 0; ampEntry.vals = []; refresh(); return; }
+    ampEntry = null;
+    try { execute({ kind:'prepare', n:1, amps, label:'amp' }); } catch (e){ showError(e.message); }
+    qbasis = ['comp']; Parser.clear();
+    applySheet(false); renderKeypad(); refresh();   // gaveta desce + reconstrói o teclado (auto-return)
   }
   // v4: entrada inline do AUTOVALOR λ ao aplicar uma porta a um ket abstrato.
   // O teclado vira o da calc; '=' confirma λ (número/fase exata via Calc, ou símbolo livre se o
@@ -3399,10 +3542,13 @@ const UI = (() => {
         out(`${branchesTxt}\n\nCollapsed to |${pick.outcome}⟩ (P = ${pick.str}).`);
       }
       else if (op === 'partial'){
-        const keep = askQubits('Qubits to KEEP (e.g.: 0 or 0,1):', '0'); if (!keep) return;
+        const keep = Parser.peekOperands().targets.slice();   // v22-8: qubits a MANTER via gramática de operandos (0 Q 1 Q ρ_A), igual ao ⟨ZZ⟩ — sem prompt nativo
+        if (!keep.length){ showError('select the qubit(s) to KEEP first, e.g. 0 Q ρ_A  (or 0 Q 1 Q ρ_A)'); return; }
+        if (keep.some(q => q < 0 || q >= s.n)){ showError('selected qubit is out of the state'); return; }
         const d = Ops.reducedDM(s, keep);
         const grid = d.rho;
         out(`ρ_A (keeping Q${d.keep.join(',Q')}), dim ${d.dim}×${d.dim}:\n${fmtMatrix(grid)}`);
+        Parser.clear();
       }
       else if (op === 'concurrence'){
         const c = Ops.concurrencePure(s);
@@ -3413,18 +3559,15 @@ const UI = (() => {
         out(`Schmidt decomposition (Q0 | Q1):\n  λ = [${sc.lambdas.map(x=>+x.toFixed(6)).join(', ')}]\n  coef = [${sc.coeffs.map(x=>+x.toFixed(6)).join(', ')}]\n  Schmidt rank = ${sc.rank}  → ${sc.entangled ? 'ENTANGLED' : 'separable'}`);
       }
       else if (op === 'vonneumann'){
-        const keep = askQubits('Subsystem A — qubits to keep (e.g.: 0):', '0'); if (!keep) return;
+        const keep = Parser.peekOperands().targets.slice();   // v22-8: subsistema A via operandos (0 Q S(ρ)), sem prompt nativo
+        if (!keep.length){ showError('select the qubit(s) of subsystem A first, e.g. 0 Q S(ρ)'); return; }
+        if (keep.some(q => q < 0 || q >= s.n)){ showError('selected qubit is out of the state'); return; }
         const v = Ops.vonNeumann(s, keep);
         out(`von Neumann entropy S(ρ_A), A = Q${v.keep.join(',Q')}:\n  S = ${(+v.S.toFixed(6))} bits${v.exactEig ? '  (exact eigenvalues)' : '  (numeric eigenvalues)'}\n  eigenvalues λ = [${v.vals.map(x=>+x.toFixed(6)).join(', ')}]`);
+        Parser.clear();
       }
       clearError();
     } catch (e){ showError(e.message); }
-  }
-  function askQubits(msg, def){
-    const inp = window.prompt(msg, def); if (inp === null) return null;
-    const arr = inp.split(/[ ,]+/).filter(Boolean).map(Number);
-    if (arr.some(x => !Number.isInteger(x) || x < 0)) { showError('invalid qubit list'); return null; }
-    return arr;
   }
   function bar(value){ return value > 0 ? `▏${'█'.repeat(Math.max(1, Math.round(value*14)))}` : ''; }   // v21-28: escala 20→14 (P=1 não estoura a largura no mobile) + pad dinâmico do valor (sem vão fixo)
 
@@ -3460,6 +3603,19 @@ const UI = (() => {
     applyDisplayPane();   // v16: reconcilia o painel do visor (transform + affordance + inert) em TODOS os caminhos do refresh
     const disp = $('stateDisplay'), sel = $('selection'), status = $('statusLine'), badge = $('approxBadge');
     disp.textContent = ''; sel.textContent = '';
+    if (ampEntry){                                       // v22-6: entrada de amplitude COMPLEXA (α, β como expressão) — buffer no visor + prompt do passo
+      disp.dataset.plain = calcBuf || '⌶';
+      disp.appendChild(document.createTextNode(calcBuf || '⌶'));
+      sel.appendChild(document.createTextNode('∿ amp · ' + AMP_FIELDS[ampEntry.idx]));
+      if (badge) badge.classList.remove('show');         // durante a digitação não há estado novo p/ sinalizar
+      if (!status.classList.contains('err')){
+        const cfmt = (c) => Algebra.format(Algebra.numeric(c.re, c.im), 'rect').text;                  // amplitude já confirmada (compacta)
+        const done = ampEntry.vals.map((c, i) => `${AMP_FIELDS[i].split(' ')[0]}=${cfmt(c)}`).join(' · ');
+        status.textContent = `amp · ${AMP_FIELDS[ampEntry.idx]} = ?  [${ampEntry.idx + 1}/2]` + (done ? `  ·  ${done}` : '') + `  ·  swipe ↓ to cancel`;
+      }
+      $('historyOut').textContent = History.labels().join('\n') || '(empty)';
+      return;
+    }
     if (angleEntry || lambdaEntry){
       // entrada inline de ângulo/λ: expressão na linha principal, prompt na linha de status (v13: calc-mode livre removido)
       disp.dataset.plain = calcBuf || '⌶';
@@ -3491,7 +3647,7 @@ const UI = (() => {
         sel.appendChild(document.createTextNode(' · ')); const vsp = document.createElement('span'); vsp.className = 'base'; vsp.textContent = rd.form; sel.appendChild(vsp);   // v12: rótulo de forma (factored/expanded) separado do basisLabel
         if (badge) badge.classList.toggle('show', !!rd.approx);
         if (!status.classList.contains('err'))
-          status.textContent = 'buffer: ' + Parser.bufferText() + (rd.approx ? '    [numeric coefficient ≈]' : '') + (SymRules.entries().length ? '    rules: ' + SymRules.entries().length : '');
+          status.textContent = 'buffer: ' + Parser.bufferText() + (SymRules.entries().length ? '    rules: ' + SymRules.entries().length : '');   // v22-9: "[numeric coefficient ≈]" removido — redundante com o badge ≈
         $('historyOut').textContent = History.labels().join('\n') || '(empty)';
         if (showProb) symProb(cs);                          // v21-24: distribuição simbólica/mista no MESMO toggle showProb (symProb trata os casos inválidos com erro próprio); permite LIGAR e DESLIGAR
         return;
@@ -3550,8 +3706,7 @@ const UI = (() => {
     if (badge) badge.classList.toggle('show', !!approxFlag);
     if (!status.classList.contains('err')){
       const ex = Parser.getExprRaw();
-      status.textContent = 'buffer: ' + Parser.bufferText() + (ex ? `   |   angle: ${ex}` : '') +
-        (rd.approx ? '    [numeric amplitude ≈]' : '');
+      status.textContent = 'buffer: ' + Parser.bufferText() + (ex ? `   |   angle: ${ex}` : '');   // v22-9: "[numeric amplitude ≈]" removido — redundante com o badge ≈ do topo
     }
     $('historyOut').textContent = History.labels().join('\n') || '(empty)';
   }
@@ -3807,7 +3962,8 @@ const UI = (() => {
   function renderKeypad(){
     // v15: durante a entrada de ângulo/λ a GAVETA (#angleSheet, irmã de #keypad) cobre o teclado; este NÃO é reconstruído
     // (fica inert+dim via applySheet; o buffer é pintado no #display). No-op aqui ⇒ sem rebuild/replay por tecla.
-    if (angleEntry || lambdaEntry) return;
+    // v22-12: ampEntry idem — o rebuild apagava o kp-dimmed/inert (fundo voltava a aparecer habilitado durante a entrada de amplitude).
+    if (angleEntry || lambdaEntry || ampEntry) return;
     const lay = Keymap.layout('quantum', page);
     // -- faixa de vistas (segmentada, perto do display) --
     const vstrip = $('viewStrip'); vstrip.textContent = '';
@@ -3828,13 +3984,14 @@ const UI = (() => {
     const track = document.createElement('div'); track.className = 'kp-strip'; track.id = 'pageStrip';
     lay.pages.forEach((pg, idx) => {
       const pageEl = document.createElement('div'); pageEl.className = 'kp-page'; pageEl.dataset.page = idx;
-      if (pg.R){                                                   // página com 2 colunas (paleta | numérico)
+      if (pg.R){                                                   // página com 2 colunas (pág.1: paleta|numérico · pág.2: input+ops | variants+2q+presets)
         const colL = document.createElement('div'); colL.className = 'kp-col kp-L';
         for (const grp of pg.L) colL.appendChild(buildPanel(grp));
         const colR = document.createElement('div'); colR.className = 'kp-col kp-R';
-        colR.appendChild(buildPanel(pg.R));
+        const rGroups = Array.isArray(pg.R) ? pg.R : [pg.R];       // v22-4: R pode ser 1 grupo (pág.1) ou vários (pág.2)
+        for (const grp of rGroups) colR.appendChild(buildPanel(grp));
         pageEl.appendChild(colL); pageEl.appendChild(colR);
-      } else {                                                     // página full-width (cauda-longa): painéis diretos
+      } else {                                                     // página full-width (painéis diretos) — não usada atualmente
         for (const grp of pg.L) pageEl.appendChild(buildPanel(grp));
       }
       track.appendChild(pageEl);
@@ -3861,8 +4018,12 @@ const UI = (() => {
       if (!sheet){
         sheet = document.createElement('div'); sheet.className = 'angle-sheet'; sheet.id = 'angleSheet';
         const handle = document.createElement('div'); handle.className = 'sheet-handle'; sheet.appendChild(handle);   // affordance de arraste
-        const calc = Keymap.layout('calc');                            // {cols:{L:[], R:[pad enxuto reusado]}}
-        for (const grp of calc.cols.R) sheet.appendChild(buildPanel(grp));
+        if (ampEntry){                                                 // v22-6: AMPLITUDE = pad CIENTÍFICO (√ sin cos exp e i + numérico), SEM os atalhos de ângulo
+          for (const grp of Keymap.layout('amp').cols.R) sheet.appendChild(buildPanel(grp));
+        } else {                                                       // ÂNGULO/λ = atalhos π/8·π/4·π/2 + pad enxuto
+          sheet.appendChild(buildPanel({ label:'', n:3, keys:[['quick:π/8','π/8','k'],['quick:π/4','π/4','k'],['quick:π/2','π/2','k']] }));
+          for (const grp of Keymap.layout('calc').cols.R) sheet.appendChild(buildPanel(grp));
+        }
         document.getElementById('keypadArea').insertBefore(sheet, pad);   // ANTES de #keypad → .first() resolve p/ a gaveta (não p/ o comando inerte)
         initSheetSwipe(sheet);
       }
@@ -3899,7 +4060,7 @@ const UI = (() => {
         suppressClick = true; setTimeout(() => { suppressClick = false; }, 80);            // descarta o click pós-arrasto (tap numa tecla NÃO é engolido)
         const dy = e.clientY - y0;
         sheet.style.transform = '';                                                        // a classe .open volta a controlar (snap-back) ou applySheet(false) leva p/ baixo
-        if (dy > sheet.offsetHeight * 0.30){ if (lambdaEntry) doLambda(true); else if (angleEntry) cancelAngle(); }   // commit → ESC
+        if (dy > sheet.offsetHeight * 0.30){ if (ampEntry) cancelAmp(); else if (lambdaEntry) doLambda(true); else if (angleEntry) cancelAngle(); }   // commit → ESC
       }
     };
     sheet.addEventListener('pointerup', end);
@@ -3910,14 +4071,23 @@ const UI = (() => {
   function routeAction(action){
     if (lambdaEntry){                                  // v4: durante entrada de λ: calc/=/⌫ ; CLR/mode = deixar simbólico (nó)
       if (action === 'eval'){ doLambda(false); }
+      else if (action.startsWith('quick:')){ calcBuf = action.slice(6); calcResult = ''; refresh(); }   // v22: atalho de ângulo SUBSTITUI o buffer (não insere no meio → evita '2π/8')
       else if (action.startsWith('calc:')){ onCalc(action.slice(5)); }
       else if (action === 'key:BKSP'){ calcBuf = calcBuf.slice(0,-1); calcResult = ''; refresh(); }
       else if (action === 'angcycle'){ cycleAngle(); }   // v16: permite alternar rad↔turns DURANTE a entrada (antes era engolido pela guarda)
       else if (action === 'key:CLR' || action === 'mode'){ doLambda(true); }
       return;
     }
+    if (ampEntry){                                     // v22-6: entrada de amplitude complexa (pad científico próprio)
+      if (action === 'eval'){ doAmpEval(); }
+      else if (action.startsWith('calc:')){ onCalc(action.slice(5)); }
+      else if (action === 'key:BKSP'){ calcBuf = calcBuf.slice(0,-1); calcResult = ''; refresh(); }
+      else if (action === 'key:CLR' || action === 'mode'){ cancelAmp(); }
+      return;
+    }
     if (angleEntry){                                   // durante entrada de ângulo: só calc/=/⌫/cancelar
       if (action === 'eval'){ doEval(); }
+      else if (action.startsWith('quick:')){ calcBuf = action.slice(6); calcResult = ''; refresh(); }   // v22: atalho de ângulo SUBSTITUI o buffer (π/8, π/4, π/2)
       else if (action.startsWith('calc:')){ onCalc(action.slice(5)); }
       else if (action === 'key:BKSP'){ calcBuf = calcBuf.slice(0,-1); calcResult = ''; refresh(); }
       else if (action === 'angcycle'){ cycleAngle(); }   // v16: alterna rad↔turns DURANTE a entrada
@@ -3962,6 +4132,7 @@ const UI = (() => {
         if (arg !== 'saveBra' && arg !== 'tensor' && hasDetail()) switchDisplayPane(1);   // v16: op com RESULTADO → auto-rola p/ o detalhe (animado); M (confirmação) e ⊗ (troca de estado) NÃO rolam
       }
       else if (kind === 'cmd'){ onCmd(arg); }
+      else if (kind === 'input'){ onInput(arg); }            // v22: |T⟩ / rand / amp — composição de estado de 1 qubit
       else if (kind === 'calc'){ onCalc(arg); }
     } catch (e){ showError(e.message); }
   }
@@ -4096,13 +4267,13 @@ const UI = (() => {
     document.addEventListener('keydown', (e) => {
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       const k = e.key;
-      if (angleEntry || lambdaEntry){                                   // v13: entrada inline de ângulo/λ (calc-mode livre removido)
+      if (angleEntry || lambdaEntry || ampEntry){                       // v13/v22-3: entrada inline de ângulo/λ/amplitude (mesmo pad)
         if (/^[0-9.]$/.test(k)) onCalc(k);
         else if ('+-*/^()'.includes(k)) onCalc(k);
         else if (lambdaEntry && /^[a-zA-Zλμθφψχπ{}]$/.test(k)) onCalc(k);   // v4: símbolo livre / fase estruturada de λ (ex.: λ, t, e^{2πiθ})
-        else if (k === 'Enter'){ e.preventDefault(); lambdaEntry ? doLambda(false) : doEval(); }
+        else if (k === 'Enter'){ e.preventDefault(); ampEntry ? doAmpEval() : lambdaEntry ? doLambda(false) : doEval(); }
         else if (k === 'Backspace'){ e.preventDefault(); calcBuf = calcBuf.slice(0,-1); calcResult=''; refresh(); }
-        else if (k === 'Escape'){ if (lambdaEntry) doLambda(true); else if (angleEntry) cancelAngle(); }
+        else if (k === 'Escape'){ if (ampEntry) cancelAmp(); else if (lambdaEntry) doLambda(true); else if (angleEntry) cancelAngle(); }
         return;
       }
       if (/^[0-9]$/.test(k)) onKey(k);
@@ -4149,7 +4320,7 @@ const UI = (() => {
 
 // expõe os módulos p/ inspeção/console didático
 window.QC = { Algebra, Gate, State, Engine, Ops, Parser, Render, History, Calc, Bloch, Keymap, UI,
-              SymExpr, SymState, SymEngine, SymRules, Presets };
+              SymExpr, SymState, SymEngine, SymRules, Presets, Prep };
 document.addEventListener('DOMContentLoaded', UI.init);
 
 // PWA service worker — registra SÓ fora de file:// (SW não roda em file://; abrir o arquivo direto

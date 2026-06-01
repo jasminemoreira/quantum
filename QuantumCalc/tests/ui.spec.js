@@ -1089,9 +1089,11 @@ test('v21-24 abrir Bloch com ALL selecionado fixa a seleção em Q0', async ({ p
 test('v20-UI-8 tap FORA do centro não cicla (mantém Q0)', async ({ page }) => {
   await bell(page);
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'op:bloch');
+  await expect(page.locator('#blochLabel')).toHaveText('Q0');                         // âncora: esfera aberta em Q0
+  await page.waitForTimeout(360);                                                     // espera a animação de zoom do canvas (.28s) ASSENTAR antes de medir (senão o box é obsoleto → clique cai perto do centro → ciclo)
   const box = await page.locator('#blochCanvas').boundingBox();
-  // tap perto da borda da esfera (longe do centro além de tapRadius)
-  await page.mouse.click(box.x + 10, box.y + 10);
+  // tap no CANTO da esfera (máxima distância do centro, bem além do tapRadius de 44px)
+  await page.mouse.click(box.x + 3, box.y + 3);
   await expect(page.locator('#blochLabel')).toHaveText('Q0');                         // não cicla
 });
 

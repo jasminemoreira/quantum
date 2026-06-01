@@ -23,8 +23,12 @@ function loadQC(){
   return new Function('window','document',`${script}\n;return window.QC;`)(window, document);
 }
 const QC = loadQC();
-const { State, Engine, Render, Presets } = QC;
-const dirac = (s, f='exp') => Render.dirac(Render.terms(s, f).list);
+const { State, SymState, Engine, SymEngine, Render, Presets } = QC;
+// anti-AP7 pins use the EXPANDED Dirac (engine-correctness check; independent of the manual's factored
+// display). v23: dispatch on type so symbolic E10 renders through diracSym.
+const dirac = (s) => (s && s.sym)
+  ? Render.diracSym(s, 'exp')
+  : Render.dirac(Render.terms(s, 'exp').list);
 const PARAM_GATES = new Set(['CP','CRz','Rx','Ry','Rz','P','U','CU']);
 
 // Evaluate an inline angle expression built from calc: tokens (π → Math.PI). Cards use only π,/,-,digits.
@@ -37,11 +41,17 @@ function evalAngle(expr){
 // Minimal step interpreter mirroring the keypad FSM for the vocabulary the algorithm cards use:
 // key:<digit>, key:Q, key:CTRL, key:ALL, key:SET, gate:<NAME>, preset:<NAME>, page:0/page:1 (no-op), calc:*, eval.
 function runSteps(steps){
-  let s = null, num = '', targets = [], controls = [], allFlag = false;
+  let s = null, num = '', targets = [], controls = [], allFlag = false, kets = [];
   let pending = null, expr = '';   // pending parametric gate awaiting eval
   const reset = () => { num=''; targets=[]; controls=[]; allFlag=false; };
+  // v23: faithful to the UI's cmd.kind==='apply' path — Engine.apply (concrete, strict arity) /
+  // SymEngine.apply (symbolic). The new cards use named multi-control gates (CSWAP, CCX, CZ) so the
+  // strict-arity Engine.apply accepts them; E10 carries a symbolic |ψ⟩ through SymEngine.
   const applyGate = (name, params) => {
-    if (allFlag){ for (let q=0;q<s.n;q++) s = Engine.apply(s,name,{targets:[q],controls:[],params}); }
+    if (s && s.sym){
+      if (allFlag){ for (let q=0;q<s.n;q++) s = SymEngine.apply(s,{gate:name,targets:[q],controls:[],params}); }
+      else s = SymEngine.apply(s,{gate:name,targets:targets.slice(),controls:controls.slice(),params});
+    } else if (allFlag){ for (let q=0;q<s.n;q++) s = Engine.apply(s,name,{targets:[q],controls:[],params}); }
     else s = Engine.apply(s, name, { targets:targets.slice(), controls:controls.slice(), params });
     reset();
   };
@@ -52,12 +62,16 @@ function runSteps(steps){
       if (step === 'eval'){ const p = pending; pending=null; applyGate(p.name,[evalAngle(expr)]); expr=''; continue; }
       throw new Error('unexpected step during angle entry: ' + step);
     }
+    if (k === 'ket'){ kets.push(v); continue; }      // v23: symbolic / cardinal ket (raw label for SymState.fromKets)
     if (k === 'key'){
       if (/^[0-9]+$/.test(v)) { num += v; continue; }
       if (v === 'Q')   { targets.push(parseInt(num,10)); num=''; continue; }
       if (v === 'CTRL'){ controls.push(parseInt(num,10)); num=''; continue; }
       if (v === 'ALL') { reset(); allFlag = true; continue; }
-      if (v === 'SET') { const count = targets[0]; s = State.computational(count); reset(); continue; }
+      if (v === 'SET') {                              // v23: ket-string → SymState; else N-qubit computational
+        s = kets.length ? SymState.fromKets(kets) : State.computational(targets[0]);
+        kets = []; reset(); continue;
+      }
       throw new Error('unknown key step: ' + step);
     }
     if (k === 'gate'){
@@ -65,9 +79,13 @@ function runSteps(steps){
       applyGate(v, undefined); continue;
     }
     if (k === 'preset'){
-      const qs = allFlag ? Array.from({length:s.n},(_,i)=>i) : (targets.length===1 ? targets.slice() : [Math.min(...targets), Math.max(...targets)]);
+      const qs = allFlag ? Array.from({length:s.n},(_,i)=>i)
+        : (targets.length===1 ? targets.slice() : Array.from({length:Math.max(...targets)-Math.min(...targets)+1},(_,i)=>Math.min(...targets)+i));
       const { ops } = Presets.expand(v, qs);
-      for (const o of ops) s = Engine.applyN(s, o.gate, o);
+      // v23: a preset may run on a symbolic state (E10 Bell preset on |ψ⟩|0⟩|0⟩) → SymEngine.
+      for (const o of ops) s = (s && s.sym)
+        ? SymEngine.apply(s, { gate:o.gate, targets:o.targets||[], controls:o.controls||[], params:o.params||[] })
+        : Engine.applyN(s, o.gate, o);
       reset(); continue;
     }
     if (k === 'page') continue;                      // carousel navigation (page:0/page:1) — no engine effect
@@ -86,12 +104,28 @@ const EXPECT = {
   'E4/after 1 iteration → P(|111⟩)=25/32':  '−(1/4√2)|000⟩ − (1/4√2)|001⟩ − (1/4√2)|010⟩ − (1/4√2)|011⟩ − (1/4√2)|100⟩ − (1/4√2)|101⟩ − (1/4√2)|110⟩ − (5/4√2)|111⟩',
   'E4/after 2 iterations → P(|111⟩)=121/128': '−(1/8√2)|000⟩ − (1/8√2)|001⟩ − (1/8√2)|010⟩ − (1/8√2)|011⟩ − (1/8√2)|100⟩ − (1/8√2)|101⟩ − (1/8√2)|110⟩ + (11/8√2)|111⟩',
   'E5/count |001⟩ ⊗ |1⟩':                   '|0011⟩',
+  // v23 — E6–E10 (states captured from the real engine; see specs/references/44 + the cycle-24 P5 decision).
+  'E6/final state — input register ∈ {|00⟩,|11⟩}': '(1/2)|0000⟩ + (1/2)|0011⟩ + (1/2)|1100⟩ − (1/2)|1111⟩',
+  'E7/message 00 (I) → |00⟩':  '|00⟩',
+  'E7/message 01 (X) → |01⟩':  '|01⟩',
+  'E7/message 10 (Z) → |10⟩':  '|10⟩',
+  'E7/message 11 (ZX) → −|11⟩':'−|11⟩',
+  'E8/after the controlled ×11 mod 15 (work register holds |1⟩ or |11⟩)':
+    '(1/2)|000001⟩ + (1/2)|011011⟩ + (1/2)|100001⟩ + (1/2)|111011⟩',
+  'E8/after QFT† — counting register peaks at {0, 2}':
+    '(1/2)|000001⟩ + (1/2)|001011⟩ + (1/2)|100001⟩ − (1/2)|101011⟩',
+  // E9 (Quantum counting) deferred to the next cycle — see the P5 scope decision.
+  'E10/|ψ⟩|0⟩|0⟩ SET': '|ψ⟩⊗|00⟩',
+  'E10/pre-measurement: |ψ⟩ spread over the 4 (q0,q1) branches':
+    '(1/2·ψ₀)|000⟩ + (1/2·ψ₀)|100⟩ + (1/2·ψ₁)|010⟩ − (1/2·ψ₁)|110⟩ + (1/2·ψ₀)|011⟩ + (1/2·ψ₀)|111⟩ + (1/2·ψ₁)|001⟩ − (1/2·ψ₁)|101⟩',
+  'E10/deferred correction (CNOT · CZ) → q2 recovers |ψ⟩':
+    '(1/2)|00⟩⊗|ψ⟩ + (1/2)|10⟩⊗|ψ⟩ + (1/2)|01⟩⊗|ψ⟩ + (1/2)|11⟩⊗|ψ⟩',
 };
 
 const algos = examples.filter(e => e.part === 'III');
 
-test('v21: Part III has exactly the 5 MVP algorithms', () => {
-  assert.deepEqual(algos.map(e=>e.id).sort(), ['E1','E2','E3','E4','E5']);
+test('v23: Part III has 9 algorithm cards E1–E8 + E10 (E9 deferred)', () => {
+  assert.deepEqual(algos.map(e=>e.id).sort(), ['E1','E10','E2','E3','E4','E5','E6','E7','E8']);
   for (const e of algos){ assert.ok(e.motivation, `${e.id}.motivation`); assert.ok(e.result, `${e.id}.result`); }
 });
 
@@ -119,6 +153,8 @@ function keyTokens(keys){
 }
 for (const ex of algos){
   for (const r of ex.results){
+    if (!r.keys) continue;   // v23: E6–E10 omit the hand `keys` string — the doc DERIVES keys from steps
+                             // (examples-render.stepsToKeys), so there is no parallel hand string to lie.
     test(`v21 keys↔steps consistency: ${ex.id}/${r.label}`, () => {
       const need = opsFromSteps(r.steps);      // ordered gate/preset symbols actually executed
       const toks = keyTokens(r.keys);

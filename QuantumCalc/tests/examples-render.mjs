@@ -50,7 +50,8 @@ const REFERENCE_HTML = `
   <h2 id="modes"><span class="n">2</span>Theme &amp; inline entry</h2>
   <ul>
     <li><span class="key">☾</span> / <span class="key">☀</span> — toggles the <b>theme</b>; <span class="key">?</span> opens the manual/help (new tab). Both are icon buttons below the display, right-aligned. The LCD and the Bloch sphere follow along.</li>
-    <li><b>Inline angle / eigenvalue entry (drawer):</b> a parametric gate (<code>Rx, Ry, Rz, P, U, CP, CRz, C‑U</code>) or a gate on an abstract <code>|ψ⟩</code> slides a small numeric/expression <b>drawer</b> up over the keypad — type the angle (or eigenvalue) and <span class="key">=</span> (see §6, §8). It is exact when possible (fractions, √2, π) and falls back to numeric (<code>≈</code>) otherwise. Cancel by <b>swiping the drawer down</b> (or pressing <span class="key">Esc</span> on a keyboard); on a gate over <code>|ψ⟩</code>, cancelling leaves the symbolic node <code>U|ψ⟩</code>.</li>
+    <li><b>Inline angle / eigenvalue entry (drawer):</b> a parametric gate (<code>Rx, Ry, Rz, P, U, CP, CRz, C‑U</code>) or a gate on an abstract <code>|ψ⟩</code> slides a small numeric/expression <b>drawer</b> up over the keypad — type the angle (or eigenvalue) and <span class="key">=</span> (see §6, §8). Quick-angle keys <span class="key">π/8</span> <span class="key">π/4</span> <span class="key">π/2</span> fill the field in one tap. It is exact when possible (fractions, √2, π) and falls back to numeric (<code>≈</code>) otherwise. Cancel by <b>swiping the drawer down</b> (or pressing <span class="key">Esc</span> on a keyboard); on a gate over <code>|ψ⟩</code>, cancelling leaves the symbolic node <code>U|ψ⟩</code>.</li>
+    <li><b>Amplitude entry (drawer):</b> the <span class="key">amp</span> key (page 2, input) opens a <b>scientific drawer</b> (√, sin, cos, exp, 1/√2, i, π) to type the amplitudes α, β as complex expressions — same keyboard idiom, normalized on confirm (see §5).</li>
   </ul>
 
   <h2 id="keypad"><span class="n">3</span>The keypad: fixed command + sliding pages</h2>
@@ -58,9 +59,10 @@ const REFERENCE_HTML = `
   <ul>
     <li><b>Command block (fixed, always visible):</b> <span class="sw" style="background:#C47E4F"></span>ALL/CTRL/Q/SET/<span class="key">M</span> (memory — see §7) · CLR/⌫/undo/redo/reset.</li>
     <li><b>Page 1 (frequent):</b> <span class="sw" style="background:#93B4D7"></span>gates · 1 qubit · <span class="sw" style="background:#EAB5C5"></span>kets · <span class="sw" style="background:#7E9B76"></span>controlled · <span class="sw" style="background:#8E6BA8"></span>operations (prob, measure, Bloch, ⟨φ|ψ⟩, ⊗) · and the <span class="sw" style="background:#AB97A1"></span>numeric keypad (digits, π, 1/√2).</li>
-    <li><b>Page 2 (long tail, full width):</b> S†, T†, P, U; SWAP, iSWAP, CCX, CSWAP; the <b>operations</b> ρ, ρ_A, Schmidt, S(ρ), C, ⟨ZZ⟩, phase, ‖ψ‖, factor; and the <b>presets</b> QFT, QFT†, Bell, GHZ, Grover, W (see §11). No digits on page 2.</li>
+    <li><b>Page 2 (long tail, two columns):</b> <i>left</i> — <span class="sw" style="background:#EAB5C5"></span><b>input</b> (|T⟩, rand, amp — see §5), <span class="sw" style="background:#8E6BA8"></span><b>measure &amp; view</b> (⟨ZZ⟩, ‖ψ‖, phase, factor) and <b>density &amp; entanglement</b> (ρ, ρ_A, Schmidt, S(ρ), C); <i>right</i> — <span class="sw" style="background:#93B4D7"></span><b>gate variants</b> S†, T†, P, U, √X, √Y, <span class="sw" style="background:#7E9B76"></span>2 qubits SWAP, iSWAP, CCX, CSWAP, and the <b>presets</b> QFT, QFT†, Bell, GHZ, Grover, W (see §11). No digits on page 2.</li>
     <li><b>Views strip</b> (below the display): basis · fmt · rad/trn · view.</li>
   </ul>
+  <p>Tap the bottom arrow <code>▼</code> to <b>expand the display</b> (the input/gate zones collapse to give the state more room); tap <code>▲</code> to restore.</p>
   <p>To reach page 2: <b>swipe</b> left/right (touch), click the <b>page dots</b> <code>•○</code>, press the <b>arrow keys</b> <code>←/→</code>, or drag with the mouse. The command block stays put and the typed buffer persists across the swipe. The keypad <b>stays on the current page</b> after applying a gate/preset — so you can chain several page-2 gates in a row; swipe back to page 1 when you're done.</p>
 
   <h2 id="grammar"><span class="n">4</span>“Paper keys” grammar (FSM)</h2>
@@ -97,15 +99,28 @@ const REFERENCE_HTML = `
   <p>Cardinal kets available: <code>|0⟩ |1⟩ |+⟩ |−⟩ |i⟩ |−i⟩</code>. Abstract kets: <code>|ψ⟩ |φ⟩ |χ⟩</code>.
      Mixing a digit and a ket in the same input is an error. Big-endian ordering: the 1st ket is Q0.</p>
 
+  <h3>Input keys (page 2) — single-qubit composition</h3>
+  <p>The <b>input</b> group on page 2 prepares a <b>fresh 1-qubit state</b> (like SET — it replaces the register, one undo step):</p>
+  <table>
+    <tr><th>Key</th><th>Result</th></tr>
+    <tr><td><span class="key">|T⟩</span></td><td><b>exact</b> macro H·T on |0⟩ → <code>(|0⟩ + e^{iπ/4}|1⟩)/√2</code> (the “magic” T-state). In ℤ[ζ₁₆], so <b>no ≈</b>.</td></tr>
+    <tr><td><span class="key">rand</span></td><td>a <b>random</b> 1-qubit state, sampled <b>uniformly on the Bloch sphere</b> (Haar): θ = acos(1−2u), φ = 2πv. Always normalized; numeric, so marked <code>≈</code>. Tap again for another.</td></tr>
+    <tr><td><span class="key">amp</span></td><td>type the amplitudes <b>α, β directly</b>. Opens a <b>scientific drawer</b> (√, sin, cos, exp, 1/√2, i, π, digits): enter α as one complex expression and <span class="key">=</span>, then β and <span class="key">=</span>. For a phase use <code>exp(i·θ)</code> (not <code>e^…</code>). Accepts rectangular <code>(√3+i)/2</code>, polar/exponential <code>exp(i·π/3)</code>, fractions, etc. The state is <b>normalized</b> on confirm (the ratio α:β and the relative phase are preserved); <code>α=β=0</code> is rejected (null vector). Numeric → <code>≈</code> unless the value lands exactly in ℤ[ζ₁₆] (e.g. <code>1</code>,<code>1</code> → <code>1/√2</code> each, shown exact). <b>Swipe the drawer down</b> to cancel.</td></tr>
+  </table>
+  <div class="note">Why normalize? |α|² and |β|² are probabilities and must sum to 1. <code>amp</code> rescales your input to ‖ψ‖=1 — you give the <b>direction</b> of the state, it returns the physical unit vector. Use the <span class="key">fmt</span> view to show the result as rectangular, polar or exponential.</div>
+
   <h2 id="gates"><span class="n">6</span>Gates</h2>
   <table>
     <tr><th>Group</th><th>Gates</th></tr>
-    <tr><td>1 qubit</td><td><code>H X Y Z S T Rx Ry Rz</code> · <b>page 2</b>: <code>S† T† P(φ) U(θ,φ,λ)</code></td></tr>
+    <tr><td>1 qubit</td><td><code>H X Y Z S T Rx Ry Rz</code> · <b>page 2</b>: <code>S† T† P(φ) U(θ,φ,λ) √X √Y</code></td></tr>
     <tr><td>2 qubits / controlled</td><td><code>CNOT CZ CP(λ) CRz C‑U</code> · <b>page 2</b>: <code>SWAP iSWAP CCX CSWAP</code></td></tr>
   </table>
+  <p><code>√X</code> and <code>√Y</code> (page 2, gate variants) are <b>exact</b> square-root gates in ℤ[ζ₁₆]
+     (Qiskit convention): <code>√X·√X = X</code>, <code>√Y·√Y = Y</code> exactly. <code>√X|0⟩ = (1+i)/2 |0⟩ + (1−i)/2 |1⟩</code>.</p>
   <p>Parametrized gates (<code>Rx, Ry, Rz, P, U, CP, CRz, C‑U</code>) ask for the angle(s) on an
-     <b>inline line</b> (type the expression and <span class="key">=</span>). E.g.: <code>π/2</code>, <code>2πθ</code>, <code>π/4</code>.
-     A notable angle (multiple of <b>π/8</b>) → exact; an arbitrary angle → numeric, marked <code>≈</code>.</p>
+     <b>inline drawer</b> (type the expression and <span class="key">=</span>). E.g.: <code>π/2</code>, <code>2πθ</code>, <code>π/4</code>.
+     A notable angle (multiple of <b>π/8</b>) → exact; an arbitrary angle → numeric, marked <code>≈</code>.
+     The drawer has <b>quick-angle keys</b> <span class="key">π/8</span> <span class="key">π/4</span> <span class="key">π/2</span> that <b>replace</b> the field (one tap = that angle).</p>
 
   <h3>CP vs CRz — controlled phase vs controlled rotation</h3>
   <p>They look alike but differ where it matters (the difference is invisible on 1 qubit but becomes a
@@ -146,8 +161,9 @@ const REFERENCE_HTML = `
     <tr><td><span class="key">⟨φ|ψ⟩</span></td><td>inner product of the saved φ with the current ψ — <b>concrete states</b> (save φ first with <span class="key">M</span>)</td></tr>
     <tr><td><span class="key">⊗</span></td><td>tensor product φ ⊗ ψ — works on <b>concrete AND symbolic</b> states (e.g. build <code>T·H|ψ⟩ ⊗ |φ⟩</code>); a concrete operand is promoted automatically; save φ first with <span class="key">M</span> (see §8)</td></tr>
     <tr><td><span class="key">M</span></td><td><b>memory</b> (in the fixed command block): stores the current state as φ — concrete or symbolic — read by ⟨φ|ψ⟩ and ⊗; visible on <b>both pages</b> (the command block never slides)</td></tr>
-    <tr><td colspan="2"><b>page 2:</b> <span class="key">ρ</span> density matrix · <span class="key">ρ_A</span> partial trace · <span class="key">Schmidt</span> · <span class="key">S(ρ)</span> von Neumann entropy · <span class="key">C</span> concurrence · <span class="key">⟨ZZ⟩</span> quantum correlation (parity expectation) · <span class="key">phase</span> factor out the global phase · <span class="key">‖ψ‖</span> norm ⟨ψ|ψ⟩ · <span class="key">factor</span> per-qubit factored view</td></tr>
+    <tr><td colspan="2"><b>page 2 — density &amp; entanglement:</b> <span class="key">ρ</span> density matrix · <span class="key">ρ_A</span> partial trace · <span class="key">Schmidt</span> · <span class="key">S(ρ)</span> von Neumann entropy · <span class="key">C</span> concurrence. <b>measure &amp; view:</b> <span class="key">⟨ZZ⟩</span> quantum correlation (parity expectation) · <span class="key">‖ψ‖</span> norm ⟨ψ|ψ⟩ · <span class="key">phase</span> factor out the global phase · <span class="key">factor</span> per-qubit factored view</td></tr>
   </table>
+  <div class="note"><span class="key">ρ_A</span> (partial trace) and <span class="key">S(ρ)</span> (von Neumann entropy of subsystem A) take the qubits to <b>keep</b> from the same <code>n Q</code> operand grammar as ⟨ZZ⟩ — e.g. <code>0 Q ρ_A</code>, <code>0 Q 1 Q S(ρ)</code>. With no selection they show a guiding error (no native pop-up).</div>
 
   <h2 id="symbolic"><span class="n">8</span>Symbolic engine |ψ⟩</h2>
   <p>Introducing an abstract ket (<code>|ψ⟩, |φ⟩, |χ⟩</code>) promotes the state to the <b>symbolic engine</b>,
@@ -250,6 +266,9 @@ const REFERENCE_HTML = `
      (its rotation angles are not multiples of π/8) — a nice demonstration of the exact↔numeric fallback.</div>
   <div class="note">To get the four Bell states, prepare the two input qubits and press <code>Bell</code>: e.g.
      <code>2 Q SET · 1 Q X · 0 Q 1 Q p2 Bell</code> gives Ψ⁺ from |01⟩.</div>
+  <div class="note"><b>On a symbolic state</b> a preset runs over its <b>concrete qubits</b>: with <code>|ψ⟩|0⟩|0⟩</code>,
+     <code>1 Q 2 Q Bell</code> entangles Q1,Q2 → <code>|ψ⟩⊗(|00⟩+|11⟩)/√2</code>. It is refused only if a target qubit
+     is the abstract <code>|ψ⟩</code> slot itself (presets act on concrete qubits).</div>
 
   <h2 id="exactness"><span class="n">12</span>Exactness & conventions</h2>
   <ul>
@@ -272,8 +291,9 @@ function chips(keys){
 // não de uma string escrita à mão. Elimina divergências: prep omitida ("…"), atalhos não-literais ("Bell",
 // "GHZ") e PSEUDO-teclas que não existem no app ("(I)", "(no oracle)"). Cada chip é uma tecla de verdade.
 const STEP_SIMPLE = { 'key:Q':'Q','key:CTRL':'CTRL','key:ALL':'ALL','key:SET':'SET','key:NEG':'±','key:PI':'π','key:INVSQRT2':'1/√2','key:.':'.','key:BKSP':'⌫','key:CLR':'ESC','eval':'=','page:1':'p2','fmtcycle':'fmt','chbase':'basis','angcycle':'rad/trn','viewform':'view','cmd:undo':'↶','cmd:redo':'↷','cmd:reset':'CLR','evidence':'factor' };
-const STEP_GATE = { Sdg:'S†', Tdg:'T†', CU:'C-U' };
+const STEP_GATE = { Sdg:'S†', Tdg:'T†', CU:'C-U', SX:'√X', SY:'√Y' };   // v22: √X/√Y exatos
 const STEP_OP = { bloch:'Bloch', inner:'⟨φ|ψ⟩', tensor:'⊗', saveBra:'M', density:'ρ', partial:'ρ_A', schmidt:'Schmidt', vonneumann:'S(ρ)', concurrence:'C', globalPhase:'phase', norm:'‖ψ‖', corr:'⟨ZZ⟩' };
+const STEP_INPUT = { T:'|T⟩', rand:'rand', amp:'amp' };       // v22: teclas de input (pág.2)
 const STEP_PRESET = { QFTinv:'QFT†' };
 const STEP_CALC = { '-':'−', '*':'×' };
 function tokLabel(t){
@@ -283,6 +303,7 @@ function tokLabel(t){
   if (k === 'key') return v;                                  // dígito
   if (k === 'gate') return STEP_GATE[v] || v;
   if (k === 'op') return STEP_OP[v] || v;
+  if (k === 'input') return STEP_INPUT[v] || v;
   if (k === 'preset') return STEP_PRESET[v] || v;
   if (k === 'ket') return '|' + (v === '-' ? '−' : v === '-i' ? '−i' : v) + '⟩';
   if (k === 'calc') return STEP_CALC[v] || v;
@@ -296,8 +317,8 @@ function stepsToKeys(steps){
     if (t === 'page:0') continue;                             // volta à pág.1 = implícita, não vira chip
     if (t.startsWith('calc:')){ calcRun += tokLabel(t); continue; }   // entrada de ângulo: junta "π/4" num token
     flush(); cur.push(tokLabel(t));
-    const isGate = t.startsWith('gate:'), isOp = t.startsWith('op:') || t === 'evidence', isPreset = t.startsWith('preset:');
-    let term = TERM.has(t) || isOp || isPreset;
+    const isGate = t.startsWith('gate:'), isOp = t.startsWith('op:') || t === 'evidence', isPreset = t.startsWith('preset:'), isInput = t.startsWith('input:');
+    let term = TERM.has(t) || isOp || isPreset || isInput;
     if (isGate){ const nx = steps[i+1]; term = !(nx && nx.startsWith('calc:')); }   // gate paramétrico abre entrada de ângulo → não termina ainda
     if (term){ groups.push(cur.join(' ')); cur = []; }
   }
@@ -406,6 +427,18 @@ const CIRCUITS = {
         [['box',0,'H'],['box',1,'H'],['box',2,'H']],
         [['cdot',2,3,'U']], [['cdot',1,3,'U²']], [['cdot',0,3,'U⁴']],
         [['mbox',0,2,'QFT†']], [['m',0],['m',1],['m',2]] ] },
+  E6: { n:4, labels:['|0⟩','|0⟩','|0⟩','|0⟩'], cols:[
+        [['box',0,'H'],['box',1,'H']], [['mbox',0,3,'Uꜰ']],
+        [['box',0,'H'],['box',1,'H']], [['m',0],['m',1]] ] },
+  E7: { n:2, labels:['|0⟩','|0⟩'], cols:[
+        [['box',0,'H']], [['cx',0,1]], [['box',0,'enc']], [['cx',0,1]], [['box',0,'H']], [['m',0],['m',1]] ] },
+  E8: { n:6, labels:['|0⟩','|0⟩','|0⟩','|0⟩','|0⟩','|1⟩'], cols:[
+        [['box',0,'H'],['box',1,'H']],
+        [['cx',1,2]], [['cx',1,4]],
+        [['mbox',0,1,'QFT†']], [['m',0],['m',1]] ] },
+  E10:{ n:3, labels:['|ψ⟩','|0⟩','|0⟩'], cols:[
+        [['box',1,'H']], [['cx',1,2]], [['cx',0,1]], [['box',0,'H']],
+        [['m',0],['m',1]], [['ccbox',[0,1],2,'Xᵐ¹Zᵐ⁰']] ] },
 };
 const CIRCUIT_CAP = {
   E4: 'Repeat ⟨Oracle · Diffuser⟩ √N ≈ 2× for n=3; the card runs 1 and 2 iterations.',
@@ -413,6 +446,10 @@ const CIRCUIT_CAP = {
   A4: 'Dashed lines = classical control: the measured pair (q0,q1) selects the Pauli correction on q2.',
   A5: 'enc = Alice’s encoding on q0: I / X / Z / ZX for the message 00 / 01 / 10 / 11 (here 00 and 11).',
   A3: 'By hand: H · controlled-phase π/2ᵏ · final SWAP (bit reversal). Same as one key: ALL QFT (page 2). QFT† is the inverse.',
+  E6: 'Uꜰ writes f(x)=x₀⊕x₁ (invariant under x→x⊕s); the final H⊗² makes every measured y satisfy y·s = 0 (mod 2).',
+  E7: 'enc = Alice’s Pauli on q0: I / X / Z / ZX for the messages 00 / 01 / 10 / 11.',
+  E8: 'a = 11 → order r = 2. The controlled ×11 mod 15 on the work register is just two CNOTs (it only sends |1⟩↔|11⟩); 11² ≡ 1 so q0 controls nothing. QFT† reads r into q0,q1 → gcd(11±1,15) = {3,5}.',
+  E10:'Dashed lines = classical control; the measured pair (q0,q1) selects the Pauli correction on q2 (00→I · 01→X · 10→Z · 11→ZX). Deferring it as controlled gates gives one exact state.',
 };
 function circuitFig(id){
   const spec = CIRCUITS[id]; if (!spec) return '';
@@ -424,7 +461,7 @@ function circuitFig(id){
 // quantum advantage) · Circuit / key sequence + State at key points (the result blocks) · Result
 // (classical interpretation). Pedagogical order is fixed by ALGO_ORDER; states are captured from the
 // real interface exactly like the cookbook (anti-AP7: never an invented result).
-const ALGO_ORDER = ['E1','E2','E3','E4','E5'];
+const ALGO_ORDER = ['E1','E2','E3','E4','E5','E6','E7','E8','E10'];   // v23: E9 (Quantum counting) deferred — needs a controlled-Grover keypad feature (next cycle)
 const algoCards = (examples) => {
   const byId = new Map(examples.filter(e=>e.part==='III').map(e=>[e.id,e]));
   return ALGO_ORDER.map(id=>byId.get(id)).filter(Boolean);
@@ -598,7 +635,7 @@ export function renderManual(examples, referenceSections = REFERENCE_HTML){
      <b>symbolic</b> engine for abstract kets <code>|ψ⟩</code>. Single file, offline.
      <b>Part I</b> is the reference; <b>Part II</b> is the cookbook of worked examples; <b>Part III</b> walks through the classic quantum algorithms.</p>
 ${body}
-  <footer>Quantum Calculator · manual v21 — Part I reference + Part II cookbook + Part III classic algorithms (${examples.length} worked examples). Each result is captured from the real screen (tests/examples.spec.js). Rendered offline via vendored KaTeX. <a href="quantum_calc.html">← back to the calculator</a>.</footer>
+  <footer>Quantum Calculator · manual v23 — Part I reference + Part II cookbook + Part III classic algorithms (${examples.length} worked examples). Each result is captured from the real screen (tests/examples.spec.js). Rendered offline via vendored KaTeX. <a href="quantum_calc.html">← back to the calculator</a>.</footer>
 </div>
 <script src="vendor/katex/katex.min.js"></script>
 <script>

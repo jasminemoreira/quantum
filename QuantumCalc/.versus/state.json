@@ -152,7 +152,14 @@
       "v21: named ORACLE preset (oracles shown as literal key sequences)",
       "v21: multiple instances/sizes per card / exhaustive oracle variations (one representative instance per algorithm)",
       "v21: CU(λ)/EV multi-qubit, iOS KaTeX baseline (radar from prior cycles)",
-      "v21: everything in v20-8 not touched by this delta — see prior-cycle AS-IS boundaries"
+      "v21: everything in v20-8 not touched by this delta — see prior-cycle AS-IS boundaries",
+      "v22: rand/amp de n qubits",
+      "v22: |T⟩ como ket cardeal (mexeria na máquina de bases)",
+      "v22: exatidão fora de ℤ[ζ₁₆] (√3, fases não-múltiplas de π/8)",
+      "v22: √X†/√Y†",
+      "v23: mudança no motor ℤ[ζ₁₆]/portas/FSM (delta é só doc + testes)",
+      "v23: instâncias grandes que saem de ℤ[ζ₁₆] — Shor N≠15, Simon n≥4, Quantum Counting t≥5 (π/16 → ≈approx)",
+      "v23: tudo do ciclo 23 (v22) e anteriores não tocado por este delta — ver decisões AS-IS"
     ],
     "patterns": [
       "Layered architecture",
@@ -211,7 +218,13 @@
       "Domain Model (Fowler, herdado)",
       "v20: View-only local state — _blochViewQ é variável de escopo do widget renderBloch (NÃO global, NÃO no Parser), reseta on state change. Composição natural, ZERO padrão novo",
       "v21: 100% inherited — Layered + Modular Monolith, Pure core/DOM-only-in-UI, KISS+YAGNI+SOLID, Single Source of Truth (examples-data→doc), Test-as-spec anti-drift, single-threaded; ZERO new pattern/module/gate",
-      "v21: oracle = concrete gate sequence (CNOT/X/Z/CZ/MCZ via Engine.applyN), hand-compiled with didactic comment; SymRules.declare insufficient for f(x)-oracles → concrete-gate fallback"
+      "v21: oracle = concrete gate sequence (CNOT/X/Z/CZ/MCZ via Engine.applyN), hand-compiled with didactic comment; SymRules.declare insufficient for f(x)-oracles → concrete-gate fallback",
+      "v22: macro de prep = sequência atômica de apply (|T⟩ = H·T)",
+      "v22: rand/amp via comando kind:'prepare' (estado numérico) + badge ≈",
+      "v22: entrada de amplitudes = overlay espelhando a gaveta de ângulo",
+      "v22: atalhos de ângulo = quick-insert de token na entrada de ângulo (onCalc)",
+      "v23: E6–E10 = padrão E-card herdado do v21 (renderAlgorithms + circuitSVG + card schema {id,part:III,motivation,results,result}); steps replayados geram o estado (anti-AP7); trava anti-drift no examples.test",
+      "v23: oráculo/circuito de Shor-15 TRANSCRITO de referência publicada (Beauregard/Vandersypen/N&C), não inventado"
     ],
     "constraints": [
       "Arquivo único HTML/JS sem build/toolchain",
@@ -290,24 +303,16 @@
       "v21: do not regress the 445 tests (328 Node + 117 Playwright)",
       "v21: every card state engine-generated, never invented (anti-AP7)",
       "v21: engine ℤ[ζ₁₆]/gates/FSM/presets UNTOUCHED — delta confined to examples-data.mjs + examples-render.mjs + tests",
-      "v21: result.steps maps 1:1 to checkpoint state (verified by replay)"
+      "v21: result.steps maps 1:1 to checkpoint state (verified by replay)",
+      "v22: motor exato ℤ[ζ₁₆] e sua representação INTOCADOS",
+      "v22: numéricos (rand/amp) só pelo caminho aproximado já existente (badge ≈)",
+      "v22: rand/amp substituem por estado FRESCO de 1 qubit (não atuam dentro de registro n-qubit)"
     ]
   },
-  "currentPhase": 7,
+  "currentPhase": 0,
   "currentIteration": 1,
-  "phase0Score": 95,
-  "phase0Breakdown": {
-    "clarezaProblema": 10,
-    "casosDeUso": 15,
-    "vocabulario": 10,
-    "ambiguidades": 14,
-    "foraDeEscopo": 10,
-    "criteriosSucesso": 10,
-    "premissas": 10,
-    "documentacao": 4,
-    "usuarioConfirmou": 10,
-    "iaConfiante": 5
-  },
+  "phase0Score": null,
+  "phase0Breakdown": null,
   "decisions": [
     {
       "id": "678827fe-0b0f-47fe-84fe-b1976470daa1",
@@ -2905,244 +2910,268 @@
       "category": "requirement",
       "content": "v21-43 — QFT no manual: PAREAR forma manual (didática) com a tecla de alto nível no MESMO card. A operadora notou que temos as teclas QFT/QFT† no teclado mas os exemplos faziam QFT só à mão. As duas formas já existiam, mas em cards SEPARADOS (A3=QFT manual; A9=galeria de presets). FIX: card A3 (QFT₃) reestruturado com 5 resultados que parejam: (1) QFT₃|000⟩ POR MÃO (H·CP(π/2ᵏ)·SWAP) → (2) QFT₃|000⟩ UMA TECLA (ALL QFT, pág.2) — estado capturado IDÊNTICO; (3) QFT₃|001⟩ por mão → (4) QFT₃|001⟩ uma tecla — idêntico; (5) QFT† como INVERSO: QFT·QFT†→|001⟩ de volta. A captura da tela prova visualmente a equivalência (manual==tecla, mesma string Dirac — uniforme p/ |000⟩, fases e^{2πik/8} p/ |001⟩; cross-check já garantido pelo teste v9-UI). why reescrito enquadrando \"by hand (vê a estrutura) vs one key (trabalho real)\". BÔNUS: novo diagrama de circuito QFT₃ no A3 (H · controlled-phase π/2ᵏ · SWAP final) — exigiu adicionar a op 'swap' (×—× + linha) ao renderizador circuitSVG (+ opW). A9 (galeria de presets) mantida para completude dos 6 blocos. Validação: examples.spec 4✔ (manual regenerado; estados manual/tecla idênticos confirmados por grep; circuito A3 viewBox 390×124 com H/π2/π4/SWAP) + 351 Node ✔ (motor intocado). Padrão replicável p/ Bell/GHZ/Grover (I1/I2/E4 manuais ↔ A9 teclas) se a operadora quiser estender. sw.js → qcalc-v21-43, deploy OK.",
       "timestamp": "2026-05-31T18:45:50.890Z"
+    },
+    {
+      "id": "a1b847c3-490d-479a-bf3c-4368c2338194",
+      "phase": 0,
+      "category": "scope",
+      "content": "DELIVERY TARGET (ciclo 23, DELTA MODE): DELTA COMPLETO — teclas de input/composição de estado na página 2, os 4 grupos neste ciclo, sem divisão salvo bloqueio técnico: (1) PALETA EXATA — portas √X/√Y (já implementadas como spike P5 validado: SX/SY em ℤ[ζ₁₆], SX²=X/SY²=Y, 5 Node + 1 PW verdes, commit 2b7a332) + ket |T⟩=(|0⟩+e^{iπ/4}|1⟩)/√2 (a desenhar: ket vs macro); (2) ATALHOS DE ÂNGULO π/8,π/4,π/2 (a desenhar: onde — entrada de ângulo vs quick-apply); (3) rand — estado aleatório normalizado, modo ≈ (a desenhar: 1 qubit vs n, distribuição); (4) amp — entrada direta de amplitudes α,β… numéricas, modo ≈ (a desenhar: formato a+bi vs r∠θ, nº de estados, UI). Contexto: pedido da operadora p/ servir o caso didático de iniciante (estados aleatórios/arbitrários p/ drills de conversão/probabilidade/Bloch) que hoje exige calc científica; a infra de modo aproximado + badge ≈ JÁ EXISTE (ângulos fora de π/8), então os modos numéricos (rand/amp) reaproveitam o contrato \"exato por padrão, aproximado sinalizado\". Correção de processo: este conjunto deveria ter sido aberto como ciclo Versus desde o início (a operadora apontou); √X/√Y foi feito antes do P0 (deslize), agora formalizado.",
+      "timestamp": "2026-05-31T21:46:16.438Z"
+    },
+    {
+      "id": "e178df2e-97f5-46f7-b124-acd96cf28f26",
+      "phase": 0,
+      "category": "requirement",
+      "content": "DESIGN do delta (ambiguidades P0 resolvidas pela operadora via AskUserQuestion): (1) rand = estado aleatório de 1 QUBIT (≈), no qubit selecionado ou novo — casa com drills de Bloch/conversão/probabilidade. (2) amp = entrada direta de amplitudes de 1 qubit (α|0⟩+β|1⟩), aceitando AMBOS formatos a+bi E r∠θ com toggle; normaliza ao confirmar; modo ≈. (3) |T⟩ = MACRO DE PREP (aplica H depois T ao qubit) — reaproveita portas exatas, NÃO toca em ketBasis/CARDINAL_KETS/evidência (|T⟩ não forma par de base de medição); resultado exato (|0⟩+e^{iπ/4}|1⟩)/√2. (4) Atalhos de ângulo π/8,π/4,π/2 = quick-insert NA ENTRADA DE ÂNGULO (ao digitar P/U/Rz/CP), inserindo \"π/8\" etc.; NÃO são teclas de porta na pág.2 (evita duplicar T=P(π/4)/S=P(π/2)/Z=P(π) e poluir). Já decidido antes: √X/√Y exatos (spike feito). Implicação de placement: √X/√Y já na pág.2 'gate variants'; |T⟩ + rand + amp = novo grupo 'input' na pág.2; atalhos de ângulo na UI de entrada de ângulo (não na pág.2).",
+      "timestamp": "2026-05-31T21:48:53.175Z"
+    },
+    {
+      "id": "ba1c51cd-3602-4883-af5b-ec48f883e1c3",
+      "phase": 1,
+      "category": "architecture",
+      "content": "ARQUITETURA do delta (P1, validada 'Adequada' pela operadora). Decomposição (reusa módulos existentes, mínima superfície nova): √X/√Y em Gate (matrizes ℤ[ζ₁₆], feito); |T⟩ = MACRO de 2 apply (H·T) atômicos no histórico (sem mudança de motor); atalhos π/8,π/4,π/2 = quick-insert na UI de entrada de ângulo (onCalc + render da gaveta); rand/amp = comando existente kind:'prepare' (estado numérico, badge ≈); amp = overlay NOVO espelhando a gaveta de ângulo (lê α,β em a+bi OU r∠θ com toggle). CONTRATO rand/amp (decisão da operadora): SUBSTITUEM por estado FRESCO de 1 qubit (como SET), não atuam dentro de registro n-qubit. Interfaces: rand/amp → {kind:'prepare',n:1,amps:[[0,re,im],[1,re,im]]} normalizado; |T⟩ → 2 apply agrupados; atalhos → onCalc(tokens); teclas → data-actions input:T/input:rand/input:amp roteados no routeAction. Premissas (AP4): prepare aceita amps numéricos arbitrários e renderiza c/ ≈ (verificado, execute ~3092); Math.random no runtime; rand 1 qubit = ponto Haar uniforme na esfera de Bloch; amp α=β=0 → erro (vetor nulo). Padrões herdados: monólito arquivo único JS puro sem build, KISS+YAGNI, single-threaded, reuso prepare-command + overlay-drawer. Escopo negativo: n-qubit rand/amp; |T⟩ cardeal; álgebra exata nova; √X†/√Y†; representação do motor exato intocada.",
+      "timestamp": "2026-05-31T21:55:08.596Z"
+    },
+    {
+      "id": "2ece3148-e153-45de-a8e8-5160bcdfe526",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 crítica adversarial — lentes ativadas: 7 universais + 3 condicionais (UI/UX interface; Migração/Coexistência modifica PWA em produção; Linguística/Gramática contratos de input/parsing). Não ativadas (offline/sem dados/atores): Segurança, Regulatório, Resiliência, Sustentabilidade, Ética, Governança, Observabilidade, Control Eng, Game Theory, Mecânica. Matriz 5 módulos × 8 lentes: 0 🔴, ~12 🟡, resto 🟢. ACHADOS 🟡 (a tratar em P3): (B) |T⟩ macro só dá |T⟩ a partir de |0⟩ → deve resetar p/ |0⟩ 1 qubit + H·T atômico (exato via Engine, não numeric); (C) atalho de ângulo deve SUBSTITUIR o campo por 'π/8' (não inserir no meio → '2π/8'); (D) rand = amostragem Haar uniforme na esfera (θ=acos(1−2u), φ=2πv), NÃO θ uniforme (AP7); (D/E) rand/amp substituem estado → undo deve restaurar (History.push); (E) amp = maior UI nova (campos α,β real/imag + toggle a+bi↔r∠θ), risco mobile, fluxo guiado; (E) overlay do amp coexiste com gaveta de ângulo (1 por vez); (E) parsing robusto, α=β=0→erro, amplitude vazia→0. CONCENTRAÇÃO: módulo E (amp) é o mais arriscado (inerente à entrada de complexos, não redesign); nenhuma lente sistêmica; Segurança/Regulatório vazias = corretamente inativas. A (√X/√Y) limpo (feito+testado).",
+      "timestamp": "2026-05-31T21:57:18.724Z"
+    },
+    {
+      "id": "62131c79-eb49-4804-b9c9-604cac8fa8ae",
+      "phase": 3,
+      "category": "architecture",
+      "content": "P3 simplificação/resposta unificada aos 🟡 do P2 (validada pela operadora → avançar P4). Refinos integrados SEM novo módulo (AP2 respeitado): (B) |T⟩ = reset p/ |0⟩ 1 qubit + H + T atômico (exato sempre); (C) atalho de ângulo SUBSTITUI o campo por 'π/8' (não insere no meio); (D) rand = amostragem Haar uniforme na esfera (θ=acos(1−2u), φ=2πv) — amps [cos(θ/2), e^{iφ}sin(θ/2)] via Algebra.numeric; (D/E) rand/amp como SET (History.init) — consistente com preparação, aceito; (E) amp overlay guiado reusando o mecanismo da gaveta de ângulo, coexistência 'um overlay por vez', parsing robusto (α=β=0→erro, vazio→0). Mudança estrutural ~0% (0 de 5 módulos reestruturados), 0 críticos → Phase 4. Anti-scope-creep ✅ (4/4): requisitos P0 cobertos, sem feature nova, o que o sistema FAZ inalterado, casos de uso válidos.",
+      "timestamp": "2026-05-31T21:58:49.089Z"
+    },
+    {
+      "id": "aa077ca7-2525-4b46-9960-e05a8e3ac659",
+      "phase": 5,
+      "category": "architecture",
+      "content": "P5 IMPLEMENTAÇÃO do delta v22 (teclas de input/composição de estado, pág.2) — CONCLUÍDA. Motor ℤ[ζ₁₆] INTOCADO (só leituras). Mudanças confinadas a quantum_calc.html + 2 arquivos de teste.\n\nNÚCLEO PURO NOVO — módulo `Prep` (IIFE, sem DOM, exportado em window.QC): (1) `tState()` = |T⟩ EXATO via macro H·T sobre |0⟩ fresco (= (|0⟩+e^{iπ/4}|1⟩)/√2 ∈ ℤ[ζ₁₆]); (2) `randAmps(u,v)` = amostragem Haar-uniforme na esfera (θ=acos(1−2u), φ=2πv → [cos(θ/2), e^{iφ}sin(θ/2)]), numérico ≈; (3) `normAmps(aRe,aIm,bRe,bIm)` = amplitudes diretas normalizadas (‖ψ‖=1), null se vetor nulo; (4) `polarToRect(r,θ)` p/ entrada r∠θ.\n\nUI (M11): (a) novo grupo 'input' em Q_LEFT_2/pág.2 com teclas input:T / input:rand / input:amp (CSS .zone-input full-width embaixo); (b) routeAction despacha kind==='input' → onInput(): T/rand via execute({kind:'prepare',...}) — T com cmd.state EXATO pré-computado (execute estendido p/ aceitar estado exato; senão Algebra.numeric), rand/amp numéricos; os TRÊS substituem por estado FRESCO de 1 qubit (History.init, como SET) + qbasis=['comp']; (c) amp = overlay #ampSheet espelhando a mecânica de slide da gaveta de ângulo (.angle-sheet) mas com formulário guiado de campos NATIVOS (α/β re/im OU r/θ, toggle a+bi↔r∠θ via #ampFmtBtn), parseExpr por campo (aceita π/sqrt//), normaliza ao confirmar, α=β=0→erro inline (#ampMsg), cancel/Esc fecham; teclado atrás inert+dim; touch-action:auto override p/ caret nativo; guarda no keydown global p/ teclas não vazarem ao teclado quântico; (d) atalhos de ângulo π/8,π/4,π/2 = panel quick:… no TOPO da gaveta de ângulo, SUBSTITUEM o buffer (calcBuf=valor, não inserem) — handled nos guards angleEntry/lambdaEntry de routeAction.\n\nCONTRATO ≈ value-driven (não code-path): badge ≈ acende quando o VALOR exibido não é exatamente representável em ℤ[ζ₁₆]. Logo amp(1,1)→1/√2 mostra SEM ≈ (honesto — é exato), enquanto amp(2,1)→2/√5 acende ≈. Reuso direto da infra rd.approx existente (zero código novo de badge). |T⟩ sempre exato (badge OFF). rand genericamente ≈.\n\nTESTES: tests/v22-input-keys.test.mjs (10 Node, núcleo Prep) + tests/v22.spec.js (9 Playwright, UI E2E). Suíte total: 366 Node ✓ (0 fail) + 145 Playwright ✓ (1 fail = v20-UI-8 tap-geometria, VERMELHO PRÉ-EXISTENTE documentado, NÃO regressão). Spec specs/technical/42-v22-input-keys.md reconciliada com as decisões P3 (|T⟩/rand/amp = estado FRESCO de 1q como SET; atalho substitui; rand Haar; amp a+bi∧r∠θ). S7 micro-check aplicado: corrigida fuga de teclas físicas p/ o teclado atrás do overlay amp.",
+      "timestamp": "2026-05-31T22:16:59.851Z"
+    },
+    {
+      "id": "99f2846b-2af3-4e66-b4e0-365b0791558e",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-2 — FIX de LAYOUT pós validação humana no device (operadora). PROBLEMA reportado: o grupo 'input' (|T⟩/rand/amp) foi colocado como uma LINHA FULL-WIDTH nova no fim da pág.2; como o carrossel iguala a altura das 2 páginas (.kp-page = flex item que estica até a altura da página mais alta), isso ESTICOU a pág.1 (que estava perfeita e NÃO devia ter sido tocada — eu não mudei nenhuma tecla da pág.1, mas a altura compartilhada a afetou). A operadora: \"não era pra mexer na posição do primeiro teclado… havia um monte de espaço no segundo teclado… volte ao layout anterior da primeira tela e reacomode na segunda.\" CAUSA-RAIZ: a pág.2 tinha vão VAZIO ao lado de 'operations' (9 teclas/2-col = 5 linhas, alta) — 'presets' (3-col, 2 linhas) deixava espaço morto abaixo. A linha nova ignorou esse vão e cresceu a página. FIX (CSS-only, zero motor/JS): colocação EXPLÍCITA de grid na pág.2 — gate-variants[1/3,r1] · 2-qubits[3/5,r1] · operations[1/3,r2/4] (ocupa as 2 faixas inferiores à esquerda) · presets[3/5,r2] · input[3/5,r3]. Assim input empilha sob presets DENTRO do vão que operations já definia → altura da pág.2 = gate-variants + operations (idêntica à de antes) → pág.1 volta ao normal. VERIFICADO: page1=page2=418px (diff 0) em viewport 412×915 (Motorola retrato) + screenshot conferido. Testes: v22.spec.js 9✔ + ui.spec.js (139 pass, 1 fail = v20-UI-8 tap-geom pré-existente). LIÇÃO: num carrossel de páginas com altura compartilhada, adicionar conteúdo a UMA página afeta TODAS — preencher vão existente (colocação explícita) em vez de adicionar linha; validar igualdade de alturas. sw.js → qcalc-v22-2, deploy OK.",
+      "timestamp": "2026-05-31T22:57:00.843Z"
+    },
+    {
+      "id": "24d91ffa-fe57-422e-963c-1ba0d52df244",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-3 — ENTRADA DE AMPLITUDE (amp) REFEITA após validação humana (operadora): \"o form de input de amplitude está totalmente fora da proposta do app, abre o teclado do celular, a pessoa pode digitar XPTO, qualquer lixo... bem diferente do form de input de ângulo, que está perfeito.\" PROBLEMA: a 1ª versão usava <input> nativos (inputmode=text) → abria o teclado do SO e aceitava texto arbitrário, quebrando a identidade \"tudo pelo pad enxuto do app\". FIX: amp agora reusa A MESMA gaveta + pad da entrada de ângulo (applySheet), com a forma de estado ampEntry={fmt:'rect'|'polar', idx:0..3, vals:[]} espelhando angleEntry. Fluxo: 4 valores REAIS digitados EM SEQUÊNCIA pelo pad (α Re, α Im, β Re, β Im — ou α r, α θ, β r, β θ no polar), cada um confirmado por '=' (doAmpEval usa Calc.evaluate, MESMO avaliador exato do ângulo: aceita π, 1/√2, frações; θ sempre rad, sem turns); só tokens do pad (dígitos, π, √, /, +−×()., ⌫). Toggle a+bi↔r∠θ por CHIP tappable no #selection (data-action 'ampfmt' → toggleAmpFmt reseta idx/vals). No 4º '=': normAmps normaliza; α=β=0 → erro + reinicia a sequência (não fecha); senão execute prepare + auto-return (gaveta desce, teclado reconstrói). ESC/swipe-down/CLR cancelam (cancelAmp). Roteado pelo guard ampEntry em routeAction + keydown físico (Enter→doAmpEval, Esc→cancelAmp) + initSheetSwipe. Removidos: openAmpSheet/confirmAmp/closeAmpSheet/#ampSheet/<input>/CSS .amp-*. Prompt no #statusLine: \"amp (a+bi) · enter α: Re = ? [1/4] · tap a+bi to switch, ESC cancel\" + valores já confirmados. Testes v22.spec.js reescritos (11 PW: sem <input> nativo, normalização 2/√5 ≈, exato 1/√2 sem badge, polar 1∠0/1∠(π/2)→(|0⟩+i|1⟩)/√2, vetor nulo, ESC). 366 Node ✓ + 11 PW v22 ✓. Screenshot conferido = idioma idêntico à entrada de ângulo. LIÇÃO: num app de \"tudo pelo teclado próprio\", NUNCA usar <input> nativo (abre teclado do SO + aceita lixo); toda entrada numérica deve passar pelo pad enxuto + avaliador exato. sw.js → qcalc-v22-3, deploy OK.",
+      "timestamp": "2026-05-31T23:05:09.827Z"
+    },
+    {
+      "id": "a0591ae7-83ea-449f-b6b0-de10c6d5fb8d",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-4 — pág.2 REORGANIZADA em 2 COLUNAS REAIS (pedido da operadora no dogfooding): col ESQ = INPUT + OPERATIONS · col DIR = GATE VARIANTS + 2 QUBITS + PRESETS/BLOCKS. IMPLEMENTAÇÃO: Q_LEFT_2 (array único de 5 grupos) dividido em Q2_COL_L=[input, operations] e Q2_COL_R=[gate variants, 2 qubits, presets]; layout() pág.2 passa de {L:Q_LEFT_2,R:null} (full-width) para {L:Q2_COL_L, R:Q2_COL_R}. renderKeypad: o ramo de 2 colunas agora aceita pg.R como ARRAY de grupos (rGroups = Array.isArray(pg.R)?pg.R:[pg.R]) — pág.1 (R=Q_NUMERIC, 1 grupo) inalterada. CSS: override do display:contents base SÓ na pág.2 → .kp-page[data-page=\"1\"] .kp-L/.kp-R viram flex-column reais (grid-column 1/3 e 3/5) com altura INDEPENDENTE; removida a colocação explícita grid-row/grid-column por zona (v22-1/2). Cada coluna empilha seus grupos por conta → página não cresce além da coluna mais alta. VERIFICADO: page1=page2=418px (diff 0) viewport 412×915 + screenshot conferido (col esq input→operations; col dir gate variants→2 qubits→presets). Testes: v22.spec 11✔ + ui.spec (141 pass, 1 fail = v20-UI-8 tap-geom pré-existente, não-regressão). sw.js → qcalc-v22-4, deploy OK. NOTA: 3ª iteração de layout da pág.2 no dogfooding (v22-1 linha full-width → v22-2 encaixe no vão → v22-4 2 colunas explícitas da operadora) — a forma final é a preferência dela.",
+      "timestamp": "2026-05-31T23:11:03.839Z"
+    },
+    {
+      "id": "84b52b06-5f0d-4703-8c08-bebb91a3e547",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-6 — ENTRADA DE AMPLITUDE refeita como PAD CIENTÍFICO próprio (3ª iteração do amp; feedback operadora: \"o form de amplitude não pode ser o mesmo do ângulo — precisamos de radical, seno, cosseno, e, i, escolha de formato polar/retangular/exponencial\"). INSIGHT-CHAVE: Calc.evaluate JÁ suporta √ sin cos tan exp ln log conj abs + π e i + aritmética COMPLEXA completa (só os BOTÕES tinham sido removidos do pad do ângulo, pois ângulo é real). Logo um pad científico p/ amplitude é viável SEM mexer no motor. DESIGN (melhor que o guiado de campos): cada amplitude (α, β) é UMA EXPRESSÃO COMPLEXA única — cobre rect (a+b·i), polar/exp (r·exp(i·θ)) pela própria escrita; o \"formato\" que a operadora pediu é o toggle fmt do visor (exp/rect/polar) aplicado ao resultado. IMPLEMENTAÇÃO: novo pad C_AMP no Keymap + layout('amp') (cols.R = funções [√ sin cos exp e i] + numérico [( ) ⌫ / · dígitos · π =]); applySheet ramifica ampEntry→pad científico vs ângulo→atalhos+enxuto; ampEntry={idx:0,vals:[]} (2 passos); doAmpEval usa Calc.evaluate e LÊ O COMPLEXO (Algebra.toComplex(value), não só .re) — CRÍTICO: e^{iθ} faz-se com exp(iθ) (applyFn exp trata expoente complexo via Euler), NÃO com '^' (binop POW trunca o expoente à parte real). 2º '='→normAmps→prepare. Removidos: toggle a+bi/r∠θ, chip ampfmt, toggleAmpFmt, AMP_FIELDS(fmt) virou ['α |0⟩','β |1⟩], entrada polar de 4 campos (Prep.polarToRect fica como helper morto+testado, inofensivo). Prompt: \"amp · enter α |0⟩ as a complex expression (a+b·i, r·exp(i·θ)) = ? [1/2]\". TESTES: v22.spec reescrito (11 PW: pad científico visível sem <input>; α=2,β=1→2/√5 ≈; α=1,β=1→1/√2 exato; α=1,β=i→(|0⟩+i|1⟩)/√2; fase via exp(i·π/2)→i; vetor nulo; ESC) + v22-input-keys 10 Node. ATUALIZADOS por mudança ESTRUTURAL da pág.2 (de full-width R=null p/ 2 colunas R=array): v14.test.mjs (zoneActs/zoneLabels robustos a array, v14-6) + v2.test.mjs (keymap paginado + sem-botão-I lendo L+R). 366 Node ✓. sw.js → qcalc-v22-6, deploy OK. LIÇÃO: antes de empobrecer/replicar uma UI, checar o que o MOTOR já suporta — o avaliador complexo já existia; só faltavam os botões. Entrada por expressão complexa única > campos guiados separados (mais natural, cobre rect/polar/exp de graça).",
+      "timestamp": "2026-05-31T23:28:58.480Z"
+    },
+    {
+      "id": "258fe17b-a45c-42e2-90c8-30f86c3f1604",
+      "phase": 5,
+      "category": "scope",
+      "content": "v22-8 — ADIÇÃO DE ESCOPO aprovada pela operadora no dogfooding (AskUserQuestion opção 1): remover os window.prompt NATIVOS dos ops ρ_A (traço parcial) e S(ρ) (von Neumann), que abriam diálogo do SO (\"Qubits to KEEP\") e aceitavam texto arbitrário — mesma quebra de identidade do amp. Eram PRÉ-EXISTENTES (ciclos de densidade/emaranhamento), fora do Delivery Target original do v22 (teclas de input/composição). FIX: ρ_A e S(ρ) agora leem os qubits da GRAMÁTICA DE OPERANDOS via Parser.peekOperands().targets (0 Q ρ_A · 0 Q 1 Q S(ρ)), EXATAMENTE como o ⟨ZZ⟩ (op:corr) já fazia — zero UI nova, idioma consistente. Sem seleção → erro guiado (\"select the qubit(s) to KEEP first, e.g. 0 Q ρ_A\"); qubit fora do estado → erro; Parser.clear() após. Função askQubits REMOVIDA (era o único caller dos 2). DESCOBERTA: collectParams (3191, o OUTRO window.prompt, p/ params 2+ de U/CU) é CÓDIGO MORTO — a entrada inline de ângulo (doEval, idx 0..n-1) já coleta todos os params pelo pad do app; deixado intocado (operadora escolheu opção 1 \"só ρ_A/S(ρ)\", não a varredura completa). Testes: +3 PW em v22.spec (0 Q ρ_A→\"ρ_A (keeping Q0)\"; 0 Q S(ρ) em Bell→\"S = 1\"; sem seleção→erro \"KEEP\"). 366 Node ✓ + 14 PW v22 ✓. sw.js → qcalc-v22-8, deploy OK. LIÇÃO (reforça v22-3): num app \"tudo pelo teclado próprio\", window.prompt nativo é proibido em QUALQUER entrada — varrer e rotear pela gramática/pad existente. collectParams morto fica como dívida conhecida (varredura completa = ciclo futuro, se a operadora quiser).",
+      "timestamp": "2026-05-31T23:43:06.294Z"
+    },
+    {
+      "id": "05d253ac-c6f8-454b-aa87-4546b3f26cfa",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-10 — bloco INPUT agora COLAPSA ao expandir o display (▼), como GATE VARIANTS (feedback operadora: \"no 2º teclado o bloco INPUT não está colapsando como GATE VARIANTS, está descendo, impedindo o display expandir corretamente\"). CAUSA: o modo expandido do v19 (F3b) colapsa via CSS uma LISTA FIXA de zonas (.zone-kets-prepare-factor/.zone-gates/.zone-gate-variants/.zone-2-qubits) → height:0+opacity+pointer-events:none; a nova .zone-input não estava na lista → permanecia, empurrando o layout e impedindo o display de crescer. FIX (consistência em 4 pontos): adicionado .zone-input a (1) regra CSS de transition (height/opacity/padding/margin), (2) regra CSS body.display-expanded …{height:0!important…}, (3) as 3 querySelectorAll de captureExpansionGeometry/toggle em JS (medem altura natural/freed das zonas colapsáveis). VERIFICADO: ao expandir na pág.2, zone-input e zone-gate-variants ambas → 2px (só borda); display cresce ocupando o espaço; sobram OPERATIONS + PRESETS (design v19: operations/presets persistem). Screenshot conferido. 366 Node ✓. sw.js → qcalc-v22-10, deploy OK. LIÇÃO: ao adicionar uma zona nova ao teclado, conferir TODAS as listas que enumeram zonas (colapso/expand, geometria) — não só o layout de grid.",
+      "timestamp": "2026-06-01T00:24:08.213Z"
+    },
+    {
+      "id": "21073d63-54af-4763-ad96-8795d64c7d44",
+      "phase": 5,
+      "category": "requirement",
+      "content": "v22-11 — MANUAL atualizado p/ todo o delta v22 (pedido operadora \"atualizar o manual com tudo o que fizemos\"). manual.html é GERADO por examples-render.mjs (referência Parte I) + examples-data.mjs (cookbook Parte II), validado por examples.spec. EDIÇÕES NA REFERÊNCIA (Parte I, prosa EN): §2 (entrada inline) — +atalhos de ângulo π/8·π/4·π/2 na gaveta + NOVO item \"Amplitude entry (drawer)\" descrevendo o pad científico do amp; §3 (keypad) — pág.2 reescrita de \"full width\" p/ \"two columns\" (esq: input+operations · dir: gate variants+2 qubits+presets) + nota do expand ▼ (zonas colapsam); §5 (prepare) — NOVA subseção h3 \"Input keys (page 2)\" com tabela |T⟩ (macro H·T exato), rand (Haar-uniforme θ=acos(1−2u)/φ=2πv, ≈), amp (pad científico √ sin cos exp e i, α/β como expressão complexa, normaliza, rect/polar/exp, α=β=0→erro) + nota da normalização; §6 (gates) — +√X/√Y na tabela 1-qubit pág.2 + parágrafo \"√X·√X=X, √Y·√Y=Y exatos em ℤ[ζ₁₆]\" + quick-angle keys na nota; §7 (operations) — nota \"ρ_A e S(ρ) tomam os qubits da gramática n Q (0 Q ρ_A · 0 Q 1 Q S(ρ)), sem pop-up nativo\". COOKBOOK (Parte II): B1 título→\"(SET + the |T⟩ input key)\" +result |T⟩=H·T|0⟩ (page:1,input:T); B3 título→\"Page-2 gates: phases … and roots (√X,√Y)\" +2 results (√X|0⟩, √X·√X=X). Resultados adicionados a artigos EXISTENTES → contagem de artigos do cookbook inalterada (21), structure test passa. stepsToKeys (fonte única das teclas exibidas, v21-41) ensinado a mapear gate:SX/SY→√X/√Y, input:T/rand/amp→|T⟩/rand/amp, e input:* como terminador de grupo. VALIDAÇÃO: examples.spec 4✔ (manual regenerado, KaTeX ok, estrutura 21+5 intacta, novos estados |T⟩/√X capturados do motor — anti-AP7) + 366 Node ✔ (anti-drift lê manual.html e confirma as strings). grep confirma termos v22 no manual (√X, Haar, scientific drawer, two columns, n Q operand…). sw.js → qcalc-v22-11, deploy OK.",
+      "timestamp": "2026-06-01T00:40:23.654Z"
+    },
+    {
+      "id": "cffa4e15-f2b4-4f6b-9b18-000e0d12e7e8",
+      "phase": 6,
+      "category": "spec-coverage",
+      "content": "SPEC COVERAGE REPORT — v22 (ciclo 23). Verificado por execução (S4): Node 366/366 pass · Playwright 151 pass / 1 fail (v20-UI-8 tap-geometria, VERMELHO PRÉ-EXISTENTE documentado, NÃO-regressão).\n\nCOVERED (critério exato → teste):\n- √X²=X, √Y²=Y EXATOS → v22-sqrt-gates.test.mjs (√X|0⟩=(1+i)/2|0⟩+(1−i)/2|1⟩ exato; √X·√X=X; √Y·√Y=Y; √X|1⟩; unitária em |+⟩) [6 Node].\n- |T⟩ exato (badge OFF) → v22-input-keys (|T⟩=(|0⟩+e^{iπ/4}|1⟩)/√2, all .ex, ‖ψ‖=1) + v22.spec (#approxBadge hidden).\n- rand normalizado ‖ψ‖²=1 + badge ≈ + Haar → v22-input-keys (‖·‖²=1 p/ 5 (u,v); u=0→|0⟩,u=1→|1⟩; φ=π/2 no equador→i/√2) + v22.spec (n=1 fresco, badge visível, ‖·‖²≈1).\n- amp normaliza/bate (rect) → v22.spec (α=2,β=1→2/√5 ≈; α=1,β=1→1/√2 exato; α=1,β=i→(|0⟩+i|1⟩)/√2) + v22-input-keys (normAmps, escala 3,4→3/5,4/5).\n- amp polar/exp (fase) → v22.spec (β=exp(i·π/2)→i/√2) + v22-input-keys (polarToRect).\n- amp tecla 1/√2 → v22.spec (α=β=1/√2→|+⟩ exato).\n- amp = pad do app (sem teclado SO) → v22.spec (0 <input> nativos; √/sin/cos/exp/1√2/i visíveis).\n- atalho de ângulo substitui buffer → v22.spec (π/4 substitui, não concatena).\n- ρ_A/S(ρ) por gramática n Q → v22.spec (0 Q ρ_A → \"ρ_A (keeping Q0)\"; 0 Q S(ρ) Bell → \"S = 1\").\n- layout pág.2 2 colunas (estrutura) → v14.test/v2.test (pg.R array, input em pág.2, sem dígitos) + height check (page1=page2=418px).\n- |T⟩ cookbook + √X cookbook capturados do motor (anti-AP7) → examples.spec (4✔, manual regenerado).\n\nNEGATIVE TESTS: amp vetor-nulo α=β=0→erro (v22.spec + v22-input-keys null); ρ_A sem-seleção→erro guiado (v22.spec); calc:e ausente (v22.spec). ≈4 negativos / ≈24 positivos = ratio ~1:6 (acima do mínimo 1:2).\n\nNOT COVERED (automático, exige human-AV — Playwright headless não emula): feel do swipe/gesto da gaveta; dim/inert percebido visualmente; animação de expand do display; renderização KaTeX no WebView Android; orientação retrato; háptico. Cobertos pela validação humana no Motorola (13 iterações de dogfooding).\n\nGAPS: nenhum critério da spec 42 com teste que não verifique o critério exato.",
+      "timestamp": "2026-06-01T02:24:24.357Z"
+    },
+    {
+      "id": "082df594-0c66-40f6-8911-66ab38654c2f",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: automated-done; manual-in-progress\nPASS: Automatizado — Node 366/366; Playwright 151/152 (o único fail é v20-UI-8 tap-geometria, vermelho PRÉ-EXISTENTE de ciclo anterior, NÃO-regressão do v22). examples.spec 4/4 (manual regenerado). Validação humana PARCIAL já feita: 13 iterações de dogfooding no Motorola Edge 50 Ultra (PWA) durante o cluster v22-1..13 (layout 2 colunas, amp científico, dim do fundo, expand do INPUT, ρ_A/S(ρ) por n Q, 1/√2, rodapé limpo) — operadora dirigiu cada ajuste no device.\nFAIL: nenhum (o vermelho v20-UI-8 é pré-existente e fora do escopo v22).\nNEXT: teste exploratório manual FORMAL no device — executar os casos de uso novos de ponta a ponta + edge cases (double-tap, entrada vazia, cancelar no meio, interrupção/resume) e avaliar feedback/mensagens. Plano apresentado no chat. Aguardando a operadora retornar com resultados antes de marcar manual_testing e avançar p/ Fase 7.",
+      "timestamp": "2026-06-01T02:24:35.732Z"
+    },
+    {
+      "id": "2c6592f1-93e1-4554-9a3c-81b20bded911",
+      "phase": 6,
+      "category": "testing",
+      "content": "v22-14 — LIMPEZA DE CÓDIGO MORTO (pedido operadora durante a Fase 6). Auditoria de dead code feita antes de remover (não remover algo usado). REMOVIDOS: (1) collectParams() — função nunca chamada; coletava o 2º/3º parâmetro de U/CU via window.prompt NATIVO, mas a entrada inline de ângulo (startAngleEntry/doEval, idx 0..n-1) já coleta TODOS os params pelo pad do app. Era o ÚLTIMO window.prompt do projeto → agora ZERO pop-ups nativos (consistência total com a identidade \"tudo pelo teclado próprio\", fechando o tema iniciado em v22-3/v22-8). (2) Prep.polarToRect — helper r∠θ→a+bi não mais usado pelo app (a entrada polar do amp passou a ser exp(i·θ) via Calc.evaluate complexo no v22-6); removido de Prep + export + o teste Node que o exercitava. MANTIDOS (auditados, NÃO mortos): C_LEFT/C_STRIP (vazios mas referenciados em layout('calc')/layout('amp')). VERIFICAÇÃO: grep confirma 0 refs remanescentes (só comentários); 0 window.prompt real; Node 365/365 (era 366, −1 do teste polarToRect) ✓; Playwright v22+ui 145 pass/1 fail (v20-UI-8 pré-existente) ✓. sw.js → qcalc-v22-14, deploy OK. Comportamento do app INALTERADO (só remoção de código não-executado).",
+      "timestamp": "2026-06-01T02:37:18.340Z"
+    },
+    {
+      "id": "c3d47cf4-3df9-44a4-9a5d-4f8afba5ce92",
+      "phase": 6,
+      "category": "scope",
+      "content": "v22-15 — ADIÇÃO DE ESCOPO aprovada pela operadora (achado no teste manual da Fase 6): presets (Bell/GHZ/QFT/QFT†/Grover/W) agora rodam sobre os qubits CONCRETOS de um estado SIMBÓLICO. ANTES: todo preset era concrete-only (v9 decision) → \"preset requires a concrete state\" mesmo aplicando em qubits concretos de |ψ⟩⊗|0⟩|0⟩. A operadora perguntou por que não conseguia aplicar Bell nos 2 últimos qubits. FIX (execute, kind:'preset'): removido o guard `if(cur.sym) throw`; agora se cur.sym, recusa SÓ se algum qubit-alvo for o slot abstrato (cur.layout[q]==='a' → \"preset target Qk is the abstract |ψ⟩\"); senão dobra as ops de Presets.expand via SymEngine.apply (em vez de Engine.applyN). As portas H/CNOT/CP/SWAP já funcionavam sobre qubits concretos de um SymState (é o que o teleporte faz). VERIFICADO: |ψ⟩|0⟩|0⟩ + 1 Q 2 Q Bell → |ψ⟩⊗((1/√2)|00⟩+(1/√2)|11⟩) (engine + UI). Testes: +2 PW em v22.spec (Bell nos concretos de |ψ⟩|0⟩|0⟩; recusa quando alvo=|ψ⟩ → \"abstract\") = 17 PW v22. Node 365/365 (v9 presets concretos seguem pelo caminho Engine.applyN, intactos). Manual §11 +nota \"On a symbolic state a preset runs over its concrete qubits\". Ressalva: Grover(MCZ)/W/QFT≥5 sobre simbólico podem nem sempre ser suportados pelo SymEngine — se não, erro gracioso (não crash); Bell/GHZ/QFT≤4 confirmados. sw.js → qcalc-v22-15, deploy OK. Nota: 2ª adição de escopo da Fase 6 (após v22-8 ρ_A/S(ρ) por n Q) — ambas vindas do uso real, melhoram consistência simbólico↔concreto.",
+      "timestamp": "2026-06-01T10:51:01.274Z"
+    },
+    {
+      "id": "3e1d8a57-47c0-4e72-aa91-7b0b898f5d72",
+      "phase": 6,
+      "category": "requirement",
+      "content": "v22-16/17 — pág.2 polish de UI (dogfooding Fase 6): o bloco 'operations' (9 teclas, monólito de ~5 linhas) foi SPLIT em 2 blocos rotulados — 'density & entanglement' (ρ ρ_A Schmidt S(ρ) C) e 'measure & view' (⟨ZZ⟩ ‖ψ‖ phase factor). v22-17 (pedido operadora): col esq REORDENADA p/ input → measure&view → density&entanglement, e MEASURE & VIEW agora COLAPSA ao expandir o display (▼) junto com INPUT (adicionado .zone-measure-view às regras CSS de colapso + às 3 medições de geometria JS); DENSITY & ENTANGLEMENT permanece embaixo (espaço p/ análise enquanto o estado expandido é lido). IMPLEMENTAÇÃO: Q2_COL_L reordenado; CSS .zone-operations (pág.2 grid + font mobile) → .zone-density-entanglement + .zone-measure-view; collapse list (transition + display-expanded height:0 + querySelectorAll×3) += .zone-measure-view. VERIFICADO: ordem col esq = INPUT→MEASURE&VIEW→DENSITY&ENTANGLEMENT; ao expandir input/measure-view→2px (colapsados), density-entanglement→167px (permanece); page1=page2=418px; screenshot conferido. Manual §3/§7 atualizados (2 blocos, nova ordem). Teste ui.spec:781 (toContain 'operations') segue verde via o bloco operations da PÁG.1 (intacto). Node 365/365 ✓ · Playwright 153/154 (v20-UI-8 pré-existente) ✓. sw.js → qcalc-v22-17, deploy OK.",
+      "timestamp": "2026-06-01T11:17:30.465Z"
+    },
+    {
+      "id": "e805021d-a35e-4d82-8919-aec67852c855",
+      "phase": 6,
+      "category": "requirement",
+      "content": "v22-18 — polish do DISPLAY EXPANDIDO (dogfooding Fase 6): operadora notou (a) vão \"um pouco grande\" entre command e numeric no modo expandido e (b) display poderia crescer um pouco. DIAGNÓSTICO (medição headless 412×915): as zonas colapsadas (kets/gates) ficavam com 2px (bordas .kp-panel 1px+1px NÃO somem com height:0) → caixinhas vazias finas + grid-row-gap 7px = vão feio; e o app já estava em ZOOM-FIT (offsetHeight 914 + margens 36 > 915 → zoom 0.96), ou seja sem folga real no headless (em device mais alto pode haver). FIX: (1) border-width:0 nas zonas colapsadas (body.display-expanded …{…border-width:0}) → kets/gates colapsam a h=0, vão command↔numeric vira o espaçamento NORMAL de bloco (~14px, limpo, sem caixinhas); (2) fillExpandedDisplay() — após expandir (setTimeout 290ms, depois do lockApp liberar em 270ms), mede slack = avail(Math.max das 3 fontes) − margens − app.offsetHeight e, se >2, doa ao display (transição .25s). Corretamente NO-OP sob zoom-fit (slack negativo, headless) e REIVINDICA a folga em devices com slack genuíno (zoom=1). VERIFICADO: kets h 2→0; vão limpo no screenshot; slack=−35 no headless (no-op correto). Node 365/365 ✓ · ui+v22 147/148 (v20-UI-8 pré-existente) ✓. sw.js → qcalc-v22-18, deploy OK. Validação no device pendente (se o display cresce o \"pouquinho\").",
+      "timestamp": "2026-06-01T11:36:15.464Z"
+    },
+    {
+      "id": "834b1a87-23c6-4516-9688-7ca5e8361a0f",
+      "phase": 6,
+      "category": "testing",
+      "content": "v20-UI-8 (ui.spec \"tap FORA do centro não cicla\") — VERMELHO PRÉ-EXISTENTE desde o v20 RESOLVIDO (era teste FLAKY, não defeito do produto). CAUSA-RAIZ (diagnosticada na Fase 6, pergunta da operadora): o #blochCanvas tem transition:width/height .28s (zoom ao abrir a esfera); o teste capturava boundingBox() IMEDIATAMENTE após op:bloch, durante a animação → coords obsoletas; o page.mouse.click caía perto do centro do canvas já reposicionado → tap-cycle disparava → label virava Q1 (esperado Q0). Geometria conferida: com o canvas ASSENTADO (97×97), clique a (10,10) fica a 55px do centro > tapRadius 44px → não cicla (correto). FIX (só no teste, produto INTOCADO): (1) âncora expect blochLabel=Q0 após abrir; (2) waitForTimeout(360) p/ a animação .28s assentar ANTES de medir o box; (3) clique no canto (box.x+3) = máxima distância do centro. VERIFICADO determinístico: 5/5 passes com --repeat-each=5. LIÇÃO: ao clicar em elemento ANIMADO no Playwright, esperar a transição assentar antes de capturar boundingBox (senão o box é obsoleto). Agora a suíte deve estar 100% verde (sem o vermelho histórico). O tap-cycle real sempre funcionou (validado no device pela operadora).",
+      "timestamp": "2026-06-01T11:39:46.757Z"
+    },
+    {
+      "id": "08784a51-f060-4586-b4c6-8923cc034b23",
+      "phase": 6,
+      "category": "requirement",
+      "content": "v22-19 — FIX DEFINITIVO do \"vão extra ao expandir o display\" (operadora: persistia em web E PWA após o v22-18). CAUSA: as zonas colapsadas usavam height:0 (v19-L17, p/ animar) — mas height:0 NÃO remove a linha do CSS grid: a linha vazia + o row-gap de 7px continuavam ocupando espaço entre command e numeric (o \"vão extra\"). O border-width:0 do v22-18 só tirou 2px das bordas, não a linha. FIX: body.display-expanded .zone-*{display:none !important} — remove a linha do grid e o gap; o teclado encolhe de verdade, o `freed` (toggleExpand) contabiliza tudo e o display preenche. Trade-off: as zonas somem sem animar (height:0 animava); mas o CRESCIMENTO DO DISPLAY continua animando (.25s) — é o movimento visível. VERIFICADO (headless 412×915): vão command↔numeric 14→7px (= flex-gap normal, igual ao não-expandido); display 327→334. O appBottomToWin=17 residual é artefato do zoom-fit (app já é ligeiramente > viewport → zoom 0.97), não vão reclamável aqui; em device mais alto o fillExpandedDisplay (v22-18) reivindica slack genuíno. Suíte 154/154 100% VERDE (confirmado em 2 runs; 1 flake do pwa.spec/webServer sob carga não reproduz isolado nem no re-run). sw.js → qcalc-v22-19, deploy OK. LIÇÃO: p/ colapsar item de CSS grid sem deixar vão, display:none (remove a track); height:0 mantém a track + gap.",
+      "timestamp": "2026-06-01T11:50:57.843Z"
+    },
+    {
+      "id": "7ce279ad-b623-479e-bfb6-1a512e9acba6",
+      "phase": 6,
+      "category": "requirement",
+      "content": "v22-20 — RECONCILIAÇÃO animação ↔ vão (operadora: o v22-19 display:none fechou o vão mas MATOU a animação de colapso, \"experiência mais pobre\"). SOLUÇÃO padrão \"ANIMA-DEPOIS-REMOVE\": (1) body.display-expanded .zone-*{height:0…} volta a ANIMAR o colapso (.25s, restaura a animação); (2) ao ASSENTAR (~280ms, setTimeout no expand de toggleExpand), adiciona-se a classe body.display-expanded-settled que aplica display:none nas mesmas zonas → tira a linha do CSS grid + o row-gap de 7px (fecha o \"vão extra\"); o resíduo de altura liberado é medido (before−after kp.offsetHeight) e DOADO ao display (cresce suave) + fillExpandedDisplay. (3) No COLLAPSE (collapseDisplay): remove display-expanded-settled PRIMEIRO → zonas voltam ao fluxo ainda em height:0 → reflow → só então remove display-expanded → anima height 0→natural. Guard: se o usuário colapsa antes dos 280ms, o setTimeout checa !_expanded → no-op. VERIFICADO (headless): a ~150ms ketsH=20px (ANIMANDO 161→0); a ~700ms gap=8px + ketsH=0 + settled=true (vão fechado); após collapse gap=176 + ketsH=161 + settled=false (restaurado). Node 365/365 ✓ · ui+v22 148/148 ✓. sw.js → qcalc-v22-20, deploy OK. LIÇÃO: colapsar item de CSS grid COM animação E sem deixar vão = animar height:0 e, no transitionend/timeout, aplicar display:none (remove a track); reverter a ordem no expand-back.",
+      "timestamp": "2026-06-01T12:01:44.933Z"
+    },
+    {
+      "id": "5ea01b29-4c6d-4374-9ada-7e32d9f85e3b",
+      "phase": 6,
+      "category": "requirement",
+      "content": "v22-21 — FIX do \"pulinho\" dos blocos de baixo no FIM da expansão (operadora: blocos ficam no lugar, dão um pulinho e voltam no fim do expand; contração já era suave). CAUSA: no settle (~280ms) o display:none (classe settled) é INSTANTÂNEO → remove o row-gap → blocos sobem ~9px; mas o crescimento compensatório do display naquele instante usava a transição .25s (disp tem transition:height) → empurrava os blocos de volta SUAVEMENTE → \"sobe-e-volta\". FIX: aplicar o crescimento do `extra` no settle com transition:none (disp.style.transition='none'; set height; void offsetHeight; restaura) → mesmo frame que o display:none → movimento líquido ZERO. Também REMOVIDO fillExpandedDisplay (v22-18): era no-op sob zoom-fit e, quando atuava, crescia o display com transição no settle (mais motion); o ganho de espaço vem do `extra` (recuperação do gap) instantâneo. VERIFICADO (headless): numeric.top CONSTANTE em 570 ao longo de todo o expand (60→600ms, 10 amostras) — antes desviava ~280ms. Contração intocada (já suave). Node 365/365 ✓ · ui+v22 148/148 ✓. sw.js → qcalc-v22-21, deploy OK. LIÇÃO: ao trocar layout instantâneo (display:none) por um lado e compensar tamanho por outro, AMBOS devem ser no MESMO frame (sem transição) — senão a diferença de timing vira \"pulinho\".",
+      "timestamp": "2026-06-01T12:13:20.338Z"
+    },
+    {
+      "id": "da2456aa-b1b0-44a7-bcad-9414e990698d",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: manual-done (operadora aprovou). PASS: (1) Automatizado — Node 365/365; Playwright 154/154 (100% verde — o vermelho histórico v20-UI-8 era teste flaky, corrigido em v22-19). (2) Manual/human-AV — dogfooding EXTENSO no Motorola Edge 50 Ultra (PWA + web) ao longo do cluster v22-1..21: validou |T⟩/rand/amp (pad científico, expressões complexas, normalização), √X/√Y, atalhos de ângulo, ρ_A/S(ρ) por n Q, presets sobre estado simbólico, layout pág.2 em 2 colunas (input/measure&view/density&entanglement | gate variants/2 qubits/presets), cores de input, Bloch/prob de qubit emaranhado (vetor nulo correto), e dirigiu todo o polish da expansão do display (vão fechado + animação + sem pulinho). Edge cases cobertos: amp vetor-nulo→erro, cancelar no meio (swipe-down), fundo desabilitado, expand/colapso, resume. FAIL: nenhum. Operadora confirmou \"aprovar e avançar p/ Fase 7\". Ambos os gates (automatizado + manual) satisfeitos.",
+      "timestamp": "2026-06-01T12:16:11.627Z"
+    },
+    {
+      "id": "02c3d9c7-c0ce-4d77-8bf2-aeefcea64c86",
+      "phase": 7,
+      "category": "requirement",
+      "content": "P7 AVALIAÇÃO DO PRODUTO v22 (operadora): ATENDE ao P0, SEM PENDÊNCIAS. Os 4 grupos do Delivery Target entregues e validados no device (Motorola, PWA+web): (1) paleta exata √X/√Y + |T⟩; (2) atalhos de ângulo π/8·π/4·π/2; (3) rand (Haar 1 qubit, ≈); (4) amp (amplitudes complexas via pad científico, normaliza, ≈). Bônus do dogfooding (adições de escopo aprovadas + polish): ρ_A/S(ρ) pela gramática n Q (sem window.prompt), presets sobre qubits concretos de estado simbólico, layout pág.2 em 2 colunas com split operations→density&entanglement/measure&view + reorder + colapso no expand, cores de input (rosa/ket), entrada de amp refeita 3× até a forma final (expressão complexa única), remoção de TODO código morto/window.prompt, e polish completo da expansão do display (vão fechado + animação + sem pulinho). Suíte 100% verde: Node 365/365 + Playwright 154/154 (o vermelho histórico v20-UI-8 era teste flaky, corrigido). Motor exato ℤ[ζ₁₆] INTOCADO o ciclo inteiro. Lições em specs/technical/43-v22-lessons.md. Live qcalc-v22-21. Nada a carregar p/ próximo ciclo (radar de ciclos anteriores permanece: amp/rand n-qubit, CU(λ)/EV multi-qubit ⟨Z₀Z₁⟩, iOS KaTeX baseline, Part III E6–E10 Simon/Superdense/Shor/Counting/Teleporte expandido).",
+      "timestamp": "2026-06-01T12:31:22.790Z"
+    },
+    {
+      "id": "aad80435-b782-42b1-95d6-02b6f88a955c",
+      "phase": 0,
+      "category": "scope",
+      "content": "CICLO 24 (v23) — ESCOPO escolhido pela operadora: completar a PART III do manual com E6–E10 (carry-forward do v21): Simon, Superdense Coding (expandido), Shor N=15 (compilado), Quantum Counting, Teleportation (expandido). DOC-ONLY (manual.html via examples-render.mjs renderAlgorithms + examples-data.mjs card schema {id, part:'III', title, motivation, results:[{label,keys,steps}], result}), MESMO padrão E-card do v21 (4 seções: motivation/circuit-keys/state-at-checkpoints/result; oráculos/circuitos como sequências LITERAIS de portas concretas; estados engine-generated anti-AP7 via replay dos steps; trava anti-drift no examples.test). Motor ℤ[ζ₁₆]/portas/FSM INTOCADOS. DELTA MODE (specs/AS-IS preservados do ciclo 23).",
+      "timestamp": "2026-06-01T15:27:24.005Z"
+    },
+    {
+      "id": "5dcbda33-67f1-4f9b-bdc5-18e1b544aa79",
+      "phase": 0,
+      "category": "scope",
+      "content": "DELIVERY TARGET (ciclo 24, v23, DELTA MODE): DELTA COMPLETO — os 5 cards E6–E10 da Part III entregues neste ciclo (Simon · Superdense expandido · Shor N=15 compilado · Quantum Counting · Teleportation expandido), salvo bloqueio técnico explícito. Fecha a Part III (E1–E10). Enquadra a profundidade da pesquisa de circuitos e os limiares de viabilidade. NOTA de viabilidade a investigar no HSA: alguns (Shor N=15, Quantum Counting) usam QFT/QPE e fases que podem cair fora de ℤ[ζ₁₆] (≥5 qubits = π/16 → ≈approx) — consistente com a política v9/v21 (QFT exata ≤4q, senão ≈ sinalizado); o card mostra a sequência literal + estado capturado do motor (mesmo que ≈). Simon/Superdense/Teleporte são H/CNOT/Pauli/medição → exatos.",
+      "timestamp": "2026-06-01T15:31:10.925Z"
+    },
+    {
+      "id": "59cce29d-ff82-41b1-8c96-044005773caa",
+      "phase": 0,
+      "category": "requirement",
+      "content": "DESIGN do delta v23 (ambiguidades P0 resolvidas pela operadora). Síntese validada \"correta\". (1) E8 Shor N=15: circuito COMPILADO PORTADO DE REFERÊNCIA (a=7 ou a=11; reg. contagem 3 qubits → QFT₃ exata em ℤ[ζ₁₆], pois usa só π/2,π/4; mult. modular compilada p/ N=15 via X/SWAP/CNOT/CCX). DEPOSITAR a referência (Nielsen&Chuang cap.5 / Beauregard arXiv:quant-ph/0205095 / circuitos compilados Shor-15 publicados) em specs/references ANTES de implementar (antídoto AP7 — não inventar circuito). (2) E10 Teleportation expandido: ENUMERAR os 4 ramos de medição (00/01/10/11) + a correção de Pauli correspondente (I/X/Z/ZX) que recupera |ψ⟩ — não só 1 ramo amostrado. (3) E9 Quantum Counting (default a confirmar na pesquisa P1): instância PEQUENA com t≤4 qubits de contagem (QFT†ₜ exata) + espaço de busca pequeno (ex.: n=2, 1 item marcado), QPE sobre o operador de Grover (controlled-G^{2ʲ}); o ESTADO é exato (Grover=H/X/MCZ + QFT≤4q), o resultado/leitura de M é probabilístico (explicado na seção result). E6 Simon (n=2, s=11) e E7 Superdense (expande A5: Bell·encode·decode·measure, 4 mensagens) = exatos, baixo risco. PADRÃO: E-card v21 (motivation/circuit+keys/state-at-checkpoints/result; steps replayados geram o estado; circuitos SVG via circuitSVG; anti-drift no examples.test). Motor INTOCADO.",
+      "timestamp": "2026-06-01T15:44:23.478Z"
+    },
+    {
+      "id": "2233d365-55c4-4041-aadf-d0c896b9bf82",
+      "phase": 1,
+      "category": "architecture",
+      "content": "ARQUITETURA do delta v23 (P1, validada \"Adequada\" pela operadora). 100% HERDADA do padrão E-card do v21 — ZERO módulo/padrão novo, motor ℤ[ζ₁₆]/portas/FSM INTOCADOS. (1) DECOMPOSIÇÃO: +5 entradas E6–E10 em tests/examples-data.mjs (schema E-card {id, part:'III', title, motivation, results:[{label,keys,steps}], result}); renderAlgorithms() (existe) renderiza; circuitSVG (existe) +specs de circuito por id; examples.spec replay→captura estado (anti-AP7) + examples.test trava anti-drift + atualizar contagem Part III 5→10. (2) INTERFACES: idênticas a E1–E5 (card schema + tokens de steps key:/gate:/op:/preset:/ket:/page: que o spec aperta). (3) PREMISSAS (AP4): motor suporta H/X/Z/CNOT/CCX/SWAP/MCZ + presets + |ψ⟩ simbólico+measure; instâncias no regime EXATO (QFT₃=π/2,π/4∈ζ₁₆); Shor-15 TRANSCRITO da ref (specs/references/44), não inventado; fora de ζ₁₆ → badge ≈. (4) ESCOPO NEGATIVO: zero mudança motor/portas/FSM; sem instâncias grandes (Shor N≠15, Simon n≥4, Counting t≥5→≈); tudo do ciclo 23 e anteriores intocado (AS-IS). Padrões herdados: Single Source of Truth (examples-data→doc), Test-as-spec+anti-drift (replay), E-card renderer, oráculo=sequência literal de portas concretas, pure-core/motor-intocado, single-threaded. Sessão de IMPLEMENTAÇÃO (P5) deve ser NOVA (AP3) — escrever os 5 cards + portar Shor-15.",
+      "timestamp": "2026-06-01T15:47:43.389Z"
+    },
+    {
+      "id": "d6d51150-6777-424c-ab44-a5d2c25c2a65",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 crítica adversarial v23 (E6–E10) — lentes ativadas: 7 universais + Linguística/Gramática (contrato de tokens dos steps) + Migração/Coexistência (regenerar manual.html em produção). NÃO ativadas (offline single-file, sem dados/atores/deps externas/UI-de-app/decisões sobre pessoas): Segurança, Performance, Regulatório, Resiliência, Sustentabilidade, Ética, Governança, Observabilidade, Control Eng, Game Theory, Mecânica. MATRIZ 5 cards × lentes: 0 🔴, 3 🟡, resto 🟢. ACHADOS 🟡 (P3): (E8 Shor, Científica+Implementabilidade) circuito compilado deve ser TRANSCRITO da referência (Beauregard arXiv:quant-ph/0205095 / Vandersypen Nature 414 / N&C §5.3) e o estado capturado VERIFICADO (período r→gcd→3,5); risco mitigado por AP7 (transcrever≠inventar)+replay; (E8/E9, Assumptions) premissa estado∈ℤ[ζ₁₆] via QFT≤4q (π/2,π/4) — verificar na implementação, senão badge ≈ (aceitável); (E9 Counting, Científica) leitura de M é PROBABILÍSTICA (estimativa de fase) — a seção result explica a estimativa, não afirma valor exato. CONCENTRAÇÃO: por módulo E8(Shor) concentra (maior cuidado de transcrição+verificação, NÃO redesign — arquitetura herdada sólida); por lente a Científica concentra os 🟡 (esperado p/ doc de algoritmos); nenhuma lente sistêmica. E6/E7/E10 limpos (textbook exatos). Exit gate: 0🔴/3🟡/resto🟢 → P3 trata os 🟡.",
+      "timestamp": "2026-06-01T15:49:48.967Z"
+    },
+    {
+      "id": "4d9b8de4-0d52-4c19-a0a8-f37490ecbada",
+      "phase": 3,
+      "category": "architecture",
+      "content": "P3 resposta unificada aos 3 🟡 do P2 (v23 E6–E10), SEM novo módulo (AP2). Refinos integrados como RESTRIÇÕES de implementação: (1) E8 Shor-15 = circuito compilado TRANSCRITO da referência (specs/references/44: Beauregard/Vandersypen/N&C, a=7 ou 11, 3q contagem, QFT₃ exata) + estado capturado VERIFICADO por replay (período r→gcd(a^{r/2}±1,15)→3,5); AP7 transcrever≠inventar + anti-drift. (2) E8/E9 exatidão: verificar na implementação que o estado ∈ ℤ[ζ₁₆] (QFT≤4q=π/2,π/4); se escapar → badge ≈ (política v9/v21, aceitável). (3) E9 Counting: seção result EXPLICA a estimativa de fase (M≈N·sin²(θ/2)), não afirma valor exato (natureza do QPE). DECISÃO PÓS-CICLO: mudança estrutural ~0% (0 de 5 cards reestruturados; arquitetura 100% herdada v21), 0 críticos → Fase 4. ANTI-SCOPE-CREEP 4/4: requisitos P0 cobertos (5 cards), sem feature nova, o que o sistema FAZ inalterado (motor ℤ[ζ₁₆] intocado), casos de uso válidos. Critério de parada (<15% mudança + 0 crítico) satisfeito.",
+      "timestamp": "2026-06-01T15:54:15.201Z"
+    },
+    {
+      "id": "20a72dc2-9d11-4531-87b8-d53a45e375eb",
+      "phase": 5,
+      "category": "testing",
+      "content": "P5 VERIFICAÇÃO DOS CIRCUITOS E6–E10 (anti-AP7, Tier-2 reference-port + replay no motor real via harness tests/_scratch_v23.mjs que estende o runSteps do v21 com ket:/SymEngine/applyN). Estados CAPTURADOS do motor, nunca inventados. RESULTADOS VERIFICADOS:\n• E6 Simon n=2 s=11: oráculo out0=out1=x0⊕x1 (CNOT q0→q2,q1→q2,q0→q3,q1→q3); H⊗²·Uf·H⊗² → estado EXATO (1/2)|0000⟩+(1/2)|0011⟩+(1/2)|1100⟩−(1/2)|1111⟩. Registro de input ∈ {00,11} (ambos y·s=0 mod 2). EXATO ℤ[ζ₁₆].\n• E7 Superdense: Bell·encode·CNOT·H decodifica I→|00⟩, X→|01⟩, Z→|10⟩, ZX→−|11⟩ (fase global). 4 mensagens EXATAS.\n• E8 Shor N=15 a=7 (r=4): circuito COMPILADO PORTADO do Qiskit textbook c_amod15 (refs em specs/references/44). mult-by-7 = SWAP(w2,w3)·SWAP(w1,w2)·SWAP(w0,w1)·X⊗⁴ (ordem de swap REVERSA p/ casar big-endian → ciclo 1→7→4→13 verificado). Controlado: cSWAP(Fredkin)+CNOT controlados pelo qubit de contagem. 3 qubits de contagem: U¹ ctrl q2, U² ctrl q1 (bloco ×2), U⁴=I ctrl q0 omitido. QFT†₃ (preset QFTinv, π/2,π/4 ∈ ζ₁₆). Estado final EXATO; registro de contagem ∈ {000,010,100,110}={0,2,4,6} cada P=1/4 → c/8=s/4 → r=4 → gcd(7²±1,15)={3,5}. EXATO ℤ[ζ₁₆].\n• E9 Quantum Counting n=2(N=4) M=1, t=3: QPE sobre operador de Grover G=oráculo CZ + difusor (H,X,CZ,X,H). Controlled-G via CH (controlled-H, exato pois H∈ζ₁₆), CNOT, CCZ. 1 iterada de Grover verificada (uniforme→−|11⟩). Estado final EXATO em RECT (todas amplitudes a/8√2+bi/8√2 ∈ ℤ[ζ₁₆]); em EXP mostra fallback numérico só porque amplitudes são SOMAS, não monômios c·e^{ikπ/8} (limitação conhecida v6-Fase3, NÃO inexatidão). A leitura de M é probabilística (distribuição sobre o registro de contagem — a calcular). DISPLAY do card = RECT p/ mostrar forma fechada exata.\n• E10 Teleportation expandido: usa PRINCÍPIO DA MEDIÇÃO ADIADA (correções controladas em vez de medição aleatória) → DETERMINÍSTICO e replayável. |ψ⟩|0⟩|0⟩ (q0=ψ) → Bell(q1,q2) → Alice(CNOT q0→q1,H q0) → correções adiadas CNOT(q1→q2)+CZ(q0→q2) → estado final (1/2)(|00⟩+|01⟩+|10⟩+|11⟩)⊗|ψ⟩: q2 recupera |ψ⟩ EXATO, q0/q1 desemaranhados. Os 4 ramos de medição (00→I,01→X,10→Z,11→ZX) enumerados na prosa/circuito. EXATO simbólico.\nLIÇÃO: endianness Qiskit(little)↔motor(big) inverte a ordem dos SWAPs do mult modular — verificar o ciclo no motor (não assumir). TODOS os 5 estados são engine-generated.",
+      "timestamp": "2026-06-01T16:14:12.790Z"
+    },
+    {
+      "id": "c2dafd8a-4d39-457d-aac7-42ffe921b8da",
+      "phase": 5,
+      "category": "scope",
+      "content": "REVISÃO DE ESCOPO no P5 (operadora, ciclo 24/v23) — duas mudanças, mantendo o ciclo DOC-ONLY (motor INTOCADO):\n\n(1) MINIMIZAR OPERAÇÕES NA PART III usando PRESETS (pedido explícito: \"ninguém reproduz 200 teclas à mão; use QFT/QFT†/Bell/Grover\"). Revisões:\n  • E5 QPE: troca a inverse-QFT MANUAL (~30 teclas: SWAP+CPs negativos+H) pelo PRESET QFT† (range 0..2). Verificado: dá o MESMO |0011⟩. O preset QFT† CASA a convenção do QPE (não precisa montar à mão).\n  • E7 Superdense: usa preset Bell na preparação (em vez de H+CNOT).\n  • E8 Shor N=15: TROCA a=7 (≈200 teclas: 9×CSWAP+12×CNOT compilados) por a=11 (r=2): controlled-×11 mod 15 = APENAS 2 CNOTs (CNOT q1→q2, CNOT q1→q4, pois 0001↔1011 difere em 2 bits; U²=mult-by-1=I → q0 ocioso), t=2, + preset QFT†(0,1). ~14 teclas. Picos {0,2}→r=2→gcd(11±1,15)={3,5}. Exato.\n  • E10 Teleportation: usa preset Bell no par (q1,q2). Mesmos estados.\n  • E6 Simon: já mínimo (H + CNOTs do oráculo + H). E1–E4 já mínimos (E4 já usa preset Grover).\n\n(2) E9 QUANTUM COUNTING REMOVIDO do ciclo 24 e DEFERIDO ao próximo ciclo (implementação + card no manual). MOTIVO: QPE de contagem exige Grover CONTROLADO; não há preset controlado nem controlled-H no teclado → ~215 teclas (irreproduzível à mão). DESCOBERTA-CHAVE verificada: o MOTOR JÁ COMPUTA Grover controlado corretamente via applyN (injetando o controle em cada op do preset Grover) — N=4/M=2/t=3 dá picos nítidos c={2,6}→M=2 EXATO. Falta só EXPOR no teclado um recurso de CONTROLE GENERALIZADO (\"CTRL antes de qualquer porta/preset → applyN multi-controlado\"), que é mudança de MOTOR/teclado (fora do doc-only deste ciclo) e de baixa-moderada complexidade (Parser+execute injeta controls; matemática já existe). Esse recurso também encurtaria o Shor (mult modular controlada) e turbinaria o QPE geral → merece ciclo próprio. CARRY-FORWARD ciclo 25: feature \"controle generalizado (CTRL + porta/preset)\" + card E9 Quantum Counting canônico (N=4, M=2) curto.\n\nPART III final do ciclo 24 = E1–E8 + E10 (9 cards; E9 ausente, deferido). Anti-scope-creep: nenhuma feature nova de motor entra; E9 deferido com decisão registrada (não silencioso, anti-AP10).",
+      "timestamp": "2026-06-01T17:01:23.012Z"
+    },
+    {
+      "id": "f57d37ba-a89b-4e2f-8a0f-a5db88d26a17",
+      "phase": 6,
+      "category": "spec-coverage",
+      "content": "SPEC COVERAGE REPORT (ciclo 24/v23, Part III E6–E10 + E5 revisado, DOC-ONLY):\n- COVERED (automatizado, 100% verde): E5 QPE→|0011⟩ (preset QFT†, v21.test); E6 Simon estado final; E7 Superdense ×4 mensagens (I/X/Z/ZX→00/01/10/11); E8 Shor a=11 pré+final (período r=2, picos {0,2}); E10 Teleporte init/pré-medição/correção-adiada (q2=|ψ⟩). TODOS os estados = REPLAY no motor real (anti-AP7, igualdade exata) — nunca inventados. Estrutura manual.html (examples.spec #3: 21 cookbook + 9 algo, ids E1–E8+E10). REPLAY na UI REAL de cada card (examples.spec #1: clica data-action + captura tela + valida KaTeX) — cobre presets Bell/QFT† e a=11 CNOTs no quantum_calc.html real. KaTeX offline (examples.spec #2). keys↔steps E1–E5 (v21). Não-regressão: 374 Node + 154 PW.\n- NOT COVERED (automatizável não): qualidade DIDÁTICA/legibilidade da prosa dos cards; correção VISUAL dos diagramas de circuito SVG (E6/E7/E8/E10); leitura humana de que a sequência de teclas é confortável de reproduzir → vão para teste manual (human-AV).\n- NEGATIVE TESTS: count test (E9 deve estar AUSENTE — anti-vazamento de escopo); anti-AP7 (igualdade exata → estado errado falha); estrutura com contagens exatas (card faltando/extra falha); keys↔steps (keys não cobrindo steps falha). Suíte de verificação de doc é majoritariamente positiva por natureza; cobertura negativa concentrada nessas travas.\n- GAPS: nenhum para specs formalizáveis (estados exatos via replay). Itens de julgamento humano (legibilidade/visual dos circuitos) endereçados no teste manual.\n- E9 Quantum Counting: NÃO é gap — foi DEFERIDO via record_decision de escopo (P5), não está na entrega do ciclo.",
+      "timestamp": "2026-06-01T17:19:16.738Z"
+    },
+    {
+      "id": "34b215a1-4e91-4abc-9e16-1bc0b9f90637",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: automated-done\nPASS: Node 374/374 + Playwright 154/154 (100% verde). Inclui: anti-AP7 replay dos cards E5/E6/E7/E8/E10 (estados exatos engine-generated); examples.spec #1 = replay REAL na UI de todos os 30 cards (presets Bell/QFT† + a=11 CNOTs funcionam no quantum_calc.html real); estrutura (9 algo, E9 ausente); KaTeX offline; keys↔steps E1–E5; sem regressão do motor ℤ[ζ₁₆].\nFAIL: nenhum.\nNEXT (manual/human-AV — operadora): abrir manual.html no navegador e conferir a Part III revisada — (1) cada card lê bem e a sequência de teclas é CURTA/reproduzível; (2) os diagramas de circuito (E6 Simon, E7 Superdense, E8 Shor a=11=2 CNOTs+QFT†, E10 teleporte) estão visualmente corretos; (3) E5 QPE agora usa QFT† preset; (4) E9 NÃO aparece (deferido); (5) opcional: reproduzir 1–2 sequências no app real (ex.: E8 a=11, E7 Bell) e ver os estados baterem. Reportar problemas de volta.",
+      "timestamp": "2026-06-01T17:19:27.278Z"
+    },
+    {
+      "id": "b4ef6ab3-282d-4c34-8b5f-c85da9da97bb",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: manual-done (operadora aprovou — \"parece ok\")\nPASS: (1) Automatizado — Node 374/374 + Playwright 154/154 (100% verde): anti-AP7 replay E5/E6/E7/E8/E10, replay REAL na UI de todos os 30 cards (examples.spec #1), estrutura 9 algo (E9 ausente), KaTeX offline, keys↔steps E1–E5, sem regressão do motor. (2) Manual/human-AV — operadora revisou a Part III revisada no manual.html e aprovou: sequências curtas/reproduzíveis (E5 QFT† preset; E7/E10 Bell preset; E8 Shor a=11 = SET·H·H·2 CNOTs·QFT†, ~14 teclas vs ~200), diagramas de circuito OK, E9 corretamente ausente.\nFAIL: nenhum.\nAmbos os gates (automatizado + manual) satisfeitos. Apto à Fase 7.",
+      "timestamp": "2026-06-01T17:36:19.006Z"
+    },
+    {
+      "id": "ea3eb44b-cf84-416c-9a62-8b2f1ffcdd6f",
+      "phase": 7,
+      "category": "requirement",
+      "content": "P7 AVALIAÇÃO DO PRODUTO (operadora): ATENDE, SEM PENDÊNCIAS. Ciclo 24/v23 (Part III enxuta) entregue: E1–E8 + E10 (9 cards), sequências CURTAS via presets (E5 QFT†, E7/E10 Bell, E8 Shor a=11 = SET·H·H·2 CNOTs·QFT† ~14 teclas), estados exatos engine-generated (anti-AP7), suíte 100% verde (374 Node + 154 PW), motor ℤ[ζ₁₆]/portas/FSM INTOCADOS. Aprovado no teste manual (\"parece ok\"). E9 Quantum Counting DEFERIDO ao ciclo 25 (decisão de escopo, não silencioso). Lições em specs/technical/45-v23-lessons.md; referência atualizada em specs/references/44. NOTA: operadora optou por NÃO fazer deploy agora (manual.html atualizado localmente; deploy pendente, fazer quando quiser via ./deploy-ssh.sh + bump sw.js). PRÓXIMO: iniciar ciclo 25 = feature \"controle generalizado (CTRL + qualquer porta/preset)\" + card E9 Quantum Counting curto.",
+      "timestamp": "2026-06-01T17:39:20.959Z"
     }
   ],
-  "exitCriteria": [
-    {
-      "phase": 0,
-      "criterion": "score_90",
-      "met": true,
-      "details": "Score 95/100 (update_score, meetsThreshold:true). Breakdown displayed in chat."
-    },
-    {
-      "phase": 0,
-      "criterion": "user_confirmed",
-      "met": true,
-      "details": "Operator validated synthesis as 'Correta' via AskUserQuestion."
-    },
-    {
-      "phase": 0,
-      "criterion": "ambiguities_zero",
-      "met": true,
-      "details": "3 ambiguities resolved via AskUserQuestion: oracle=literal key sequence, depth=representative instance, format confirmed. Exact card instances detailed in Phase 1."
-    },
-    {
-      "phase": 0,
-      "criterion": "use_cases_complete",
-      "met": true,
-      "details": "5 algorithms mapped to concrete gate sequences + target states (Level 4 table). Deutsch/A3, DJ, BV/A12, Grover/A4, QPE/A6."
-    },
-    {
-      "phase": 0,
-      "criterion": "vocabulary_agreed",
-      "met": true,
-      "details": "QC domain vocabulary inherited from v1-v20 (mature). Delta adds no new vocabulary."
-    },
-    {
-      "phase": 0,
-      "criterion": "out_of_scope_clear",
-      "met": true,
-      "details": "Out of scope tabled: 5 deferred algorithms (Simon/Superdense/Shor/Counting/Teleportation), SymRules oracle extension, new gate/preset/module, QFT≥5q exact, radar items, all untouched v20-8."
-    },
-    {
-      "phase": 0,
-      "criterion": "tech_feasibility",
-      "met": true,
-      "details": "VERIFIED in code (not assumed): all 5 algorithms build from gates that exist and are exact in ℤ[ζ₁₆] — CNOT, X, Z, CZ, MCZ via Engine.applyN generic multi-control loop (quantum_calc.html:1090-1119), CP(θ) controlled-phase, QFT/QFT† presets (1175-1192). Working examples A3/A4/A5/A6/A12 demonstrate feasibility. SymRules.declare insufficient for f(x)-oracles → concrete-gate fallback adopted. No blocker."
-    },
-    {
-      "phase": 0,
-      "criterion": "implementation_feasibility",
-      "met": true,
-      "details": "Tier 1: all gates/presets exist in the mature engine — reuse directly. No Tier 3 component; delta is documentation (Part III cards) + content validation. No PoC needed (engine untouched, oracles = existing gates)."
-    },
-    {
-      "phase": 0,
-      "criterion": "technical_scientific_research",
-      "met": true,
-      "details": "Algorithms are textbook-standard (Deutsch, Deutsch-Jozsa, Bernstein-Vazirani, Grover, QPE — Nielsen & Chuang). Circuits already encoded and engine-validated in examples-data.mjs (A3/A4/A5/A6/A12). 39 technical spec files exist (specs/technical/). No invented parameters — every state generated by the ℤ[ζ₁₆] engine."
-    },
-    {
-      "phase": 0,
-      "criterion": "specs_populated",
-      "met": true,
-      "details": "specs/ fully populated (9/9 dirs; 39 technical files incl. 39-v20-lessons.md carry-forward). examples-data.mjs is the single source for cards."
-    },
-    {
-      "phase": 1,
-      "criterion": "patterns_defined",
-      "met": true,
-      "details": "100% inherited patterns confirmed by operator: Layered+Modular Monolith, Pure core/DOM-only, KISS+YAGNI+SOLID, SSOT+Test-as-spec, single-threaded."
-    },
-    {
-      "phase": 1,
-      "criterion": "modules_responsibility",
-      "met": true,
-      "details": "4 modules: M1 Card Data (examples-data.mjs), M2 Part III Render (examples-render.mjs renderAlgorithms), M3 generated manual.html, M4 anti-drift tests. Each single responsibility."
-    },
-    {
-      "phase": 1,
-      "criterion": "interfaces_defined",
-      "met": true,
-      "details": "Card schema {id, part:'III', title, motivation, results:[{label,keys,steps}], result}; renderAlgorithms(algos)→HTML reusing chips()/resultBlock(); test contract = replay steps[]→engine state, assert string ∈ manual.html."
-    },
-    {
-      "phase": 1,
-      "criterion": "dependencies_explicit",
-      "met": true,
-      "details": "M1 data → M2 render → M3 doc; M4 tests depend on M1 (data) + engine (quantum_calc.html, read-only) + M3 (string presence). Engine is a read-only dependency, untouched."
-    },
-    {
-      "phase": 1,
-      "criterion": "assumptions_listed",
-      "met": true,
-      "details": "5 explicit assumptions: engine untouched⇒445 green+identical states; every card state engine-generated (anti-AP7); steps 1:1 to checkpoint; KaTeX renders kets w/ offline degrade; QFT exact ≤4q."
-    },
-    {
-      "phase": 1,
-      "criterion": "architecture_doc",
-      "met": true,
-      "details": "Architecture recorded in decision 995cdc2e + project spec (stack/patterns/outOfScope/constraints), well under 2k tokens."
-    },
-    {
-      "phase": 1,
-      "criterion": "tech_100_scope",
-      "met": true,
-      "details": "All 5 algorithms build from existing exact gates (verified in code, P0). Render pipeline (examples-render.mjs) supports a new Part section. No scope cut forced by tech. 100% covered."
-    },
-    {
-      "phase": 1,
-      "criterion": "modules_adherent_patterns",
-      "met": true,
-      "details": "M1 SSOT (data source), M2 pure render (DOM-only-in-UI), M4 test-as-spec/anti-drift — all adhere to inherited v8 patterns. Zero new pattern."
-    },
-    {
-      "phase": 2,
-      "criterion": "activated_lenses_recorded",
-      "met": true,
-      "details": "Decision 11125e0c: 7 universal + 4 conditional activated (UI/UX, Migration, Linguistics, Mechanical) + 8 non-activated each with justification."
-    },
-    {
-      "phase": 2,
-      "criterion": "lenses_applied",
-      "met": true,
-      "details": "All 11 lenses applied to all 4 modules; empty cells (Security/Performance/Regulatory) recorded as valid no-finding results."
-    },
-    {
-      "phase": 2,
-      "criterion": "coverage_matrix",
-      "met": true,
-      "details": "Full 4×11 matrix displayed in chat with severities."
-    },
-    {
-      "phase": 2,
-      "criterion": "criticals_identified",
-      "met": true,
-      "details": "2🔴: F1 Migration coexistence (Part III vs Part II A3/A4/A6/A12), F2 Linguistics keys↔steps contract. 13🟡, 11🟢."
-    },
-    {
-      "phase": 2,
-      "criterion": "concentration_analyzed",
-      "met": true,
-      "details": "Decision 41ef3a31: by-module (M3+M4 hold both 🔴 on Migration = coexistence boundary, not redesign; M1 most 🟡 = content; no module in all lenses) + by-lens (Migration systemic across M1/M3/M4; Linguistics isolated 1🔴 M1)."
-    },
-    {
-      "phase": 3,
-      "criterion": "criticals_addressed",
-      "met": true,
-      "details": "Both 🔴 resolved: F1 Migration=MOVE+ENRICH (operator-confirmed), F2 Linguistics=keys↔steps consistency test. 0 remaining criticals."
-    },
-    {
-      "phase": 3,
-      "criterion": "important_decided",
-      "met": true,
-      "details": "13🟡 decided: F3 Scientific (DJ/Grover/BV reference circuits pinned), F4 UI/UX (TOC+framing+flex-wrap), F5 Implementability/Mechanical (steps-replay test + regen confirm). All addressed or routed to P5 with explicit resolution."
-    },
-    {
-      "phase": 3,
-      "criterion": "scope_preserved",
-      "met": true,
-      "details": "Anti-scope-creep checklist 4/4 ✅: all P0 reqs (5 algorithms) covered, no unsolicited feature, system behavior unchanged (doc-only), use cases valid."
-    },
-    {
-      "phase": 3,
-      "criterion": "architecture_simplified",
-      "met": true,
-      "details": "MOVE+ENRICH eliminates content duplication (DRY, one home per algorithm) vs the duplicate alternative. Zero new module/pattern/gate. Structural change 0%. Simpler than alternatives."
-    },
-    {
-      "phase": 4,
-      "criterion": "exit_criteria_p2p3",
-      "met": true,
-      "details": "Phase 2: 5/5 met. Phase 3: 4/4 met. Verified via get_exit_criteria."
-    },
-    {
-      "phase": 4,
-      "criterion": "safeguards_s1_s5",
-      "met": true,
-      "details": "check_all_safeguards: 0 violated, 0 warnings (S2 stopping=user, S4 human-AV both ok). All prior-phase safeguards S0-S7 ok per get_phase_state."
-    },
-    {
-      "phase": 5,
-      "criterion": "all_modules",
-      "met": true,
-      "details": "M1 examples-data.mjs (5 part:'III' cards), M2 examples-render.mjs (renderAlgorithms+Part III+TOC+CSS), M3 manual.html regenerated, M4 v21.test.mjs (17 tests) + examples.spec.js structure updated. All present."
-    },
-    {
-      "phase": 5,
-      "criterion": "specs_consulted",
-      "met": true,
-      "details": "Consulted quantum_calc.html engine (gate set, parser FSM, presets), examples-data/render structure, 39-v20-lessons carry-forward; circuits per Nielsen&Chuang. Verified gate/preset buttons typeable before authoring."
-    },
-    {
-      "phase": 5,
-      "criterion": "s6_applied",
-      "met": true,
-      "details": "Tier 1: reused mature engine/render pipeline (no new engine code). Tier 2: algorithm circuits are documented (Nielsen&Chuang), ported literally and validated against the engine via loadQC harness before authoring (anti-AP7). No Tier 3 / no from-scratch heuristics."
-    },
-    {
-      "phase": 5,
-      "criterion": "ui_runnable",
-      "met": true,
-      "details": "Empirical end-to-end: examples.spec.js drove the real quantum_calc.html UI through all 5 algorithm cards' key sequences (steps[]) and captured states matching the pinned engine-validated results, then generated manual.html with Part III (structure test 21 cookbook + 5 algorithm cards, all visible). Not prose — executed on the real interface. Live device human-AV is the P6 gate per established workflow."
-    },
-    {
-      "phase": 6,
-      "criterion": "tests_passing",
-      "met": true,
-      "details": "345 Node (328 baseline +17 v21) + 116/117 PW green. The single PW red (v20-UI-8 bloch tap geometry) is out of v21 scope, environment-sensitive, operator-deferred to device Bloch validation; v21 touched no widget/engine logic (only a chrome link attribute fix). All v21-scope tests pass."
-    },
-    {
-      "phase": 6,
-      "criterion": "manual_testing",
-      "met": true,
-      "details": "Operator performed device human-AV on live qcalc-v21-4 and confirmed 'tudo ok'. Verified: Part III E1–E5 render (motivation/keys/state/result legible), clean index (A1–A9 + E1–E5), floating quick-nav works, manual↔calculator navigation fixed (no Custom Tab × header)."
-    },
-    {
-      "phase": 6,
-      "criterion": "edge_cases",
-      "met": true,
-      "details": "Human-AV surfaced and fixed 2 real edge cases automated tests missed: (1) index id clarity (renumber to E1–E5 + contiguous A1–A9); (2) PWA navigation header — target=_blank opened an Android Custom Tab with a persistent × header, fixed by same-window navigation. Long key-chip wrapping (Grover iter2, QPE) on mobile confirmed acceptable. keys↔steps consistency + state correctness covered by automated tests."
-    },
-    {
-      "phase": 7,
-      "criterion": "specs_updated",
-      "met": true,
-      "details": "specs/validation/acceptance.md §v21 appended (V21-1..16 + non-regression); specs/technical/40-v21-lessons.md created (6 lessons + v22 carry-forward)."
-    },
-    {
-      "phase": 7,
-      "criterion": "lessons_documented",
-      "met": true,
-      "details": "6 project lessons in specs/technical/40-v21-lessons.md (L0 pre-audit engine capability; L1 loadQC pre-authoring validation; L2 keys↔steps contract; L3 human-AV recurrence; L4 PWA target=_blank Custom Tab; L5 index renumber)."
-    },
-    {
-      "phase": 7,
-      "criterion": "human_feedback",
-      "met": true,
-      "details": "Operator: product 'Atende plenamente'; device human-AV 'tudo ok'; chose to close v21 now (v22 later). Feedback drove 2 in-loop fixes (index renumber + PWA nav header)."
-    }
-  ],
+  "exitCriteria": [],
   "safeguards": [
     {
       "id": "S0",
@@ -3154,9 +3183,7 @@
     },
     {
       "id": "S2",
-      "status": "ok",
-      "details": "Stopping Criterion: behavioral check — requires agent attention. Stopping criterion belongs to the USER, not the AI.",
-      "lastChecked": "2026-05-29T18:27:20.772Z"
+      "status": "ok"
     },
     {
       "id": "S3",
@@ -3164,9 +3191,7 @@
     },
     {
       "id": "S4",
-      "status": "ok",
-      "details": "Explicit Verification (mandatory human-AV): behavioral check — requires agent attention. Human-AV is irreplaceable at each gate. Automated tests verify formalizable properties. Semantic adequacy, usability, and domain correctness REQUIRE human judgment. P0: human validates synthesis. P2: human arbitrated trade-offs. P4: human confirms convergence. P6: NEVER assume tests passed — execute and verify + mandatory manual exploratory testing.",
-      "lastChecked": "2026-05-29T18:27:20.772Z"
+      "status": "ok"
     },
     {
       "id": "S5",
@@ -3182,13 +3207,13 @@
     }
   ],
   "loopCounter": {
-    "pattern": "cd /home/jasmine/doutorado/quantum\ngit add quantum",
-    "count": 1,
-    "firstSeen": "2026-05-31T21:41:58.166Z",
-    "lastSeen": "2026-05-31T21:41:58.166Z"
+    "pattern": "",
+    "count": 0,
+    "firstSeen": "",
+    "lastSeen": ""
   },
   "createdAt": "2026-05-21T15:58:53.706Z",
-  "updatedAt": "2026-05-31T21:41:58.166Z",
+  "updatedAt": "2026-06-01T17:39:37.093Z",
   "history": [
     {
       "from": 0,
@@ -5210,7 +5235,206 @@
         "manual_testing",
         "edge_cases"
       ]
+    },
+    {
+      "from": 7,
+      "to": 0,
+      "timestamp": "2026-05-31T21:44:55.272Z",
+      "criteriaMet": [
+        "specs_updated",
+        "lessons_documented",
+        "human_feedback"
+      ]
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "timestamp": "2026-05-31T21:51:09.843Z",
+      "criteriaMet": [
+        "score_90",
+        "user_confirmed",
+        "ambiguities_zero",
+        "use_cases_complete",
+        "vocabulary_agreed",
+        "out_of_scope_clear",
+        "tech_feasibility",
+        "implementation_feasibility",
+        "specs_populated"
+      ]
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "timestamp": "2026-05-31T21:55:39.611Z",
+      "criteriaMet": [
+        "patterns_defined",
+        "modules_responsibility",
+        "interfaces_defined",
+        "dependencies_explicit",
+        "assumptions_listed",
+        "architecture_doc",
+        "tech_100_scope",
+        "modules_adherent_patterns"
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "timestamp": "2026-05-31T21:57:35.527Z",
+      "criteriaMet": [
+        "activated_lenses_recorded",
+        "lenses_applied",
+        "coverage_matrix",
+        "criticals_identified",
+        "concentration_analyzed"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "timestamp": "2026-05-31T21:59:00.400Z",
+      "criteriaMet": [
+        "criticals_addressed",
+        "important_decided",
+        "scope_preserved",
+        "architecture_simplified"
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "timestamp": "2026-05-31T22:01:25.490Z",
+      "criteriaMet": [
+        "exit_criteria_p2p3",
+        "safeguards_s1_s5"
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "timestamp": "2026-06-01T02:18:57.316Z",
+      "criteriaMet": [
+        "all_modules",
+        "specs_consulted",
+        "s6_applied",
+        "ui_runnable"
+      ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "timestamp": "2026-06-01T12:16:59.879Z",
+      "criteriaMet": [
+        "tests_passing",
+        "manual_testing",
+        "edge_cases"
+      ]
+    },
+    {
+      "from": 7,
+      "to": 0,
+      "timestamp": "2026-06-01T15:22:03.514Z",
+      "criteriaMet": [
+        "specs_updated",
+        "lessons_documented",
+        "human_feedback"
+      ]
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "timestamp": "2026-06-01T15:46:17.922Z",
+      "criteriaMet": [
+        "score_90",
+        "user_confirmed",
+        "ambiguities_zero",
+        "use_cases_complete",
+        "vocabulary_agreed",
+        "out_of_scope_clear",
+        "tech_feasibility",
+        "implementation_feasibility",
+        "specs_populated",
+        "technical_scientific_research"
+      ]
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "timestamp": "2026-06-01T15:48:33.945Z",
+      "criteriaMet": [
+        "patterns_defined",
+        "modules_responsibility",
+        "interfaces_defined",
+        "dependencies_explicit",
+        "assumptions_listed",
+        "architecture_doc",
+        "tech_100_scope",
+        "modules_adherent_patterns"
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "timestamp": "2026-06-01T15:53:52.409Z",
+      "criteriaMet": [
+        "activated_lenses_recorded",
+        "lenses_applied",
+        "coverage_matrix",
+        "criticals_identified",
+        "concentration_analyzed"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "timestamp": "2026-06-01T15:54:36.705Z",
+      "criteriaMet": [
+        "criticals_addressed",
+        "important_decided",
+        "scope_preserved",
+        "architecture_simplified"
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "timestamp": "2026-06-01T15:55:12.884Z",
+      "criteriaMet": [
+        "exit_criteria_p2p3",
+        "safeguards_s1_s5"
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "timestamp": "2026-06-01T17:17:57.128Z",
+      "criteriaMet": [
+        "all_modules",
+        "specs_consulted",
+        "s6_applied",
+        "ui_runnable"
+      ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "timestamp": "2026-06-01T17:36:36.980Z",
+      "criteriaMet": [
+        "tests_passing",
+        "manual_testing",
+        "edge_cases"
+      ]
+    },
+    {
+      "from": 7,
+      "to": 0,
+      "timestamp": "2026-06-01T17:39:37.093Z",
+      "criteriaMet": [
+        "specs_updated",
+        "lessons_documented",
+        "human_feedback"
+      ]
     }
   ],
-  "lastPhaseStateCheck": "2026-05-29T17:37:24.758Z"
+  "lastPhaseStateCheck": "2026-06-01T16:01:48.916Z"
 }

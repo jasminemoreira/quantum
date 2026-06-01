@@ -484,3 +484,24 @@ navegação same-window. **Veredito operadora: "tudo ok".** Lições: `specs/tec
 (L0–L5). **Escopo entregue**: 5 cards (Deutsch/DJ/BV/Grover/QPE) com oráculos literais; renderAlgorithms
 dedicado; menu flutuante; renumeração de índice. **Carry-forward → v22**: completar a Part III
 (Simon, Superdense expandido, Shor N=15, Quantum Counting, Teleportation expandido → E6–E10).
+
+## §v22 (ciclo 23) — Teclas de input/composição de estado (pág.2) — ACEITO
+
+**Delivery Target (4 grupos):** TODOS entregues e validados no device (Motorola Edge 50 Ultra, PWA+web).
+- ✅ √X/√Y exatos (SX²=X, SY²=Y em ℤ[ζ₁₆]) — spike pré-P0, formalizado.
+- ✅ |T⟩ = macro H·T (estado fresco de 1 qubit, exato, badge OFF) = (|0⟩+e^{iπ/4}|1⟩)/√2.
+- ✅ rand = 1 qubit Haar-uniforme (θ=acos(1−2u), φ=2πv), normalizado, badge ≈.
+- ✅ amp = amplitudes complexas via pad científico (√ sin cos exp 1/√2 i π); cada α,β é UMA expressão
+  complexa (Calc.evaluate); cobre rect/polar/exp; fase via exp(iθ); normaliza; α=β=0→erro; badge ≈ value-driven.
+- ✅ atalhos π/8·π/4·π/2 na gaveta de ângulo (substituem o buffer).
+
+**Bônus do dogfooding (escopo adicional aprovado + polish):** ρ_A/S(ρ) pela gramática `n Q` (sem window.prompt);
+presets sobre qubits concretos de estado simbólico; pág.2 em 2 colunas (input/measure&view/density&entanglement |
+gate variants/2 qubits/presets); expand do display polido (vão fechado + animação + sem pulinho); cores de input;
+remoção de TODO window.prompt/código morto.
+
+**Suíte:** 365 Node + 154 Playwright = **100% VERDE** (o vermelho histórico v20-UI-8 era teste flaky — corrida com
+a animação .28s do canvas; corrigido). Motor exato ℤ[ζ₁₆] INTOCADO o ciclo inteiro.
+
+**Veredito operadora:** "atende ao P0 sem pendências." Lições: `specs/technical/43-v22-lessons.md` (L1–L10).
+Live: https://jasminemoreira.com.br/quantum/ (qcalc-v22-21).

@@ -66,7 +66,7 @@ test('keymap paginado (v14): comando fixo + 2 páginas + faixa de vistas', () =>
   const lay = Keymap.layout('quantum', 0);
   // estrutura v14: { strip:[[action,label,cls]], command:{label,n,keys}, pages:[{L:[grupos],R:grupo|null}, ...] }
   assert.ok(lay.strip && lay.command && Array.isArray(lay.pages) && lay.pages.length === 2);
-  const zoneActs = (z) => z ? z.keys.map(k => k[0]) : [];
+  const zoneActs = (z) => !z ? [] : Array.isArray(z) ? z.flatMap(g => g.keys.map(k => k[0])) : z.keys.map(k => k[0]);   // v22-6: pg.R pode ser array (pág2 = 2 colunas)
   const pageActs = (pg) => pg.L.flatMap(g => g.keys.map(k => k[0])).concat(zoneActs(pg.R));
   const cmd = lay.command.keys.map(k => k[0]);
   const p0 = pageActs(lay.pages[0]);   // paleta frequente + numérico
@@ -82,9 +82,10 @@ test('keymap paginado (v14): comando fixo + 2 páginas + faixa de vistas', () =>
   assert.ok(p0.includes('gate:H') && p0.includes('gate:CP') && p0.includes('op:inner') && p0.includes('gate:Rx'));   // ⟨φ|ψ⟩ no primário
   assert.ok(p0.includes('op:tensor') && !p0.includes('op:norm') && !p0.includes('evidence'));   // ⊗ no primário; ‖ψ‖/factor na pág2
   assert.ok(!p0.includes('gate:SWAP') && !p0.includes('op:schmidt'));   // cauda longa fora da pág0
-  // página 1 = cauda longa, FULL-WIDTH (sem numérico → R null), SEM dígitos
-  assert.equal(lay.pages[1].R, null, 'pág2 sem numérico (full-width)');
+  // página 1 = cauda longa em 2 COLUNAS (v22-6: L=input+operations · R=variants+2q+presets), SEM dígitos
+  assert.ok(Array.isArray(lay.pages[1].R), 'pág2 tem coluna direita (array de grupos)');
   assert.ok(p1.includes('gate:SWAP') && p1.includes('op:schmidt') && p1.includes('gate:U') && p1.includes('op:norm') && p1.includes('evidence'));
+  assert.ok(p1.includes('input:T') && p1.includes('input:rand') && p1.includes('input:amp'), 'grupo input na pág2');
   assert.ok(!p1.some(a => /^key:[0-9]$/.test(a)), 'pág2 sem dígitos');
   // M está SÓ no comando fixo (não nas páginas) — visível nas 2 páginas por ser fixo
   assert.ok(!p0.includes('op:saveBra') && !p1.includes('op:saveBra'));
@@ -181,8 +182,9 @@ test('Render.stateTex(Bell) → LaTeX com \\sqrt{2} e \\lvert', () => {
 
 // v12: botão I (identidade) removido do teclado; gate-variants 4 teclas; 2-qubits sem espaçador
 test('v14 keymap: sem botão I; gate-variants/2-qubits na página 2 (cauda longa)', () => {
-  const p1 = Keymap.layout('quantum', 1).pages[1];   // página 2 (cauda longa)
-  const all = p1.L.flatMap(g => g.keys.map(k => k[0]));
+  const p1 = Keymap.layout('quantum', 1).pages[1];   // página 2 (cauda longa, v22-6: 2 colunas)
+  const cols = [...p1.L, ...(Array.isArray(p1.R) ? p1.R : p1.R ? [p1.R] : [])];   // L + R (R = array na pág2)
+  const all = cols.flatMap(g => g.keys.map(k => k[0]));
   assert.ok(!all.includes('gate:I'), 'botão gate:I removido do teclado');
   assert.ok(all.includes('gate:Sdg') && all.includes('gate:Tdg') && all.includes('gate:U'), 'demais variantes presentes');
   assert.ok(all.includes('gate:SWAP') && all.includes('gate:CSWAP'), '2-qubits presentes');

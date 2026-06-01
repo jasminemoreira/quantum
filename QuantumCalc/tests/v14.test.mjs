@@ -18,12 +18,14 @@ function loadQC(){
 const QC = loadQC();
 const { Keymap } = QC;
 
-const zoneActs = (z) => z ? z.keys.map(k => k[0]) : [];
+// v22-6: pg.R pode ser null | zona única (pág1: numérico) | ARRAY de zonas (pág2: 2 colunas)
+const zoneActs = (z) => !z ? [] : Array.isArray(z) ? z.flatMap(g => g.keys.map(k => k[0])) : z.keys.map(k => k[0]);
+const zoneLabels = (z) => !z ? [] : Array.isArray(z) ? z.flatMap(g => g.keys.map(k => k[1])) : z.keys.map(k => k[1]);
 const pageActs = (pg) => pg.L.flatMap(g => g.keys.map(k => k[0])).concat(zoneActs(pg.R));
 const allQuantumActs = (lay) => lay.command.keys.map(k=>k[0])
   .concat(lay.pages.flatMap(pageActs)).concat(lay.strip.map(s=>s[0]));
 const allQuantumLabels = (lay) => lay.command.keys.map(k=>k[1])
-  .concat(lay.pages.flatMap(pg => pg.L.flatMap(g=>g.keys.map(k=>k[1])).concat(zoneActs(pg.R).length?pg.R.keys.map(k=>k[1]):[])))
+  .concat(lay.pages.flatMap(pg => pg.L.flatMap(g=>g.keys.map(k=>k[1])).concat(zoneLabels(pg.R))))
   .concat(lay.strip.map(s=>s[1]));
 
 // ---- contrato do page-model ----
@@ -63,12 +65,13 @@ test('v14-5 numérico (pág1.R) perdeu o M e mantém os dígitos', () => {
   assert.ok(!acts.includes('op:saveBra'), 'M saiu do numérico');
 });
 
-// ---- página 2 = cauda longa full-width, SEM dígitos ----
-test('v14-6 página 2 = full-width (R null), cauda longa, ZERO dígitos', () => {
+// ---- página 2 = cauda longa em 2 COLUNAS (v22-6), SEM dígitos ----
+test('v14-6 página 2 = 2 colunas (L=input+operations · R=variants+2q+presets), ZERO dígitos', () => {
   const p1 = Keymap.layout('quantum',1).pages[1];
-  assert.equal(p1.R, null, 'pág2 sem numérico (full-width)');
+  assert.ok(Array.isArray(p1.R), 'pág2 agora tem coluna direita (array de grupos)');
   const acts = pageActs(p1);
   assert.ok(acts.includes('gate:SWAP') && acts.includes('op:schmidt') && acts.includes('preset:QFT'));
+  assert.ok(acts.includes('input:T') && acts.includes('input:rand') && acts.includes('input:amp'), 'grupo input na pág2');
   assert.ok(!acts.some(a => /^key:[0-9.]$/.test(a)), 'nenhum dígito na pág2');
 });
 test('v14-7 página 1 = frequentes (gates/kets/controlled/operations + numérico)', () => {
