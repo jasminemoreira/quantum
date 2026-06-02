@@ -16,13 +16,13 @@ const activePage = (p) => p.locator('.kp-page:not([inert])').getAttribute('data-
 async function bell(p){   // |Φ+⟩ = (1/√2)(|00⟩+|11⟩)
   await act(p,'key:2'); await act(p,'key:Q'); await act(p,'key:SET');
   await act(p,'key:0'); await act(p,'key:Q'); await act(p,'gate:H');
-  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:CNOT');
+  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:X');
 }
 async function ghz(p){   // GHZ₃ = (1/√2)(|000⟩+|111⟩)
   await act(p,'key:3'); await act(p,'key:Q'); await act(p,'key:SET');
   await act(p,'key:0'); await act(p,'key:Q'); await act(p,'gate:H');
-  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:CNOT');
-  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:2'); await act(p,'key:Q'); await act(p,'gate:CNOT');
+  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:X');
+  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:2'); await act(p,'key:Q'); await act(p,'gate:X');
 }
 
 test.beforeEach(async ({ page }) => { await page.goto(URL); });
@@ -38,38 +38,47 @@ test('ALL → H', async ({ page }) => {
   expect(await dirac(page)).toBe('(1/√2)|0⟩ + (1/√2)|1⟩');
 });
 
-test('manual Bell: 2 Q SET ; 0 Q H ; 0 CTRL 1 Q CNOT', async ({ page }) => {
+test('manual Bell: 2 Q SET ; 0 Q H ; 0 CTRL 1 Q X', async ({ page }) => {
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');
   expect(await dirac(page)).toBe('|00⟩');
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');
   expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');
 });
 
-test('v14 carrossel: página 1 ativa por padrão; frequentes + comando(M) + dots; SEM botão 2nd', async ({ page }) => {
+test('v26 teclado de página ÚNICA: primário visível; sem dots/carrossel; tecla 2nd presente', async ({ page }) => {
   await expect(page.locator('[data-action="gate:H"]')).toBeVisible();
   await expect(page.locator('[data-action="gate:Rx"]')).toBeVisible();     // 1q no primário
-  await expect(page.locator('[data-action="gate:CP"]')).toBeVisible();     // 2q controlada no primário
+  await expect(page.locator('[data-action="gate:P"]')).toBeVisible();      // v25: P na pág.1
+  await expect(page.locator('[data-action="preset:Bell"]')).toBeVisible(); // v26: Bell promovido ao primário do bloco gates
+  await expect(page.locator('[data-action="gate:SWAP"]')).toHaveCount(0);  // v26: SWAP foi p/ a 2ª camada
+  await expect(page.locator('[data-action="gate:CNOT"]')).toHaveCount(0);  // v25: controladas dedicadas removidas
+  await expect(page.locator('[data-action="gate:CP"]')).toHaveCount(0);
+  await expect(page.locator('[data-action="gate:CCX"]')).toHaveCount(0);
   await expect(page.locator('[data-action="op:prob"]')).toBeVisible();     // op frequente no primário
-  await expect(page.locator('[data-action="op:inner"]')).toBeVisible();    // v12: ⟨φ|ψ⟩ no primário
-  await expect(page.locator('[data-action="op:saveBra"]')).toBeVisible();  // v14: M no bloco de comando FIXO
+  await expect(page.locator('[data-action="op:inner"]')).toBeVisible();    // ⟨φ|ψ⟩ no primário
+  await expect(page.locator('[data-action="op:saveBra"]')).toBeVisible();  // v26: M no numpad
   await expect(page.locator('[data-action="chbase"]')).toBeVisible();      // base na faixa de vistas
-  await expect(page.locator('[data-action="shift"]')).toHaveCount(0);      // v14: tecla '2nd'/shift REMOVIDA
-  await expect(page.locator('[data-action="page:0"]')).toBeVisible();      // page-dots (descoberta da pág.2)
-  await expect(page.locator('[data-action="page:1"]')).toBeVisible();
-  expect(await activePage(page)).toBe('0');                                // página 1 (índice 0) ativa
+  await expect(page.locator('[data-action="shift"]')).toHaveCount(0);      // shift legado inexistente
+  await expect(page.locator('[data-action="key:2nd"]')).toBeVisible();     // v26: tecla 2nd
+  await expect(page.locator('[data-action="page:0"]')).toHaveCount(0);     // v26: sem dots/carrossel
+  await expect(page.locator('[data-action="page:1"]')).toHaveCount(0);
 });
 
-test('v14 carrossel: dot vai p/ a página 2 (cauda longa) e volta', async ({ page }) => {
-  expect(await activePage(page)).toBe('0');
-  await act(page,'page:1');                                                // dot → página 2
-  await expect.poll(() => activePage(page)).toBe('1');
-  await expect(page.locator('[data-action="gate:SWAP"]')).toBeVisible();   // 2q+ acessível
-  await expect(page.locator('[data-action="op:schmidt"]')).toBeVisible();  // ops+ acessível
-  await expect(page.locator('[data-action="gate:U"]')).toBeVisible();      // variante de porta
-  await act(page,'page:0');                                                // dot → volta à página 1
-  await expect.poll(() => activePage(page)).toBe('0');
+test('v26 tecla 2nd revela a 2ª camada (variantes/presets/ops estendidas) e volta', async ({ page }) => {
+  await expect(page.locator('[data-action="preset:QFT"]')).toHaveCount(0);   // 2ª camada oculta no primário
+  await expect(page.locator('[data-action="op:schmidt"]')).toHaveCount(0);
+  await expect(page.locator('[data-action="gate:SWAP"]')).toHaveCount(0);    // v26: SWAP é da 2ª camada
+  await expect(page.locator('[data-action="preset:Bell"]')).toBeVisible();   // Bell é primário
+  await act(page,'key:2nd');                                                 // liga a 2ª camada
+  await expect(page.locator('[data-action="gate:Sdg"]')).toBeVisible();      // variantes (S†/T†/√X)
+  await expect(page.locator('[data-action="gate:SWAP"]')).toBeVisible();     // SWAP/iSWAP na 2ª camada
+  await expect(page.locator('[data-action="preset:QFT"]')).toBeVisible();    // presets
+  await expect(page.locator('[data-action="op:schmidt"]')).toBeVisible();    // ops estendidas
+  await expect(page.locator('[data-action="gate:H"]')).toHaveCount(0);       // primário oculto na 2ª camada
+  await act(page,'key:2nd');                                                 // volta à primária
   await expect(page.locator('[data-action="gate:H"]')).toBeVisible();
+  await expect(page.locator('[data-action="preset:QFT"]')).toHaveCount(0);
 });
 
 test('limpeza v2: presets/Dirac/LaTeX/Qiskit/fatorar removidos do teclado', async ({ page }) => {
@@ -82,7 +91,7 @@ test('limpeza v2: presets/Dirac/LaTeX/Qiskit/fatorar removidos do teclado', asyn
 });
 
 test('op norm (2nd layer): ‖ψ‖', async ({ page }) => {
-  await act(page,'page:1'); await act(page,'op:norm');   // v12: ‖ψ‖ vive no 2nd
+  await act(page,'op:norm');   // v12: ‖ψ‖ vive no 2nd
   await expect(page.locator('#auxOutput')).toContainText('‖ψ‖');
 });
 
@@ -131,10 +140,10 @@ test('formato condensado: cicla muda a renderização de e^{iπ/4}|1⟩', async 
 // survives ONLY as the inline angle/λ entry surface — exercised by the inline-angle tests below
 // (Rx/Rz/λ via the calc keypad during a parametric gate or eigenvalue), e.g. 'inline angle entry: Rx…'.
 
-test('NEG: invalid command (CNOT, one operand) → error, no apply', async ({ page }) => {
+test('NEG: invalid command (X with two targets) → error, no apply', async ({ page }) => {
   await bell(page);
   const before = await dirac(page);
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');   // v25: X é 1-alvo estrito → 2 alvos = erro de aridade
   await expect(page.locator('#statusLine')).toContainText('⚠');
   expect(await dirac(page)).toBe(before);
 });
@@ -217,10 +226,10 @@ test('v17 symBloch: qubit concreto SEPARÁVEL em |0⟩⊗|ψ⟩ desenha a esfera
   await expect(page.locator('#blochInline')).toBeHidden();                          // qubit abstrato → sem esfera (re-check no refresh)
 });
 
-test('controlled phase CP(=CU1): |11⟩, 0 CTRL 1 Q, 2nd CP, π, = → −|11⟩', async ({ page }) => {
+test('controlled phase (CTRL P): |11⟩, 0 CTRL 1 Q P, π, = → −|11⟩', async ({ page }) => {
   await act(page,'key:1'); await act(page,'key:1'); await act(page,'key:SET');   // |11⟩
   await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q');
-  await act(page,'gate:CP');                              // CP na camada 2nd
+  await act(page,'gate:P');                              // v25: CTRL P (P na pág.1) = controlled-phase
   await act(page,'calc:π'); await act(page,'eval');                               // λ = π
   expect(await dirac(page)).toBe('−|11⟩');                                        // e^{iπ}|11⟩
 });
@@ -258,7 +267,7 @@ test('v3 NEG: misturar dígito e ket → erro, sem aplicar', async ({ page }) =>
 test('v3 phase kickback (base MANTIDA, sem CHBASE): |+⟩|−⟩ + CNOT(0→1) → |−−⟩', async ({ page }) => {
   await act(page,'ket:+'); await act(page,'ket:-'); await act(page,'key:SET');   // |+⟩⊗|−⟩
   expect(await dirac(page)).toBe('|+−⟩');                                         // preparado: base X mantida
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');
   expect(await dirac(page)).toBe('|−−⟩');   // controle |+⟩→|−⟩ visível direto, SEM trocar base à mão
 });
 
@@ -281,7 +290,7 @@ test('v3 forma fatorada NÃO distribui: |0⟩, Q1 em X → |0⟩⊗(soma)', asyn
 
 test('v3 evidenciar Q0 em Bell → (1/√2)[|0⟩⊗|0⟩ + |1⟩⊗|1⟩]', async ({ page }) => {
   await bell(page);
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'evidence');   // v12: factor (evidence) no 2nd
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'evidence');   // v12: factor (evidence) no 2nd
   expect(await dirac(page)).toBe('(1/√2)[|0⟩⊗|0⟩ + |1⟩⊗|1⟩]');
   await expect(page.locator('#selection')).toContainText('evid Q0');
 });
@@ -337,10 +346,10 @@ test('v4 autovalor PADRÃO: porta em |ψ⟩ + = (vazio) → fase simbólica e^{i
 
 test('v4 CRz em |ψ⟩ (controle concreto): = → e^{iθ} chutado ao controle (não nó CRz)', async ({ page }) => {
   await act(page,'ket:+'); await act(page,'ket:ψ'); await act(page,'key:SET');
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CRz');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:Rz');
   await act(page,'eval');                                                        // = vazio → e^{iθ}
   const d = await dirac(page);
-  expect(d).toContain('e^{iθ}'); expect(d).toContain('|ψ⟩'); expect(d).not.toContain('CRz');
+  expect(d).toContain('e^{iθ}'); expect(d).toContain('|ψ⟩'); expect(d).not.toContain('Rz');
 });
 
 
@@ -348,12 +357,12 @@ test('REG v4: porta em |ψ⟩ pede o ângulo TODA vez (regra não é reaplicada 
   // forma SEM Q no alvo (0 CTRL 1 CRz) — o caso relatado
   await act(page,'ket:+'); await act(page,'ket:ψ'); await act(page,'key:SET');
   // 1ª aplicação → prompt abre, = aplica e^{iθ}
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'gate:CRz');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'gate:Rz');
   await expect(page.locator('#statusLine')).toContainText('e^{iθ}');     // prompt de λ aberto
   await expect(page.locator('[data-action="eval"]')).toBeVisible();      // teclado em modo entrada (tem '=')
   await act(page,'eval');
   // 2ª aplicação → DEVE reabrir o prompt (antes reusava a regra em silêncio, sem deixar digitar)
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'gate:CRz');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'gate:Rz');
   await expect(page.locator('#statusLine')).toContainText('e^{iθ}');     // prompt reabriu → ângulo PODE ser digitado
   await expect(page.locator('[data-action="eval"]')).toBeVisible();
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');  // digita um novo ângulo π/2
@@ -362,7 +371,7 @@ test('REG v4: porta em |ψ⟩ pede o ângulo TODA vez (regra não é reaplicada 
 
 test('v4 KICKBACK φ=π (λ=e^{iπ}=−1) → colapsa o controle a |1⟩⊗|ψ⟩', async ({ page }) => {
   await symPsiPlus(page);                                                        // |+⟩|ψ⟩
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await expect(page.locator('#selection')).toContainText('λ');                   // entrada de autovalor (ângulo de fase)
   await act(page,'calc:π'); await act(page,'eval');                              // φ = π → λ = e^{iπ} = −1
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');     // H no controle
@@ -371,14 +380,14 @@ test('v4 KICKBACK φ=π (λ=e^{iπ}=−1) → colapsa o controle a |1⟩⊗|ψ�
 
 test('v4 KICKBACK φ=π/4 (λ=e^{iπ/4}) → fase relativa no controle, |ψ⟩ fatorado', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');   // φ = π/4 → λ = e^{iπ/4}=ω (exato)
   expect(await dirac(page)).toBe('((1/√2)|0⟩ + (1/√2·e^{iπ/4})|1⟩)⊗|ψ⟩');         // |ψ⟩ isolado; fase relativa, magnitude preservada
 });
 
 test('v4 forma: toggle fatorado↔expandido isola/distribui |ψ⟩', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');
   expect(await dirac(page)).toBe('((1/√2)|0⟩ + (1/√2·e^{iπ/4})|1⟩)⊗|ψ⟩');         // fatorado (padrão)
   await act(page,'viewform');                                                     // → expandido
@@ -388,7 +397,7 @@ test('v4 forma: toggle fatorado↔expandido isola/distribui |ψ⟩', async ({ pa
 
 test('v4 prob dos qubits concretos: kickback φ=π/4 completo → P(0)=(2+√2)/4, P(1)=(2−√2)/4 (exato)', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');   // φ=π/4
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');                              // completa o kickback
   await act(page,'op:prob');
@@ -399,7 +408,7 @@ test('v4 prob dos qubits concretos: kickback φ=π/4 completo → P(0)=(2+√2)/
 
 test('v4 prob bloqueada quando coef simbólico (φ livre): pede φ concreto', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await page.keyboard.type('t'); await act(page,'eval');                                                   // φ=t simbólico
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');                              // coefs viram somas (1/2±1/2 e^{it})
   await act(page,'op:prob');
@@ -408,7 +417,7 @@ test('v4 prob bloqueada quando coef simbólico (φ livre): pede φ concreto', as
 
 test('v4 KICKBACK simbólico φ=θ (λ=e^{iθ}) → ((1/2)±(1/2)e^{iθ})⊗|ψ⟩', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await page.keyboard.type('t');                                                 // φ = t (símbolo livre) → λ = e^{it}
   await act(page,'eval');
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
@@ -417,13 +426,13 @@ test('v4 KICKBACK simbólico φ=θ (λ=e^{iθ}) → ((1/2)±(1/2)e^{iθ})⊗|ψ�
 
 test('v4 operações concretas bloqueadas no modo simbólico', async ({ page }) => {
   await act(page,'ket:ψ'); await act(page,'key:SET');
-  await act(page,'page:1'); await act(page,'op:norm');   // v12: ‖ψ‖ no 2nd
+  await act(page,'op:norm');   // v12: ‖ψ‖ no 2nd
   await expect(page.locator('#statusLine')).toContainText('unavailable in symbolic mode');   // v13: onOp type-aware — norm/etc. erram no simbólico
 });
 
 test('v4 φ=2πt (λ=e^{2πit}): kickback mostra (1 ± e^{2πit})/2 (v18 condensado)', async ({ page }) => {
   await symPsiPlus(page);
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CU');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:U');
   await page.keyboard.type('2pi*t');                                            // φ = 2πt → λ = e^{2πit}
   await act(page,'eval');
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
@@ -443,8 +452,8 @@ test('v4 TELETRANSPORTE completo: medir q0,q1 (colapso) + correção Pauli recup
   // |ψ⟩ ⊗ |00⟩ → Bell(1,2) → CNOT(0→1) → H(0)
   await act(page,'ket:ψ'); await act(page,'ket:0'); await act(page,'ket:0'); await act(page,'key:SET');
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:CNOT');
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:X');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
   // medir q0 e q1 (Math.random=0.01 → ambos colapsam em |0⟩, ramo sem correção)
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'op:measure');
@@ -463,9 +472,9 @@ test('v4 TELETRANSPORTE: controle abstrato |ψ⟩ expande p/ ψ₀|0⟩+ψ₁|1�
   expect(await dirac(page)).toBe('|ψ⟩⊗|00⟩');
   // Bell em (1,2): H(1), CNOT(1→2)
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:X');
   // CNOT(0→1): CONTROLE ABSTRATO |ψ⟩ → expande em ψ₀|0⟩+ψ₁|1⟩ (antes lançava erro)
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');
   await expect(page.locator('#statusLine')).not.toHaveClass(/err/);     // sem erro de "controle abstrato"
   let d = await dirac(page);
   expect(d).toContain('ψ₀'); expect(d).toContain('ψ₁');                 // amplitudes simbólicas do qubit desconhecido
@@ -522,8 +531,8 @@ test('V5-5 NEG valor da Bloch para qubit EMARANHADO → "mixed" (Bell, Q0)', asy
 // ================= v6 — núcleo exato ζ₁₆ (π/8) na UI real =================
 // Exercita o delta π/8 ponta a ponta pelo DOM/FSM real (P está na camada 2nd).
 // Estado inicial padrão = 1 qubit |0⟩ (sem SET). dataset.plain = string Unicode renderizada.
-async function pPi8(p){           // P(π/8) no qubit selecionado, via página 2 (cauda longa) + prompt de ângulo
-  await act(p,'page:1'); await act(p,'gate:P');
+async function pPi8(p){           // P(π/8) no qubit selecionado (P na pág.1 desde v25) + prompt de ângulo
+  await act(p,'gate:P');
   await act(p,'calc:π'); await act(p,'calc:/'); await act(p,'calc:8'); await act(p,'eval');
 }
 test('v6-UI P(π/8)|+⟩ exato: exp mostra e^{iπ/8}, SEM badge ≈', async ({ page }) => {
@@ -540,7 +549,6 @@ test('v6-UI rect surdo aninhado √(4+2√2); kickback rect exato e exp ≈', as
   await act(page,'fmtcycle');                                                  // exp → a+bi (rect)
   expect(await dirac(page)).toContain('√(4+2√2)');                             // surdo aninhado no rect
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);          // rect exato
-  await act(page,'page:0');                                                    // v21-36: sem auto-return — volta à pág.1 p/ o H do kickback
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');  // kickback
   expect(await dirac(page)).toContain('√(2+√2)');                              // kickback rect exato
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);          // rect do kickback é EXATO
@@ -550,7 +558,6 @@ test('v6-UI rect surdo aninhado √(4+2√2); kickback rect exato e exp ≈', as
 test('v6-UI screenshot do kickback em rect (radical aninhado)', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
   await act(page,'key:0'); await act(page,'key:Q'); await pPi8(page);
-  await act(page,'page:0');                                                    // v21-36: sem auto-return — volta à pág.1
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');  // kickback
   await act(page,'fmtcycle');                                                  // rect
   expect(await dirac(page)).toContain('√(2+√2)');
@@ -559,7 +566,7 @@ test('v6-UI screenshot do kickback em rect (radical aninhado)', async ({ page })
 test('v6-UI NEG ângulo arbitrário (0.37) → badge ≈ acende', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
   await act(page,'key:0'); await act(page,'key:Q');
-  await act(page,'page:1'); await act(page,'gate:P');
+  await act(page,'gate:P');
   await act(page,'calc:0'); await act(page,'calc:.'); await act(page,'calc:3'); await act(page,'calc:7'); await act(page,'eval');
   await expect(page.locator('#approxBadge')).toHaveClass(/show/);              // 0.37 ∉ ζ₁₆ → approx
 });
@@ -571,13 +578,6 @@ test('v6-UI undo desfaz o P(π/8) (volta a |+⟩)', async ({ page }) => {
   await act(page,'cmd:undo');
   expect(await dirac(page)).toBe(plus);                                        // undo restaura |+⟩
 });
-test('v21-36 sem auto-return: aplicar porta da página 2 (P) PERMANECE na página 2 (encadear)', async ({ page }) => {
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:0'); await act(page,'key:Q'); await pPi8(page);          // P via página 2
-  await expect.poll(() => activePage(page)).toBe('1');                         // v21-36: FICA na pág.2 (sem auto-volta) — permite encadear portas da cauda-longa
-  await expect(page.locator('[data-action="preset:QFT"]')).toBeVisible();      // cauda-longa segue visível p/ o próximo toque
-});
-
 // ================= v7 — toggle de convenção de ângulo rad↔turns =================
 test('v7-UI toggle ∠: indicador "turns" aparece/some no #selection', async ({ page }) => {
   await expect(page.locator('#selection')).not.toContainText('turns');   // default rad (silencioso)
@@ -597,7 +597,7 @@ test('v7-UI turns render: T|1⟩ exibe e^{2πi·1/8} (e^{iπ/4} em rad)', async 
 test('v7-UI turns ENTRADA: digitar 1/8 em turns aplica P(π/4) (×2π)', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');   // |+⟩
   await act(page,'angcycle');                                            // turns ON
-  await act(page,'page:1'); await act(page,'gate:P');                     // P (camada 2nd)
+  await act(page,'gate:P');                     // P (camada 2nd)
   await act(page,'calc:1'); await act(page,'calc:/'); await act(page,'calc:8'); await act(page,'eval');  // "1/8" → ×2π = π/4
   const d = await dirac(page);
   expect(d).toContain('e^{2πi·1/8}');                                    // P(π/4)|+⟩: |1⟩ = (1/√2)e^{2πi·1/8}
@@ -605,7 +605,7 @@ test('v7-UI turns ENTRADA: digitar 1/8 em turns aplica P(π/4) (×2π)', async (
 });
 test('v7-UI rad inalterado: digitar π/4 em rad aplica P(π/4) → e^{iπ/4}', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'page:1'); await act(page,'gate:P');                     // rad (default)
+  await act(page,'gate:P');                     // rad (default)
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');
   expect(await dirac(page)).toContain('e^{iπ/4}');
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);
@@ -636,17 +636,9 @@ test('v7-UI prob na base de exibição: Bell em {+,−} → P(++)/P(−−)', as
 
 // ===== v9 — presets/macros no 2nd layer (DOM-driven: dirige a tela, não o motor) =====
 // As formas MANUAIS (bell()/ghz()/QFT manual) permanecem; os presets entram ao lado.
-test('v9-UI presets na página 2 (cauda longa), acessíveis após o swipe', async ({ page }) => {
-  expect(await activePage(page)).toBe('0');                                  // presets vivem na pág.2 (não na pág.1 ativa)
-  await act(page,'page:1');
-  await expect.poll(() => activePage(page)).toBe('1');
-  for (const a of ['preset:QFT','preset:QFTinv','preset:Bell','preset:GHZ','preset:Grover','preset:W'])
-    await expect(page.locator(`[data-action="${a}"]`)).toBeVisible();
-});
-
 test('v9-UI ALL QFT (3 qubits) → superposição uniforme', async ({ page }) => {
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:QFT');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:QFT');
   expect(await dirac(page)).toBe('(1/2√2)|000⟩ + (1/2√2)|001⟩ + (1/2√2)|010⟩ + (1/2√2)|011⟩ + (1/2√2)|100⟩ + (1/2√2)|101⟩ + (1/2√2)|110⟩ + (1/2√2)|111⟩');
 });
 
@@ -655,58 +647,56 @@ test('v9-UI CROSS-CHECK na TELA: preset QFT == QFT manual (|001⟩)', async ({ p
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:X');               // |001⟩
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:CP'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');
-  await act(page,'key:2'); await act(page,'key:CTRL'); await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:CP'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');
+  await act(page,'key:1'); await act(page,'key:CTRL'); await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');
+  await act(page,'key:2'); await act(page,'key:CTRL'); await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:4'); await act(page,'eval');
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:2'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CP'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');
+  await act(page,'key:2'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:P'); await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'gate:SWAP');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:2nd'); await act(page,'gate:SWAP'); await act(page,'key:2nd');
   const manual = await dirac(page);
   // forma AUTOMÁTICA — mesmo input, tecla de preset
-  await act(page,'page:0');                                                                  // v21-36: sem auto-return após o SWAP da pág.2 → volta à pág.1
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'gate:X');               // |001⟩
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:QFT');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:QFT');
   expect(await dirac(page)).toBe(manual);                                                   // idênticos
 });
 
 test('v9-UI Bell preset: variante pela preparação (|00⟩→Φ+, |01⟩→Ψ+)', async ({ page }) => {
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');              // |00⟩
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'preset:Bell');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'preset:Bell');
   expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');                                // Φ+
-  await act(page,'page:0');                                                                  // v21-36: sem auto-return após o preset → volta à pág.1
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');               // |01⟩
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'preset:Bell');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'preset:Bell');
   expect(await dirac(page)).toBe('(1/√2)|01⟩ + (1/√2)|10⟩');                                // Ψ+
 });
 
 test('v9-UI GHZ + Grover presets (ALL, |0…0⟩)', async ({ page }) => {
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:GHZ');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:GHZ');
   expect(await dirac(page)).toBe('(1/√2)|000⟩ + (1/√2)|111⟩');
-  await act(page,'page:0');                                                                  // v21-36: sem auto-return após o preset → volta à pág.1
+  await act(page,'key:2nd');                                                                  // v21-36: sem auto-return após o preset → volta à pág.1
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:Grover');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:Grover');
   expect(await dirac(page)).toBe('(3/4)|000⟩ − (1/4)|001⟩ − (1/4)|010⟩ − (1/4)|011⟩ − (1/4)|100⟩ − (1/4)|101⟩ − (1/4)|110⟩ − (1/4)|111⟩');
 });
 
 test('v9-UI W preset (≈approx) → 3 termos de excitação única', async ({ page }) => {
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:W');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:W');
   expect(await dirac(page)).toBe('(0.57735)|001⟩ + (0.57735)|010⟩ + (0.57735)|100⟩');
 });
 
 test('v9-UI range por dois Q: 0 Q 2 Q QFT em 4 qubits deixa q3 intacto', async ({ page }) => {
   await act(page,'key:4'); await act(page,'key:Q'); await act(page,'key:SET');              // |0000⟩
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'preset:QFT');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:2nd'); await act(page,'preset:QFT');
   // a tela FATORA o qubit intacto (q3=|0⟩) como ⊗|0⟩ — QFT₃(q0q1q2) ⊗ |0⟩ (didático: o range agiu só em q0..q2)
   expect(await dirac(page)).toBe('((1/2√2)|000⟩ + (1/2√2)|001⟩ + (1/2√2)|010⟩ + (1/2√2)|011⟩ + (1/2√2)|100⟩ + (1/2√2)|101⟩ + (1/2√2)|110⟩ + (1/2√2)|111⟩)⊗|0⟩');
 });
 
 test('v9-UI bloco ATÔMICO: 1 undo desfaz a QFT inteira', async ({ page }) => {
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:QFT');
+  await act(page,'key:ALL'); await act(page,'key:2nd'); await act(page,'preset:QFT');
   expect(await dirac(page)).not.toBe('|000⟩');
   await act(page,'cmd:undo');                                                                // 1 ↶
   expect(await dirac(page)).toBe('|000⟩');                                                    // QFT inteira desfeita
@@ -714,7 +704,7 @@ test('v9-UI bloco ATÔMICO: 1 undo desfaz a QFT inteira', async ({ page }) => {
 
 test('v9-UI Bell preset com aridade errada (3 qubits no range) → erro', async ({ page }) => {
   await act(page,'key:3'); await act(page,'key:Q'); await act(page,'key:SET');
-  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'page:1'); await act(page,'preset:Bell');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q'); await act(page,'preset:Bell');
   await expect(page.locator('#statusLine')).toContainText('Bell requires exactly 2 qubits');
   expect(await dirac(page)).toBe('|000⟩');                                                    // estado inalterado
 });
@@ -765,20 +755,38 @@ test('v11-UI cap: 7 qubits → matriz truncada com nota "(128 rows total)"', asy
 
 
 // ===================== v12 — reorg de teclado + measure sem popup + Bloch mobile =====================
-test('v14 keypad: M no comando (visível nas 2 páginas); ⊗/⟨φ|ψ⟩ na pág1; factor/‖ψ‖ na pág2; títulos sem "2nd"', async ({ page }) => {
-  // página 1
-  await expect(page.locator('[data-action="op:saveBra"]')).toHaveText('M');     // 'save φ' → 'M'
+test('v26 keypad: M no numpad; ⊗/⟨φ|ψ⟩/‖ψ‖ no primário; Schmidt/ρ na 2ª camada; labels de bloco sem "2nd"', async ({ page }) => {
+  // camada primária (v26: ‖ψ‖/⟨ZZ⟩/factor promovidos)
+  await expect(page.locator('[data-action="op:saveBra"]')).toHaveText('M');     // 'save φ' → 'M' (v26: no numpad)
   await expect(page.locator('[data-action="op:inner"]')).toBeVisible();         // ⟨φ|ψ⟩ no primário
   await expect(page.locator('[data-action="op:tensor"]')).toBeVisible();        // ⊗ no primário
-  // página 2 (cauda longa)
-  await act(page,'page:1');
-  await expect.poll(() => activePage(page)).toBe('1');
-  await expect(page.locator('[data-action="op:saveBra"]')).toBeVisible();        // M no comando FIXO → visível nas 2 páginas
-  await expect(page.locator('[data-action="op:norm"]')).toBeVisible();           // ‖ψ‖ na pág2
-  await expect(page.locator('[data-action="evidence"]')).toBeVisible();          // factor na pág2
+  await expect(page.locator('[data-action="op:norm"]')).toBeVisible();          // ‖ψ‖ promovido ao primário
+  await expect(page.locator('[data-action="op:schmidt"]')).toHaveCount(0);       // Schmidt é da 2ª camada
+  // 2ª camada (2nd)
+  await act(page,'key:2nd');
+  await expect(page.locator('[data-action="op:schmidt"]')).toBeVisible();        // Schmidt na 2ª camada
+  await expect(page.locator('[data-action="op:density"]')).toBeVisible();        // ρ na 2ª camada
   const lbls = (await page.locator('.kp-label').allInnerTexts()).map(s => s.toLowerCase());
-  for (const l of lbls) expect(l).not.toContain('2nd');                          // títulos sem "2nd ·"
-  expect(lbls).toContain('operations');                                          // bloco renomeado (existe nas 2 páginas)
+  for (const l of lbls) expect(l).not.toContain('2nd');                          // labels de BLOCO sem "2nd"
+  expect(lbls).toContain('operations');
+});
+
+// ===== v26 Grupo A — faxina do numpad + tecla 2nd (shell do toggle) =====
+test('v26-A numpad: M e ⌫ presentes; π/1√2/±/. removidos', async ({ page }) => {
+  await expect(page.locator('[data-action="op:saveBra"]')).toBeVisible();        // M migrou p/ o numpad
+  await expect(page.locator('[data-action="key:BKSP"]')).toBeVisible();          // ⌫ migrou p/ o numpad
+  await expect(page.locator('[data-action="key:PI"]')).toHaveCount(0);           // faxina
+  await expect(page.locator('[data-action="key:INVSQRT2"]')).toHaveCount(0);
+  await expect(page.locator('[data-action="key:NEG"]')).toHaveCount(0);
+  await expect(page.locator('[data-action="key:."]')).toHaveCount(0);
+});
+test('v26-A tecla 2nd: presente e faz toggle do indicador (on/off)', async ({ page }) => {
+  await expect(page.locator('[data-action="key:2nd"]')).toBeVisible();
+  await expect(page.locator('[data-action="key:2nd"]')).not.toHaveClass(/\bon\b/);
+  await act(page,'key:2nd');                                                     // liga (re-render)
+  await expect(page.locator('[data-action="key:2nd"]')).toHaveClass(/\bon\b/);
+  await act(page,'key:2nd');                                                     // desliga
+  await expect(page.locator('[data-action="key:2nd"]')).not.toHaveClass(/\bon\b/);
 });
 
 test('v12-UI M (memory): guarda φ, ⟨φ|ψ⟩ lê — tudo no primário (sem 2nd)', async ({ page }) => {
@@ -793,7 +801,7 @@ test('v12-UI measure sem popup: colapsa direto (ramos + Collapsed), zero diálog
   let dialog = false; page.on('dialog', d => { dialog = true; d.dismiss(); });
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
-  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:CNOT');
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:X');
   await act(page,'op:measure');
   await expect(page.locator('#auxOutput')).toContainText('branches (exact prob)');
   await expect(page.locator('#auxOutput')).toContainText('Collapsed to');
@@ -874,22 +882,6 @@ test('v13-UI calc RETIRED: no mode toggle key, M is on the keypad', async ({ pag
 });
 
 // ===================== v14 — teclado deslizante paginado (carrossel) =====================
-test('v14-UI seta ←/→ troca de página', async ({ page }) => {
-  expect(await activePage(page)).toBe('0');
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => activePage(page)).toBe('1');                       // → página 2
-  await expect(page.locator('[data-action="preset:QFT"]')).toBeVisible();    // cauda longa acessível
-  await page.keyboard.press('ArrowLeft');
-  await expect.poll(() => activePage(page)).toBe('0');                       // ← volta à página 1
-});
-
-test('v14-UI preset via página 2: 2 Q SET · QFT (buffer persiste na troca)', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩
-  await act(page,'key:ALL'); await act(page,'page:1'); await act(page,'preset:QFT');   // buffer (ALL) persiste no swipe → preset
-  expect(await dirac(page)).toContain('|00⟩');                                  // QFT|00⟩ = uniforme (sanity: aplicou)
-  await expect.poll(() => activePage(page)).toBe('1');                          // v21-36: FICA na pág.2 após o preset (sem auto-volta)
-});
-
 // λ-turns BUGFIX (avulso): em turns, o autovalor 1/8 vira π/4 EXATO (não 0.125 rad approx)
 test('v14-UI λ em turns: T|ψ⟩ com 1/8 → e^{2πi·1/8} exato (sem aproximação)', async ({ page }) => {
   await act(page,'ket:ψ'); await act(page,'key:SET');                            // |ψ⟩ simbólico
@@ -1162,7 +1154,7 @@ test('v21-31 ESC dispensa a mensagem do detalhe (ex.: "Result φ⊗ψ…") e vol
 
 test('v21-32 ⟨ZZ⟩ (pág.2): sem seleção → ⟨Z₀Z₁⟩ de TODOS; Bell correlacionado = +1', async ({ page }) => {
   await bell(page);
-  await act(page,'page:1'); await act(page,'op:corr');                                // ⟨ZZ⟩ sobre todos os qubits (ALL default)
+  await act(page,'op:corr');                                // ⟨ZZ⟩ sobre todos os qubits (ALL default)
   const text = await page.locator('#auxOutput').innerText();
   expect(text).toContain('⟨Z₀Z₁⟩');                                                  // rótulo com subscritos por qubit
   expect(text).toContain('= 1');                                                     // Bell Φ+ → correlação +1 exata
@@ -1171,102 +1163,16 @@ test('v21-32 ⟨ZZ⟩ (pág.2): sem seleção → ⟨Z₀Z₁⟩ de TODOS; Bell 
 test('v21-32 ⟨ZZ⟩ segue a SELEÇÃO: "0 Q ⟨ZZ⟩" em Bell → ⟨Z₀⟩ = 0 (qubit marginal)', async ({ page }) => {
   await bell(page);
   await act(page,'key:0'); await act(page,'key:Q');                                   // alvo Q0 (pág.1)
-  await act(page,'page:1'); await act(page,'op:corr');                                // → ⟨Z₀⟩
+  await act(page,'op:corr');                                // → ⟨Z₀⟩
   const text = await page.locator('#auxOutput').innerText();
   expect(text).toContain('⟨Z₀⟩');
   expect(text).not.toContain('Z₁');                                                  // só o qubit pedido
   expect(text).toContain('0');                                                       // Bell: ⟨Z₀⟩ = P0−P1 = 0
 });
 
-test('v21-29 swipe p/ pág.2 + 1º tap no QFT aplica (não engole o tap pós-swipe)', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩, 2 qubits, ALL
-  const vp = await page.locator('#viewport').boundingBox();
-  const y = vp.y + vp.height * 0.5;
-  await page.mouse.move(vp.x + vp.width * 0.85, y);
-  await page.mouse.down();
-  await page.mouse.move(vp.x + vp.width * 0.15, y, { steps: 12 });               // swipe horizontal > SWIPE_COMMIT (0.22)
-  await page.mouse.up();
-  await act(page, 'preset:QFT');                                                 // 1º toque no QFT (pág.2 ativa)
-  const st = await page.locator('#stateDisplay').evaluate(e => e.dataset.plain ?? e.textContent);
-  expect(st).toContain('01⟩');                                                   // QFT₂|00⟩ = superposição uniforme → aplicou no 1º toque
-});
-
-test('v21-33 swipe p/ pág.2 + 1º tap aplica para Bell e ⟨ZZ⟩ (correção GERAL, não só QFT)', async ({ page }) => {
-  for (const [setup, action, expectSel] of [
-    [async () => {}, 'preset:Bell', '(1/√2)|00⟩ + (1/√2)|11⟩'],
-  ]){
-    await page.reload();
-    await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩ (2 qubits)
-    const vp = await page.locator('#viewport').boundingBox();
-    const y = vp.y + vp.height * 0.5;
-    await page.mouse.move(vp.x + vp.width * 0.85, y); await page.mouse.down();
-    await page.mouse.move(vp.x + vp.width * 0.15, y, { steps: 12 }); await page.mouse.up();   // swipe → pág.2
-    await act(page, action);                                                       // 1º toque
-    expect(await dirac(page)).toBe(expectSel);                                      // aplicou no 1º toque
-  }
-});
-
-test('v21-33 guard de arrasto: click cujo pointerdown ficou LONGE é descartado; tap no lugar dispara', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');     // |00⟩
-  await act(page,'page:1');                                                        // pág.2 (sem swipe)
-  const btn = await page.locator('[data-action="preset:Bell"]').first().boundingBox();
-  // simula o synthetic-click do swipe: pointerdown LONGE do botão, click sobre o botão → NÃO deve aplicar
-  await page.mouse.move(btn.x - 120, btn.y); await page.mouse.down(); await page.mouse.up();   // pointerdown longe
-  await page.dispatchEvent('[data-action="preset:Bell"]', 'click', { clientX: btn.x + btn.width/2, clientY: btn.y + btn.height/2 });
-  expect(await dirac(page)).toBe('|00⟩');                                          // arrasto descartado → estado intacto
-  // tap limpo no botão → aplica
-  await act(page,'preset:Bell');
-  expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');
-});
-
-test('v21-34 tap APRESSADO com jitter (trava >16px mas < commit) na pág.2 aplica — não engole', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');     // |00⟩
-  await act(page,'page:1'); await page.waitForTimeout(350);                         // pág.2 (espera o transform do strip assentar p/ medir a posição VISÍVEL)
-  const b = await page.locator('[data-action="preset:Bell"]').first().boundingBox();
-  const cx = b.x + b.width/2, cy = b.y + b.height/2;
-  await page.mouse.move(cx, cy); await page.mouse.down();
-  await page.mouse.move(cx + 25, cy, { steps: 4 });                                // jitter horizontal: trava (>16) mas << commit
-  await page.mouse.up();                                                           // pointerup roteia o botão sob o dedo
-  expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');                        // aplicou (não foi engolido como swipe)
-});
-
-test('v21-34 jitter GRANDE (> commit) ainda troca de página, não aplica tecla', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');     // |00⟩, pág.1
-  expect(await page.locator('.kp-page:not([inert])').getAttribute('data-page')).toBe('0');
-  const vp = await page.locator('#viewport').boundingBox();
-  const y = vp.y + vp.height * 0.5;
-  await page.mouse.move(vp.x + vp.width * 0.85, y); await page.mouse.down();
-  await page.mouse.move(vp.x + vp.width * 0.15, y, { steps: 12 });                 // swipe > commit
-  await page.mouse.up();
-  expect(await page.locator('.kp-page:not([inert])').getAttribute('data-page')).toBe('1');   // trocou de página
-  expect(await dirac(page)).toBe('|00⟩');                                          // nenhuma tecla aplicada pelo swipe
-});
-
-test('v21-35 tecla do viewport dispara no POINTERUP mesmo SEM evento de click (alvo se move na transição)', async ({ page }) => {
-  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');     // |00⟩
-  await act(page,'page:1'); await page.waitForTimeout(350);                         // pág.2 assentada
-  // dispara pointerdown+pointerup SEM click (replica o caso do device: o strip moveu o botão entre down/up,
-  // então o navegador NÃO gera o synthetic click — só o háptico/pointerdown ocorre)
-  await page.evaluate(() => {
-    const el = document.querySelector('[data-action="preset:Bell"]');
-    const r = el.getBoundingClientRect();
-    const o = { bubbles:true, cancelable:true, clientX:r.x + r.width/2, clientY:r.y + r.height/2, pointerId:1, pointerType:'touch' };
-    el.dispatchEvent(new PointerEvent('pointerdown', o));
-    el.dispatchEvent(new PointerEvent('pointerup', o));   // NENHUM click é despachado de propósito
-  });
-  expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');                        // aplicou via pointerup (independe do click)
-});
-
-test('v21-35 sem duplicação: pointerup + click no MESMO botão aplica UMA vez (não dobra)', async ({ page }) => {
-  await act(page,'key:1'); await act(page,'key:Q'); await act(page,'key:SET');     // |0⟩ (1 qubit)
-  await act(page,'key:0'); await act(page,'key:Q');                                // alvo Q0
-  await act(page,'gate:X');                                                        // X via .click() = pointerdown+pointerup+click → deve aplicar UMA vez
-  expect(await dirac(page)).toBe('|1⟩');                                           // X uma vez: |0⟩→|1⟩ (se dobrasse, |1⟩→|0⟩)
-});
-
 test('v22 √X (pág.2): aplicar duas vezes = X (|0⟩→|1⟩)', async ({ page }) => {
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'key:SET');   // |0⟩ (1 qubit)
-  await act(page,'page:1');                                                       // pág.2
+  await act(page,'key:2nd');                                                       // pág.2
   await act(page,'gate:SX'); await act(page,'gate:SX');                           // √X·√X = X
   expect(await dirac(page)).toBe('|1⟩');
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);             // √X é EXATO (sem badge ≈)
@@ -1275,7 +1181,7 @@ test('v22 √X (pág.2): aplicar duas vezes = X (|0⟩→|1⟩)', async ({ page 
 test('v21-26 preset no estado default ALL executa SEM re-apertar ALL (Bell)', async ({ page }) => {
   await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩ (2 qubits) — indicador ALL (default, allFlag=false)
   await expect(page.locator('#selection')).toContainText('ALL');
-  await act(page,'page:1'); await act(page,'preset:Bell');                        // v21-25: aplica direto, sem precisar apertar a tecla ALL antes
+  await act(page,'preset:Bell');                        // v21-25: aplica direto, sem precisar apertar a tecla ALL antes
   expect(await dirac(page)).toBe('(1/√2)|00⟩ + (1/√2)|11⟩');                       // Φ+ em todos os qubits
 });
 
@@ -1307,3 +1213,100 @@ test('v21-1 Bloch ON habilita a affordance de expandir + expand re-desenha a esf
   await expect(page.locator('#dispArrowBottom')).toBeHidden();                         // sem Bloch, sem expand, sem overflow → affordance some (default)
 });
 
+
+// ───────── v24 — generalized control (CTRL) + power (2ʲ / POW), full key→screen path ─────────
+test('v24 POW key (2^j) is present in the fixed command block', async ({ page }) => {
+  await page.goto(URL);
+  await expect(page.locator('.kp-command [data-action="key:POW"]')).toHaveCount(1);
+});
+test('v24 (+) generalized controlled-H: 2 Q SET · 0 Q X · 0 CTRL 1 Q H → (1/√2)|10⟩+(1/√2)|11⟩', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:2','key:Q','key:SET','key:0','key:Q','gate:X','key:0','key:CTRL','key:1','key:Q','gate:H']) await act(page,a);
+  expect(await dirac(page)).toBe('|1⟩⊗((1/√2)|0⟩ + (1/√2)|1⟩)');   // factored: q0 stays |1⟩, q1 → |+⟩ (controlled-H fired)
+});
+test('v24 (+) POW visible: 1 Q SET · 0 Q H · 0 Q 2 2^j T (=T⁴=Z) → |−⟩', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:1','key:Q','key:SET','key:0','key:Q','gate:H','key:0','key:Q','key:2','key:POW','gate:T']) await act(page,a);
+  expect(await dirac(page)).toBe('(1/√2)|0⟩ − (1/√2)|1⟩');
+});
+test('v24 (−) ALL + CTRL → error, no apply', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:1','key:Q','key:SET']) await act(page,a);
+  const before = await dirac(page);
+  for (const a of ['key:ALL','key:0','key:CTRL','gate:H']) await act(page,a);
+  await expect(page.locator('#statusLine')).toContainText('⚠');
+  expect(await dirac(page)).toBe(before);
+});
+test('v24 (−) POW cap: 1 1 2^j → error (max j=10)', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:1','key:1','key:POW']) await act(page,a);
+  await expect(page.locator('#statusLine')).toContainText('⚠');
+  await expect(page.locator('#statusLine')).toContainText('exponent too large');
+});
+test('v24 (−) preset control overlaps its target range → error, no apply', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:3','key:Q','key:SET']) await act(page,a);       // |000⟩
+  const before = await dirac(page);
+  for (const a of ['key:1','key:CTRL','key:1','key:Q','key:2','key:Q','key:2nd','preset:Grover']) await act(page,a);   // ctrl q1 ∈ {1,2}
+  await expect(page.locator('#statusLine')).toContainText('⚠');
+  await act(page,'key:2nd');
+  expect(await dirac(page)).toBe(before);
+});
+
+// v26 — indicador de processamento (#busyDot). Gating por CUSTO PREVISTO (não por timer): ops baratas
+// rodam síncronas e o indicador NUNCA acende (a preocupação da operadora: nada de pisca-pisca em op curta).
+// O "aparece em op pesada" depende de quadros/timing e é validado no device (como o háptico).
+test('v26 busyDot: existe, escondido no início', async ({ page }) => {
+  await page.goto(URL);
+  const dot = page.locator('#busyDot');
+  await expect(dot).toHaveCount(1);
+  await expect(dot).toBeHidden();
+});
+test('v26 busyDot: op CURTA (ALL H em |0⟩) não acende o indicador (zero pisca-pisca)', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'key:ALL'); await act(page,'gate:H');     // n=1: custo ínfimo → caminho síncrono
+  expect(await dirac(page)).toBe('(1/√2)|0⟩ + (1/√2)|1⟩');
+  await expect(page.locator('#busyDot')).toBeHidden();      // segue escondido (nunca foi mostrado)
+});
+test('v26 busyDot: cadeia de gates de 1 qubit nunca acende o indicador', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:0','key:Q','gate:H','key:0','key:Q','gate:T','key:0','key:Q','gate:S']) await act(page,a);
+  await expect(page.locator('#busyDot')).toBeHidden();
+});
+test('v26 busyDot: op PESADA (ALL H em 10 qubits) ACENDE o indicador', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:1','key:0','key:Q','key:SET']) await act(page,a);   // |0…0⟩ com 10 qubits
+  // observa a transição do atributo hidden DURANTE a aplicação (determinístico: instalado antes da op,
+  // captura o show mesmo que o hide venha logo depois — independe do timing exato dos quadros)
+  const shown = page.evaluate(() => new Promise(res => {
+    const el = document.getElementById('busyDot');
+    let seen = false;
+    new MutationObserver(() => { if (!el.hidden) seen = true; }).observe(el, { attributes:true });
+    setTimeout(() => res(seen), 4000);
+  }));
+  await act(page,'key:ALL'); await act(page,'gate:H');
+  expect(await shown).toBe(true);
+  await expect(page.locator('#busyDot')).toBeHidden();    // e volta a esconder ao terminar
+});
+
+// v26 — About (botão "i" ao lado do "?")
+test('v26 about: botão i abre o overlay com o crédito de autoria', async ({ page }) => {
+  await page.goto(URL);
+  await expect(page.locator('#aboutOverlay')).toBeHidden();
+  await act(page,'about');
+  await expect(page.locator('#aboutOverlay')).toBeVisible();
+  await expect(page.locator('#aboutCard')).toContainText('Jasmine Moreira');
+  await expect(page.locator('#aboutCard')).toContainText('QuantumCalc');
+  await expect(page.locator('#aboutCard a')).toHaveAttribute('href', 'https://www.linkedin.com/in/jasminemoreira2013/');
+});
+test('v26 about: × fecha; clique no card NÃO fecha; backdrop fecha', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'about');
+  await page.locator('#aboutCard h2').click();                 // clique no conteúdo: NÃO fecha
+  await expect(page.locator('#aboutOverlay')).toBeVisible();
+  await page.locator('#aboutX').click();                        // botão ×
+  await expect(page.locator('#aboutOverlay')).toBeHidden();
+  await act(page,'about');
+  await page.locator('#aboutOverlay').click({ position:{ x:5, y:5 } });   // backdrop (canto, fora do card)
+  await expect(page.locator('#aboutOverlay')).toBeHidden();
+});

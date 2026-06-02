@@ -46,7 +46,12 @@
       "v20: renderBloch _blochViewQ local view-only + canvas pointerup tap-center cycle + ring .bloch-tap-ring pulsante (sem mexer Parser.getSelection FSM)",
       "v21: tests/examples-render.mjs renderAlgorithms() — DEDICATED card renderer for Part III (4 labeled sub-sections: Motivation · Circuit/key sequence · State at key points · Result), reuses chips()/resultBlock(), emits <section class='part'> after Part II Cookbook",
       "v21: card schema in tests/examples-data.mjs {id, part:'III', title, motivation, results:[{label,keys,steps}], result} — 5 algorithm entries (Deutsch/Deutsch-Jozsa/Bernstein-Vazirani/Grover/Phase Estimation), oracles as LITERAL key sequences of concrete gates (no SymRules, no new preset)",
-      "v21: anti-drift test (tests/examples.test.mjs) replays each result.steps[] through the engine to compute the state, asserts validated string ∈ manual.html (v8 SSOT + test-as-spec)"
+      "v21: anti-drift test (tests/examples.test.mjs) replays each result.steps[] through the engine to compute the state, asserts validated string ∈ manual.html (v8 SSOT + test-as-spec)",
+      "v24: token POW operandos-first (expoente j → operador aplicado 2ʲ vezes) no Parser FSM, espelhando a gramática n Q / n CTRL",
+      "v24: campo opcional command.power=j (apply/preset) — execute() loopa 2ʲ vezes numa única History.push atômica",
+      "v24: campo opcional command.controls em preset — execute() injeta os controles pendentes em cada OpSpec.controls da expansão do preset",
+      "v24: tecla POW no keypad (operandos-first) + affordance visual de CTRL/POW pendente",
+      "v25 delta: TECLADO + DOCS apenas — motor ℤ[ζ₁₆]/applyN/Gate.META/Presets INTOCADOS"
     ],
     "outOfScope": [
       "Integração/hub com BlochTool/TeleportationTool/ShorLab",
@@ -159,7 +164,20 @@
       "v22: √X†/√Y†",
       "v23: mudança no motor ℤ[ζ₁₆]/portas/FSM (delta é só doc + testes)",
       "v23: instâncias grandes que saem de ℤ[ζ₁₆] — Shor N≠15, Simon n≥4, Quantum Counting t≥5 (π/16 → ≈approx)",
-      "v23: tudo do ciclo 23 (v22) e anteriores não tocado por este delta — ver decisões AS-IS"
+      "v23: tudo do ciclo 23 (v22) e anteriores não tocado por este delta — ver decisões AS-IS",
+      "v24: nova porta NOMEADA (MCX/MCZ emergem de CTRL+base, sem tecla nova); mudança de motor ℤ[ζ₁₆]/matrizes/portas-base/applyN",
+      "v24: controle ou potência sobre estado simbólico abstrato |ψ⟩ (concrete-only, herdado)",
+      "v24: expoente fracionário / não-inteiro (só 2ʲ com j inteiro ≥0)",
+      "v24: reescala de QPE/counting p/ instâncias que saem de ℤ[ζ₁₆] (t grande → ≈approx sinalizado, herdado)",
+      "v24: ALL+CTRL combinados (mutuamente exclusivos por design)",
+      "v24: tudo do ciclo 24 e anteriores não tocado por este delta permanece como está",
+      "v25: motor/applyN/Gate.META/Presets.expand (CNOT/CZ/CP/CU permanecem usados internamente pelos presets)",
+      "v25: SWAP e iSWAP (primitivas 2q genuínas, mantidas no teclado)",
+      "v25: deploy (decisão separada da operadora)",
+      "v25: features/cards novos (ciclo é racionalização, não expansão)",
+      "v26: eliminar a tecla ALL (REVERTIDO — ALL mantido)",
+      "v26: mover blocos de paleta de lugar (posições preservadas)",
+      "v26: motor/applyN/Presets/FSM/gramática de operandos (intocados)"
     ],
     "patterns": [
       "Layered architecture",
@@ -224,7 +242,16 @@
       "v22: entrada de amplitudes = overlay espelhando a gaveta de ângulo",
       "v22: atalhos de ângulo = quick-insert de token na entrada de ângulo (onCalc)",
       "v23: E6–E10 = padrão E-card herdado do v21 (renderAlgorithms + circuitSVG + card schema {id,part:III,motivation,results,result}); steps replayados geram o estado (anti-AP7); trava anti-drift no examples.test",
-      "v23: oráculo/circuito de Shor-15 TRANSCRITO de referência publicada (Beauregard/Vandersypen/N&C), não inventado"
+      "v23: oráculo/circuito de Shor-15 TRANSCRITO de referência publicada (Beauregard/Vandersypen/N&C), não inventado",
+      "v24: 100% herdados (Layered + Modular Monolith, Pure core/DOM-only-in-UI, KISS+YAGNI+SOLID, Command atômico, Strategy operandos-first, Immutable State, Single-threaded); ZERO padrão novo",
+      "v24: controle generalizado = applyN já existente alimentado com controles extras (MCX/MCZ emergem de CTRL+base, sem porta nomeada nova); CTRL acumula em ops[]",
+      "v24: controle de preset = injeção dos controles em CADA OpSpec primitiva (controle distribui sobre U=∏ops, verificado ciclo24 controlled-Grover)",
+      "v24: potência 2ʲ = loop de repetição do operador em execute() (1 entrada atômica no histórico, label tipo c-Grover^8)",
+      "v25: gramática UNIFICADA CTRL+base (CTRL prefixa qualquer porta → controlado via applyN; remove teclas controladas dedicadas redundantes)",
+      "v25: helper genérico _ctrl(gate,c,t,...args) em examples-data espelha a gramática",
+      "v25: SWAP/iSWAP mesclados no bloco 'gate variants' da pág.2; bloco '2 qubits +' eliminado",
+      "v26: teclado Único com tecla 2nd (TOGGLE global, trava) — revival do shift pré-v14; elimina o carrossel de 2 páginas",
+      "v26: bloco do Keymap ganha keys2? (2ª camada no MESMO lugar); buildPanel(grp,second) escolhe a camada"
     ],
     "constraints": [
       "Arquivo único HTML/JS sem build/toolchain",
@@ -306,13 +333,34 @@
       "v21: result.steps maps 1:1 to checkpoint state (verified by replay)",
       "v22: motor exato ℤ[ζ₁₆] e sua representação INTOCADOS",
       "v22: numéricos (rand/amp) só pelo caminho aproximado já existente (badge ≈)",
-      "v22: rand/amp substituem por estado FRESCO de 1 qubit (não atuam dentro de registro n-qubit)"
+      "v22: rand/amp substituem por estado FRESCO de 1 qubit (não atuam dentro de registro n-qubit)",
+      "v24: delta confinado a Parser (relaxar aridade applyGate + CTRL em preset + token POW) + execute() (injeta controls + loop 2ʲ) + keypad (tecla POW) + doc (card E9); motor ℤ[ζ₁₆]/matrizes/portas-base/applyN INTOCADOS",
+      "v24: CTRL acumula (controles extras somam ao conjunto; CNOT+1CTRL=CCX); ALL+CTRL mutuamente exclusivos (erro); POW aplica a qualquer operador (com/sem controle)",
+      "v24: expoente só inteiro 2ʲ (j≥0); controle/preset concrete-only (sem |ψ⟩ abstrato); qubit não pode ser controle E alvo (validateRange)",
+      "v24: não regredir a suíte do ciclo 24 (374 Node + 154 PW, 100% verde); todo estado de card engine-generated (anti-AP7)",
+      "v25: pinos anti-AP7 (v21.test) INALTERADOS — bit-identidade c CTRL t Q X ≡ c CTRL t Q CNOT provada (Gate.matrix=build(base))",
+      "v25: remoção de tecla + reescrita de card são ATÔMICAS (replay de gate:CNOT falha se o botão sumir)",
+      "v25: manual.html regenerado via examples.spec.js, nunca editado à mão",
+      "v26: 2nd é UI puro — FSM/Parser/buffer/motor inalterados",
+      "v26: implementar em 3 grupos validados ao vivo (A=comando/numpad+2nd, B=kets+input, C=fundação 2nd+gates/ops+eliminar carrossel)",
+      "v26: ripple page:1→'key:2nd' (bracket) em cards/testes; dropar page tokens p/ SWAP/input (primarizados)"
     ]
   },
-  "currentPhase": 0,
+  "currentPhase": 7,
   "currentIteration": 1,
-  "phase0Score": null,
-  "phase0Breakdown": null,
+  "phase0Score": 95,
+  "phase0Breakdown": {
+    "clarezaProblema": 10,
+    "casosDeUso": 14,
+    "vocabulario": 10,
+    "ambiguidades": 13,
+    "foraDeEscopo": 10,
+    "criteriosSucesso": 9,
+    "premissas": 10,
+    "documentacao": 4,
+    "usuarioConfirmou": 10,
+    "iaConfiante": 5
+  },
   "decisions": [
     {
       "id": "678827fe-0b0f-47fe-84fe-b1976470daa1",
@@ -3169,9 +3217,447 @@
       "category": "requirement",
       "content": "P7 AVALIAÇÃO DO PRODUTO (operadora): ATENDE, SEM PENDÊNCIAS. Ciclo 24/v23 (Part III enxuta) entregue: E1–E8 + E10 (9 cards), sequências CURTAS via presets (E5 QFT†, E7/E10 Bell, E8 Shor a=11 = SET·H·H·2 CNOTs·QFT† ~14 teclas), estados exatos engine-generated (anti-AP7), suíte 100% verde (374 Node + 154 PW), motor ℤ[ζ₁₆]/portas/FSM INTOCADOS. Aprovado no teste manual (\"parece ok\"). E9 Quantum Counting DEFERIDO ao ciclo 25 (decisão de escopo, não silencioso). Lições em specs/technical/45-v23-lessons.md; referência atualizada em specs/references/44. NOTA: operadora optou por NÃO fazer deploy agora (manual.html atualizado localmente; deploy pendente, fazer quando quiser via ./deploy-ssh.sh + bump sw.js). PRÓXIMO: iniciar ciclo 25 = feature \"controle generalizado (CTRL + qualquer porta/preset)\" + card E9 Quantum Counting curto.",
       "timestamp": "2026-06-01T17:39:20.959Z"
+    },
+    {
+      "id": "65411c68-e543-40ce-8ae2-a7f62f772c74",
+      "phase": 0,
+      "category": "scope",
+      "content": "DELIVERY TARGET (ciclo 25, v24, DELTA MODE — brownfield, motor/teclado SERÃO tocados): DELTA COMPLETO — entregar num ciclo só (salvo bloqueio técnico): (1) recurso de CONTROLE GENERALIZADO no teclado — `CTRL` antes de QUALQUER porta OU preset → o motor aplica multi-controlado via applyN (que JÁ existe; matemática verificada no ciclo 24: controlled-H/CCZ/controlled-Grover/controlled-QFT corretos); (2) atalho de POTÊNCIA 2ʲ (aplicar o operador controlado 2ʲ vezes numa entrada) p/ conveniência de QPE; (3) card E9 Quantum Counting curto (QPE sobre Grover, N=4/M=2, picos c={2,6}→M=2 exato verificado). AS-IS preservado: tudo do ciclo 24 e anteriores não tocado por este delta permanece como está.",
+      "timestamp": "2026-06-01T18:00:55.818Z"
+    },
+    {
+      "id": "7179d65a-9f49-48a9-bf20-833888a9b3c5",
+      "phase": 0,
+      "category": "requirement",
+      "content": "P0 ciclo 25 — síntese VALIDADA pela operadora (\"Correta\"). Ambiguidade A1 (UX da potência 2ʲ) RESOLVIDA: EXPOENTE j na entrada → o operador controlado é aplicado 2ʲ vezes (uma entrada por termo do QPE: q controla U^{2ʲ}). Ambiguidades A2 (manter erros de aridade úteis ao permitir controles extras), A3 (controles extras numa porta já-controlada = MCX/MCZ), A4 (ALL+CTRL exclusivos?) ficam como decisões de DESIGN da Fase 1 (não-bloqueantes). Feasibility Nível 4: SEM BLOQUEIO — applyN já multi-controla qualquer porta-base (verificado ciclo 24: controlled-H/CCZ/controlled-Grover/controlled-QFT exatos); delta confinado a Parser (relaxar aridade em applyGate, aceitar CTRL em preset, capturar expoente), execute() (rotear via applyN + injetar controles + loop 2ʲ) e keypad (entrada do expoente). Motor ℤ[ζ₁₆]/matrizes INTOCADOS. Card E9 Quantum Counting curto (N=4/M=2/t=3, picos c={2,6}→M=2 exato).",
+      "timestamp": "2026-06-01T18:04:31.557Z"
+    },
+    {
+      "id": "919fbb90-3d5b-4fb9-9952-7a533e144836",
+      "phase": 1,
+      "category": "architecture",
+      "content": "P1 ARQUITETURA v24 (ciclo 25, DELTA brownfield — Parser+execute+keypad+doc; motor ℤ[ζ₁₆]/matrizes/applyN INTOCADOS). 5 módulos: M1 Parser/FSM (relaxar aridade em applyGate p/ aceitar controles EXTRAS; permitir CTRL em preset(); capturar expoente j via token POW operandos-first); M2 execute() (rotear porta/preset controlado via applyN injetando controles; loop 2ʲ = UMA History.push atômica); M3 injeção de controle em preset (prepend dos controles pendentes em cada OpSpec.controls — válido pois U=∏ops e controle distribui, confirmado ciclo 24 controlled-Grover); M4 keypad/UX (tecla POW operandos-first + affordance de CTRL pendente); M5 docs (card E9 Quantum Counting N=4/M=2/t=3 picos c={2,6}→M=2 + regen manual.html). CONTRATOS: applyN inalterado (controls AND-gated em |1⟩, delta só alimenta o array); applyGate→{kind:'apply',gate,targets,controls,params,power?}; preset→{kind:'preset',name,…,controls?,power?}; execute aplica 2ʲ vezes quando power=j e injeta controls. DECISÕES DE DESIGN (operadora, todas Recommended): (A3) CTRL ACUMULA — todo CTRL soma a ops[]; CNOT+1CTRL=CCX, X+2CTRL=MCX (é o que applyN já faz, sem porta nova); (A4) ALL+CTRL MUTUAMENTE EXCLUSIVOS (erro c/ hint); (A1/UX) expoente via token operandos-first `j POW` (`2 CTRL 0 Q 3 POW Grover`→c-Grover²³, 1 entrada atômica label c-Grover^8); (escopo) POW aplica a QUALQUER operador (com/sem controle, é só repetição U^{2ʲ}). PREMISSAS (AP4): applyN multi-controla correto qualquer base (verificado ciclo24); repetição exata fecha em ℤ[ζ₁₆]; controle de preset = injetar em cada op (a re-verificar no replay P5); qubit não pode ser controle E alvo (validateRange a confirmar). PADRÕES 100% HERDADOS, zero novo. ESCOPO NEGATIVO: sem mudança de motor/matriz/porta-nomeada-nova; concrete-only (sem controle sobre |ψ⟩ abstrato); só expoente inteiro 2ʲ; sem reescala QPE p/ instâncias fora de ℤ[ζ₁₆] (t grande→≈approx herdado). Escopo progressivo NÃO oferecido (DELIVERY TARGET=delta completo num ciclo, Feasibility Nível 4 sem bloqueio). Operadora confirmou a arquitetura completa.",
+      "timestamp": "2026-06-01T18:19:45.319Z"
+    },
+    {
+      "id": "4b3c47c1-3fce-4db3-8291-5d0bbb81b539",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 CRÍTICA ADVERSARIAL v24 (ciclo 25, CTRL generalizado + POW 2ʲ + card E9). Lentes ativadas: 7 universais + UI/UX (keypad/affordance) + Migração/Coexistência (relaxar aridade em código maduro + regen manual.html, não regredir 374+154) + Linguística/Gramática (contrato de tokens POW/CTRL, buffer de dígito compartilhado). NÃO ativadas (offline single-file, sem rede/dados/atores/feedback/decisões-sobre-pessoas): Segurança, Regulatório, Resiliência, Sustentabilidade, Ética, Processo, Governança, Observabilidade, Control Eng, Game Theory, Mecânica (dobrada na Migração). MATRIZ 5 módulos (M1 Parser, M2 execute, M3 inj-ctrl-preset, M4 keypad, M5 docs E9) × 10 lentes: 0🔴, 10🟡, resto 🟢. ACHADOS 🟡 (P3): M1[Assumptions] relaxar só limite SUPERIOR de controles, aridade de ALVOS estrita; M1[Ling] token POW em campo escalar `pow` (não ops[]), ordem-insensível, POW-sem-dígito=erro, POW-repetido=decidir; M1[Migr] checagem ct.length===m.controls→>= pode mudar mensagens de erro asseguradas em v2.test/ui.spec (auditar); M2[Perf] EXPLOSÃO 2ʲ (j grande→milhões de aplicações congela UI single-thread)→precisa CAP com erro claro; M2[Migr] label/command atômico c-Grover^8 entra no replay/export Qiskit, não quebrar History.commands; M3[Assumptions] controlled(∏Gᵢ)=∏controlled(Gᵢ) só vale se controle∉alvos do preset→guard rejeita controle dentro do range; M3[Perf] preset×2ʲ compõe explosão (cap do M2 cobre); M4[UI/UX] descoberta POW na pág.2 + chrome mínimo + bufferText reflete CTRL extras+^j pendentes; M5[Cient] Quantum Counting ref N&C§6/Brassard-Høyer-Mosca-Tapp + leitura M probabilística (M≈N·sin²(θ/2))→depositar specs/references; M5[Implem] card E9 depende de M1–M4 prontos→ordenar por último; M5[Migr] regen manual.html sem corromper 30 cards (anti-drift guarda). CONCENTRAÇÃO: por módulo M1 lidera (3🟡) mas em lentes DISTINTAS→patch não redesign; nenhum módulo em todas as lentes→arquitetura herdada sólida. Por lente Migração espalha 3/5 (esperado brownfield, antídoto=suíte forte+anti-drift), Performance concentra M2/M3 (mecanismo único efeito composto: explosão 2ʲ). Nenhuma lente nos 5 módulos→SEM falha sistêmica. Exit gate 0🔴/10🟡/resto🟢→P3 trata os 🟡.",
+      "timestamp": "2026-06-01T18:22:18.211Z"
+    },
+    {
+      "id": "4e4d53df-982b-4aa3-ac20-62db1eb7540a",
+      "phase": 3,
+      "category": "architecture",
+      "content": "P3 RESPOSTA UNIFICADA aos 10🟡 do P2 (v24), SEM novo módulo (AP2 — simplificar). Refinos integrados como RESTRIÇÕES/guards dentro dos 5 módulos: (M1·Assump) applyGate alvos ESTRITOS (tg.length===m.targets), controles só limite superior relaxado (ct.length>=m.controls), controles efetivos=todos os ct; (M1·Ling) j em campo ESCALAR `pow` (fora de ops[]), ordem-insensível, POW-sem-dígito→erro, POW repetido→último vence (KISS); (M1·Migr) relaxação aditiva (só amplia aceitação, erros de alvo inalterados; auditar v2.test/ui.spec P6); (M2·Perf) CAP 2ʲ≤1024 (j≤10, decisão operadora) com erro 'exponent too large (max j=10)'; (M2·Migr) command {kind,…,controls,power}, export Qiskit expande power→repetições, History.commands preservado (verificar P5); (M3·Assump) GUARD controle∈range-do-preset→erro 'control overlaps preset targets' (validateRange já barra ctrl==alvo por op); (M3·Perf) coberto pelo mesmo CAP (total=ops×2ʲ, ops≤n²); (M4·UI/UX) tecla POW pág.2 + bufferText reflete CTRL extras+^j, SEM gaveta nova, chrome mínimo; (M5·Cient) depositar specs/references Quantum Counting (N&C§6/Brassard-Høyer-Mosca-Tapp) + card explica leitura PROBABILÍSTICA M≈N·sin²(θ/2); (M5·Implem/Migr) M5 por último, anti-drift guarda manual.html. SIMPLIFICAÇÃO: 0 módulos add/removidos; campo escalar pow mais simples que ops[]; CAP+guard REMOVEM modos de falha→complexidade líquida ↓. DECISÃO PÓS-CICLO: mudança estrutural 0% (0 de 5 módulos reestruturados), 0 críticos → Fase 4. ANTI-SCOPE-CREEP 4/4: (1) requisitos P0 cobertos (CTRL+POW+E9); (2) sem feature nova (cap/guard/escalar=mecanismos técnicos); (3) o que o sistema FAZ inalterado (motor intocado, CTRL/POW=novas vias de invocação); (4) casos de uso P0 válidos. Critério de parada (<15%+0🔴) satisfeito.",
+      "timestamp": "2026-06-01T18:25:00.977Z"
+    },
+    {
+      "id": "f793b851-8065-40d2-9a3c-eb30ec3f8147",
+      "phase": 5,
+      "category": "scope",
+      "content": "REVISÃO DE ESCOPO no P5 (operadora, ciclo 25/v24): além do card E9 NOVO, REFRESCAR o card E5 (QPE) para usar o token `j POW` — demonstração canônica do POW. MOTIVO: o operador de Grover do E9 é COMPOSTO (G=oráculo·difusor), então POW (repete 1 operador 2ʲ vezes) não comprime G^{2ʲ}; o E9 usa CTRL generalizado (controlled-Z oráculo + controlled-Grover difusor). POW brilha quando U é operador ÚNICO = QPE clássico (caso citado no P0). E5 novo: q2→controlled-T (`2 CTRL 3 Q T`), q1→controlled-T²=S (`1 CTRL 3 Q 1 POW T`), q0→controlled-T⁴=Z (`0 CTRL 3 Q 2 POW T`), QFT† q0..q2 → |0011⟩ EXATO (verificado por replay). Substitui as 3 CP-com-ângulo (π/4,π/2,π) do E5 atual pelo controlled-T^{2ʲ} via POW. ESPELHA o ciclo23 (que refrescou E5 p/ usar o preset QFT† em vez da inverse-QFT manual). E9 (counting N=4/M=2/t=3): SET 5 · ALL H · controlled-G^1 (q2: ctrl-Z + ctrl-Grover[3,4]) · controlled-G^2 (q1: 2 pares) · q0→G^4=I OMITIDO (exato, como Shor a=11 omitiu U²; verificado que picos {2,6} persistem) · QFT† q0..q2. Picos c={2,6} P=½ → φ=¼ → M=N·sin²(π/4)=2 EXATO. Anti-scope-creep: nenhuma feature de motor nova entra; E5-refresh é uso da feature v24 na card de QPE relevante (precedente ciclo23), registrado (não silencioso).",
+      "timestamp": "2026-06-01T18:42:48.367Z"
+    },
+    {
+      "id": "49b1acb5-6ca9-41a3-97a0-8e8859468754",
+      "phase": 6,
+      "category": "spec-coverage",
+      "content": "SPEC COVERAGE REPORT (ciclo 25/v24, CTRL generalizado + POW 2ʲ + card E9). \nCOVERED (automatizado, 100% verde — 397 Node + 160 PW):\n• CTRL generaliza (c CTRL t Q H → ctrl-H): v24-1 shape + v24-15 applyN math + ui.spec 'controlled-H' (key→tela, fatorado |1⟩⊗|+⟩).\n• CTRL acumula (X+2CTRL=MCX≡CCX): v24-2/v24-3 shape + v24-17 math (MCX==CCX).\n• Aridade alvo ESTRITA: v24-4 (0 Q 1 Q H→erro). Controles ≥min: v24-5 (CNOT sem ctrl→erro).\n• POW token 2ʲ: v24-6 shape(power=j) + v24-19/20 math (X²=I, T⁴=Z) + ui.spec 'POW visible' (|+⟩·T⁴=Z→|−⟩, key→tela).\n• POW ordem-insensível v24-7; último-vence v24-8; cap j≤10 v24-9 + ui.spec 'POW cap'(erro 'exponent too large'); sem-dígito v24-10; boundary j=10 v24-11.\n• ALL+CTRL exclusivos: v24-12(gate)/v24-13(preset) + ui.spec 'ALL+CTRL→erro, no apply'.\n• Preset controlado (injeção): v24-21/22 (ctrl-Bell ctrl=1→Bell, ctrl=0→I) + E9 card replay (v21.test).\n• Guard overlap controle∈range: v24-18 (applyN ctrl==target throws) + ui.spec 'preset control overlaps→erro, no apply' (msg execute-level).\n• Preset shape com controls/power: v24-14.\n• E9 counting picos {2,6}→M=2 EXATO: v21.test replay (anti-AP7, estado engine-gen 8 termos e^{iπ/4}∈ℤ[ζ₁₆]) + examples.spec replay UI real + estrutura (10 algo cards E1–E10).\n• E5 refresh QPE via POW → |0011⟩: v21.test replay + examples.spec UI real.\n• KaTeX offline, estrutura manual.html (31 .ex, 10 algo), screenshots.\n• Não-regressão: motor ℤ[ζ₁₆]/matrizes/applyN intocados; suíte ciclo24 (374+154) toda verde + nova (v9 shapes migrados intencionalmente p/ +controls/power).\nNEGATIVE TESTS: v24 Node 22 testes (7 negativos: v24-4,5,9,10,12,13,18 + boundary) + 3 PW negativos (ALL+CTRL, cap, overlap). Ratio global folgado (>1:2). \nNOT COVERED (automatizável não): legibilidade/qualidade didática da prosa do card E9 e do diagrama de circuito SVG; conforto da sequência de teclas reproduzida à mão → teste manual humano.\nGAPS: nenhum para specs formalizáveis (todos os estados via replay no motor real, igualdade EXATA). Itens de julgamento humano endereçados no teste manual.",
+      "timestamp": "2026-06-01T19:35:26.066Z"
+    },
+    {
+      "id": "fd4d6ad5-0065-40e4-a964-9e215ba44b85",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: automated-done\nPASS: 397 Node + 160 Playwright (100% verde). Inclui v24.test.mjs (22 testes, 7 negativos: aridade-alvo, CNOT-sem-ctrl, cap j>10, POW-sem-dígito, ALL+CTRL gate/preset, applyN ctrl==target) + 6 PW v24 key→tela (controlled-H fatorado, POW T⁴=Z→|−⟩, ALL+CTRL erro no-apply, cap 'exponent too large', preset overlap erro no-apply, tecla key:POW no bloco de comando) + replay anti-AP7 E9 (picos {2,6}, exato) e E5-POW (|0011⟩) em v21.test + examples.spec UI real (10 algo cards) + não-regressão motor ℤ[ζ₁₆].\nFAIL: nenhum.\nNEXT (manual/human-AV — operadora): abrir quantum_calc.html e (1) reproduzir 1-2 sequências v24 (controlled-H: 2 Q SET·0 Q X·0 CTRL 1 Q H → |1⟩⊗|+⟩; POW: 1 Q SET·0 Q H·0 Q 2 2^j T → |−⟩; opcional o card E9 do manual); (2) checar que o buffer mostra 'pow 2^j' e o histórico 'X^8'/'c-Grover^…'; (3) testar edge: ESC/⌫ cancelam POW pendente, double-tap, ALL+CTRL dá erro claro; (4) abrir manual.html e ler o card E9 (prosa + diagrama de circuito) — está claro/correto? E5 usa 2^j. NOTA: operadora já confirmou no P5 'show! Funciona' (controlled-H/POW visível); falta a revisão do manual E9 + edges.",
+      "timestamp": "2026-06-01T19:35:42.120Z"
+    },
+    {
+      "id": "4470f1bf-654c-45f7-bb7a-eb524ad86246",
+      "phase": 6,
+      "category": "testing",
+      "content": "TESTING STATUS: manual-done (operadora aprovou — \"Aprovo agora; P5 + automação bastam\")\nPASS: (1) Automatizado — 397 Node + 160 Playwright (100% verde): v24.test.mjs 22 (7 negativos), 6 PW v24 key→tela, replay anti-AP7 E9 (picos {2,6} exato)/E5-POW (|0011⟩), examples.spec UI real (10 algo cards), não-regressão motor. (2) Manual/human-AV — operadora reproduziu controlled-H e POW (T⁴=Z→|−⟩) no quantum_calc.html real no P5 e confirmou \"show! Funciona\"; aceitou o gate manual como satisfeito (P5 + cobertura automatizada dos edges: ALL+CTRL, cap POW, overlap guard, controlled-H, POW visível).\nFAIL: nenhum.\nAmbos os gates (automatizado + manual) satisfeitos. Apto à Fase 7.",
+      "timestamp": "2026-06-01T19:41:08.113Z"
+    },
+    {
+      "id": "31cb2d61-1065-4e85-aaaa-f3a014aaa8f6",
+      "phase": 7,
+      "category": "requirement",
+      "content": "P7 AVALIAÇÃO DO PRODUTO (operadora): ATENDE. Ciclo 25/v24 entregue: (1) CONTROLE GENERALIZADO — CTRL antes de qualquer porta/preset → multi-controlado via applyN (CTRL acumula: CNOT+1CTRL=CCX, X+2CTRL=MCX); (2) POTÊNCIA 2ʲ — token `j POW`, cap j≤10, aplicado numa entrada atômica; (3) card E9 Quantum Counting (N=4/M=2/t=3, picos c={2,6}→M=2 EXATO, engine-generated anti-AP7); + E5 (QPE) refrescado p/ usar `2^j` (controlled-T²=S, T⁴=Z). Motor ℤ[ζ₁₆]/matrizes/applyN INTOCADOS (delta=Parser+execute+keypad+doc). Suíte 100% verde: 397 Node + 160 Playwright (557), incl. 22 testes dedicados v24 (7 negativos) + 6 PW v24 key→tela. Operadora confirmou no app real (\"show! Funciona\": controlled-H, POW T⁴=Z→|−⟩) e aprovou o gate manual. Lições em specs/technical/47-v24-lessons.md. CARRY-FORWARD v2 (decisão da operadora na P7): RACIONALIZAR o teclado removendo as portas controladas agora REDUNDANTES (CTRL generaliza) — vantagem = simplificar a interface; custo de aprendizado único compensado pela facilidade de uso após entender a gramática unificada. NOTA: deploy NÃO feito (manual.html + quantum_calc.html atualizados localmente; publicar quando quiser via ./deploy-ssh.sh + bump sw.js).",
+      "timestamp": "2026-06-01T19:58:26.207Z"
+    },
+    {
+      "id": "4bf63cef-9944-4ac4-ad28-17c51a36c7a8",
+      "phase": 7,
+      "category": "scope",
+      "content": "CARRY-FORWARD ciclo 26 / v25 (decisão da operadora na P7 do v24): REMOVER do TECLADO todas as portas controladas redundantes, deixando só base + CTRL (gramática unificada). Verificado idêntico no motor: CNOT≡CTRL X, CZ≡CTRL Z, CP(λ)≡CTRL P, CRz≡CTRL Rz, C-U≡CTRL U, CCX≡X+2CTRL, CSWAP≡SWAP+CTRL. REMOVER do keypad: CNOT, CZ, CP(λ), CRz, C-U (linha 'controlled' pág.1) + CCX, CSWAP (pág.2). MANTER: SWAP, iSWAP (primitivas genuínas de 2 qubits, NÃO controladas) + todas as base 1q. RESTRIÇÃO CRÍTICA: as portas CNOT/CZ/etc. PERMANECEM no MOTOR (Presets.expand usa op('CNOT'…) no Bell/GHZ internamente) → o delta é TECLADO + DOCS apenas, motor intocado. Reescrever as sequências de teclas dos ~10 cards que usam CNOT/CZ/CCX/CSWAP → CTRL+base (ESTADOS inalterados → pinos anti-AP7/EXPECT idênticos, só os arrays `steps` mudam); atualizar STEP_GATE/stepsToKeys, ui.spec (helpers bell()/ghz() digitam CNOT), v9; regenerar manual.html; nota no manual 'qualquer porta vira controlada com CTRL'. Racional da operadora: simplificar a interface vale o custo de aprendizado único da gramática unificada. Risco baixo (UI+doc). Anti-AP9: decisão explícita da operadora, registrada (não creep silencioso).",
+      "timestamp": "2026-06-01T19:58:33.355Z"
+    },
+    {
+      "id": "75fb2ff1-e839-4946-8fb1-5ebf2a1b32b8",
+      "phase": 0,
+      "category": "scope",
+      "content": "DELIVERY TARGET (ciclo 26, v25, DELTA MODE brownfield): DELTA COMPLETO — racionalização do teclado entregue inteira neste ciclo, salvo bloqueio técnico explícito. Escopo (carry-forward da operadora no P7/v24): REMOVER do keypad as portas controladas REDUNDANTES (CTRL generaliza) — CNOT, CZ, CP(λ), CRz, C-U (linha 'controlled' pág.1) + CCX, CSWAP (pág.2). MANTER SWAP, iSWAP (primitivas 2q genuínas, não controladas) + todas as base 1q. RESTRIÇÃO CRÍTICA: CNOT/CZ/etc. PERMANECEM no MOTOR (Presets.expand usa op('CNOT') no Bell/GHZ) → delta = TECLADO + DOCS apenas, motor ℤ[ζ₁₆]/applyN INTOCADO. Entregar tudo: remoção das teclas, reescrita das sequências de teclas dos ~10 cards (CNOT→CTRL X etc., ESTADOS inalterados → pinos anti-AP7/EXPECT idênticos, só arrays `steps` mudam), atualizar STEP_GATE/stepsToKeys, ui.spec (helpers bell()/ghz()), v9, regenerar manual.html, nota 'qualquer porta vira controlada com CTRL'. Risco baixo (UI+doc). Identidades verificadas no motor: CNOT≡CTRL X, CZ≡CTRL Z, CP(λ)≡CTRL P, CRz≡CTRL Rz, C-U≡CTRL U, CCX≡X+2CTRL, CSWAP≡SWAP+CTRL.",
+      "timestamp": "2026-06-01T20:04:31.603Z"
+    },
+    {
+      "id": "a2bf9222-e418-4937-a44c-5ffe6abadb30",
+      "phase": 0,
+      "category": "testing",
+      "content": "P0 VIABILIDADE v25 VERIFICADA EM CÓDIGO (não assumida) — Feasibility Nível 4 GREEN, SEM BLOQUEIO. Achados: (1) Os ~18 cards JÁ digitam a sintaxe de prefixo `c CTRL t Q CNOT` (v24); o delta é reescrita MECÂNICA do token final: gate:CNOT→X, CZ→Z, CP→P, CRz→Rz, CU→U, CCX→X (2 CTRL já presentes), CSWAP→SWAP (CTRL presente). (2) BIT-IDENTIDADE PROVADA: Gate.matrix(name)=build(m.base) (quantum_calc.html:1016) — CNOT e X compartilham base:'X', CZ/Z base 'Z', CP/P base 'P', CRz/Rz base 'Rz', CU/U base 'U', CCX/X base 'X', CSWAP/SWAP base 'SWAP'. applyN aplica a matriz-base sobre os ALVOS e trata controles pelo loop (1137); execute(apply) usa applyN no caminho concreto (3222). Logo `c CTRL t Q X` ≡ `c CTRL t Q CNOT` ESTADO IDÊNTICO. applyGate v24: alvo ESTRITO, controles=todos os CTRL (2036). (3) Caso simbólico A7 (|0⟩|ψ⟩, q1 abstrato, gate:CP→P): SymEngine.applyOne usa Gate.matrix (base) p/ alvo concreto E rules.lookup(gate)/gateLabel p/ alvo abstrato; a regra de kickback é DECLARADA dinamicamente com ent.gate (3414) e consultada com o mesmo nome → simétrica em CP/P; o `=` dispara o autovalor e o pino mostra a fase e^{iθ}, não o rótulo da porta → deve ser idêntico (VERIFICAR empiricamente em P5/P6, não-bloqueante). (4) PIPELINE de verificação EMBUTIDO: examples.spec.js dirige o quantum_calc.html real, replay dos steps, captura o estado e writeFileSync(manual.html, renderManual(examples)); v21.test.mjs runSteps replay anti-AP7 com pins EXPANDIDOS — estados idênticos → pins INALTERADOS (rede de segurança). INTERDEPENDÊNCIA: remoção da tecla + reescrita dos cards são ATÔMICAS (replay de gate:CNOT falha se o botão sumir). FILES do delta: quantum_calc.html (keypad: deletar linha 'controlled' 2830-2831 + remover CCX/CSWAP de 2853, MANTER SWAP/iSWAP/CTRL; META 1004-1008 e Presets 1214-1251 INTOCADOS), tests/examples-data.mjs (steps dos ~18 cards + helpers _CN/_CZ/_CP + títulos I3 'Toffoli (CCX)'/A7), tests/examples-render.mjs (REFERENCE_HTML §3 keypad/§4 grammar/§6 Gates/§11 presets — remover teclas controladas + nota 'qualquer porta vira controlada com CTRL'; STEP_GATE CU vestigial), tests/ui.spec.js (helpers bell()/ghz()/kickback/teleport que CLICAM CNOT/CZ → reescrever p/ CTRL+base), tests/v9.test.mjs (mínimo — testes de motor ficam). manual.html REGENERADO via examples.spec.js. Testes de MOTOR (core/manual/v3/v9-MCZ/v24 applyGate('CNOT')) ficam AS-IS (CNOT/CZ/CCX permanecem no motor).",
+      "timestamp": "2026-06-01T20:11:52.120Z"
+    },
+    {
+      "id": "b8c60d99-b5f1-49dd-83f8-3b115c544189",
+      "phase": 0,
+      "category": "requirement",
+      "content": "P0 ciclo 26/v25 — síntese VALIDADA pela operadora (\"Correta\"). Decisões de detalhe: (1) Campo `keys` literal dos cards (NÃO-renderizado; chip deriva de steps via stepsToKeys) → ATUALIZAR também as strings literais p/ casar com os steps reescritos (higiene de fonte). NOTA: F2 (v21.test) lê r.keys quando presente — manter consistente. (2) Nota de gramática unificada no manual (§6 Gates, REFERENCE_HTML) = CURTA E DIRETA: \"Any gate becomes controlled by prefixing CTRL: c CTRL t Q X = CNOT. Stack CTRLs for multi-control (CCX = c CTRL c CTRL t Q X).\" (3) Ambiguidade não-bloqueante p/ verificar empiricamente em P5/P6: A7 simbólico (CP→P) bit-identidade do display.",
+      "timestamp": "2026-06-01T20:13:49.492Z"
+    },
+    {
+      "id": "a3e50d2b-f0e0-4554-9632-3f2482dce09e",
+      "phase": 1,
+      "category": "architecture",
+      "content": "P1 ARQUITETURA v25 (ciclo 26, DELTA brownfield — TECLADO + DOCS, motor INTOCADO). 5 módulos: M1 Keypad layout (quantum_calc.html:2821-2857) — DELETAR bloco `controlled` (n:5, linha CNOT/CZ/CP/CRz/CU pág.1); MESCLAR SWAP/iSWAP no bloco 'gate variants' da pág.2 (Q2_COL_R) e ELIMINAR o bloco '2 qubits +' (decisão da operadora — gate variants passa de 6→8 teclas, n:4 → 2 linhas; rótulo a refinar em P5); CCX/CSWAP somem. M2 Card data (examples-data.mjs) — reescrever steps (gate:CNOT→X, CZ→Z, CP→P, CRz→Rz, CU→U, CCX→X, CSWAP→SWAP); GENERALIZAR helpers _CN/_CZ/_CP → _ctrl(gate,c,t,...args) que emite [c,CTRL,t,Q,gate,...args] (espelha a gramática unificada); atualizar strings `keys` literais p/ casar com steps; atualizar títulos/why de I3 ('Toffoli (CCX)') e A7 (CP). M3 Reference prose (examples-render.mjs REFERENCE_HTML §3 keypad/§4 grammar/§6 Gates/§11 presets) — remover as teclas controladas, adicionar nota CURTA \"Any gate becomes controlled by prefixing CTRL: c CTRL t Q X = CNOT. Stack CTRLs for multi-control (CCX = c CTRL c CTRL t Q X).\"; remover STEP_GATE.CU vestigial. M4 UI tests (ui.spec.js helpers bell()/ghz()/kickback/teleport que CLICAM CNOT/CZ → reescrever p/ CTRL+base; v9.test.mjs mínimo — testes de motor ficam). M5 manual.html REGENERADO via examples.spec.js (não editado à mão). CONTRATOS preservados: API motor (META/applyN/Presets) inalterada; esquema data-action inalterado (menos tokens gate:*); schema de card inalterado; pinos anti-AP7 v21.test INALTERADOS (bit-identidade). ASSUNÇÕES: A1 c CTRL t Q X≡CNOT (PROVADO base-matrix); A2 blocos empilham, sem buraco (verificado); A3 A7 CP→P preserva kickback (verificar P5/P6, não-bloqueante); A4 nenhum atalho de teclado físico aponta p/ portas removidas (verificado :4313-4320, só h/x/y/z/s/t/c/q/a). ESCOPO NEGATIVO: motor/applyN/META/Presets, SWAP/iSWAP, deploy, features/cards novos — não tocados. Padrões HERDADOS (single-file IIFE, KISS/YAGNI, dados→DOM, replay anti-AP7) — sem nova decisão arquitetural. Operadora validou \"Adequada\".",
+      "timestamp": "2026-06-01T20:22:08.866Z"
+    },
+    {
+      "id": "b8065ffe-fd1d-471e-8b93-c2599f9edea0",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 LENTES ATIVADAS v25 (ciclo 26). 7 universais (Assumptions, Architectural, Implementability, Scientific, Security, Performance, Regulatory) + 3 condicionais: UI/UX (teclado user-facing, remoção de teclas + reflow de layout), Migração/Coexistência (modifica sistema maduro/quase-produção — não regredir 374 Node+154 PW, custo de aprendizado da gramática, baselines de screenshot), Linguística/Gramática (contrato de tokens CTRL+base, aridade do helper _ctrl, ambiguidade de sequências). NÃO ativadas (offline single-file, sem rede/dados/atores/decisões-sobre-pessoas/feedback/produção): Resiliência, Sustentabilidade, Ética, Processo, Governança, Observabilidade, Control Eng, Game Theory, Mecânica (coberta por Migração). Total 10 lentes × 5 módulos.",
+      "timestamp": "2026-06-01T20:25:41.936Z"
+    },
+    {
+      "id": "0d9d862d-8dc5-40d4-b78a-1099eec633e9",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 CONCENTRAÇÃO + ACHADOS v25. Gate: 🔴1 · 🟡10. POR LENTE (sistêmico) = Migração/Coexistência (M2/M4/M5): o risco real é a transição da suíte testes+doc existente, NÃO o motor (intocado/provado bit-idêntico). POR MÓDULO = M4 (ui.spec.js) concentra Assump/Arquit/Implem/Migração → SUBESPECIFICADO no P1 (\"helpers bell()/ghz()\" era falso-mínimo). ACHADOS: F1🔴(M4) ui.spec clica botões removidos em ~20+ pontos (act gate:CNOT/CRz/CU/CP/CCX linhas 19-25,45,137,223,261,338-426,446-468,658-661,796) + asserção visibilidade expect(gate:CP).toBeVisible() (:52) + suítes dedicadas CRz/CU autovalor v4 (:338-426) → reescrever todas p/ CTRL+base. F2🟡(M1) CSS expand (:128-146) lista .zone-2-qubits órfã após eliminar bloco; .zone-controlled não estava na lista (moot). F3🟡(M1·UI) SWAP/iSWAP em 'gate variants' (label 1q) + balanço de layout pág.1 (human-AV) + discoverability in-app. F4🟡(M2·A3) A7 CP→P kickback simbólico (verificar empírico). F5🟡(M2) risco omitir ocorrência — mitigado (replay falha se sobrar gate:CNOT). F6🟡(M2) pinos idênticos (provado) + cards CCX I3/E4 → X. F7🟡(M2·Ling) helper _ctrl(gate,c,t) só 1c+1t; CCX(2c)/CSWAP(2t) ficam INLINE; NENHUM card usa CSWAP (só keypad+prosa). F8🟡(M3) subseção 'CP vs CRz' (render:125-134) descreve portas fora do teclado mas existentes via CTRL — reframe vs remover (decisão de conteúdo p/ operadora). F9🟡(M3·Ling) gramática §4(:86-88), tabela §6(:116), desc pág2 §3(:62), listas paramétricas §3(:53)/§6(:120) atualizar + nota unificada inequívoca. F10🟡(M4) escopo M4 subestimado; reescrita CRz/CU É a verificação empírica de A3. F11🟡(M5) baselines shot-ex-*.png + shot-crz*.png (ui.spec:550-557) regenerar; cache PWA sw.js do manual deployado (nota p/ deploy, fora de escopo).",
+      "timestamp": "2026-06-01T20:26:24.685Z"
+    },
+    {
+      "id": "8d721516-03df-4ab7-902f-739d7e7e803d",
+      "phase": 3,
+      "category": "architecture",
+      "content": "P3 RESPOSTA UNIFICADA aos achados P2 (v25), SEM novo módulo (AP2 — o delta SIMPLIFICA: −7 teclas, −1 bloco keypad, −CSS de zona órfã, −listas paramétricas; LOC líquida CAI). Integração: (F1🔴+F10) M4 REDEFINIDO corretamente = reescrita COMPLETA de ui.spec.js (todas ~20+ act() de gate:CNOT/CZ/CP/CRz/CU/CCX → CTRL+base; REMOVER asserção expect([data-action=gate:CP]).toBeVisible() :52 ou trocar p/ asserir que o botão NÃO existe; reescrever suítes CRz/CU autovalor :338-426 → CTRL Rz / CTRL U — que SÃO a verificação empírica de A3); v9 mínimo. NÃO é novo módulo, é escopo corrigido. (F2) M1 SIMPLIFICA: deletar bloco 'controlled'; mesclar SWAP/iSWAP no bloco da pág.2 e RENOMEAR rótulo p/ 'gates' (decisão operadora); REMOVER .zone-2-qubits das listas de expand/collapse CSS (:128-146) — cleanup; .zone-controlled já fora da lista (moot). (F3) layout pág.1 pós-remoção = human-AV em P5/P6; discoverability via nota do manual (minimalismo, sem hint in-app). (F7) helper _ctrl(gate,c,t,...args) só 1c+1t (KISS); CCX (2c) e CSWAP (2t) ficam INLINE — CCX cards I3/E4 já inline; NENHUM card usa CSWAP (só keypad+prosa, ambos removidos/atualizados). (F4=A3) A7 CP→P verificado empírico em P6 (+ suítes CRz/CU reescritas). (F5) risco de omissão mitigado: replay examples.spec falha se sobrar gate:CNOT. (F6) pinos anti-AP7 idênticos (provado bit-identidade). (F8) subseção 'CP vs CRz' MANTIDA + reframe p/ CTRL (CTRL P vs CTRL Rz; atalhos controlled-T=CTRL P(π/4)) — conteúdo didático preservado (decisão operadora). (F9) atualizar §3/§4/§6 listas+gramática+tabela 'controlled' + nota unificada CURTA inequívoca. (F11) shot-crz*.png REESCRITOS p/ CTRL Rz (preserva cobertura kickback = verif. A3); regenerar shot-ex-*.png; nota: cache PWA sw.js do manual deployado = item de deploy (fora deste ciclo). Trade-offs arbitrados pela operadora (F3/F8/F11).",
+      "timestamp": "2026-06-01T20:31:24.917Z"
+    },
+    {
+      "id": "65d762f4-2d5b-445f-beba-c358eef970a3",
+      "phase": 5,
+      "category": "scope",
+      "content": "P5 AJUSTE DE ESCOPO APROVADO PELA OPERADORA (não-silencioso, anti-AP9): além de remover as teclas controladas, PROMOVER as teclas-base P(φ) e U(θφλ) da pág.2 p/ o bloco 'gates' da pág.1. MOTIVO: na gramática unificada CTRL+base, controlled-phase (CP→CTRL P) é a controlada mais comum (QFT/QPE), mas P/U viviam na pág.2 → exigiriam navegação p2 no meio das sequências (A3 QFT-na-unha tem 5×CP). Promovendo P/U à pág.1, todas as bases de controladas comuns (X,Z,P,Rz,U) ficam na pág.1, sem navegação. CONSEQUÊNCIA: pág.1 'gates' passa de 9→11 teclas (H,X,Y,Z,S,T,Rx,Ry,Rz,P,U); pág.2 'gates' fica com S†,T†,√X,√Y,SWAP,iSWAP (6). Cards A2/A3/A7 (CP→CTRL P) NÃO precisam de page:1. Pequeno aumento de pressão de espaço na pág.1 aceito pela operadora.",
+      "timestamp": "2026-06-01T20:44:16.823Z"
+    },
+    {
+      "id": "0924a522-76b5-49ac-ac0f-85eeec5f88c9",
+      "phase": 7,
+      "category": "requirement",
+      "content": "P7 AVALIAÇÃO DO PRODUTO v25 (operadora): ATENDE a gramática (\"a gramática parece funcionar\" no app real — Bell e controladas via CTRL+base). Ciclo 26/v25 entregue: (1) removidas do keypad as 7 portas controladas redundantes (CNOT/CZ/CP/CRz/C-U + CCX/CSWAP), motor intocado (Presets seguem usando-as internamente); (2) SWAP/iSWAP mesclados no bloco 'gates' da pág.2, bloco '2 qubits +' eliminado; (3) EXTRA aprovado: P/U promovidos à pág.1 (ergonomia das controladas comuns); (4) ~18 cards reescritos (estados bit-idênticos, pinos anti-AP7 INALTERADOS), helper _ctrl genérico, manual.html regenerado, nota da gramática unificada + reframe CP-vs-CRz→CTRL. Suíte 100% verde: 397 Node + 160 PW (557). A3 (kickback simbólico via base+CTRL) CONFIRMADA em código (onGate:3277 dispara λ por alvo abstrato) e verde nas suítes. Lições em specs/technical/48-v25-lessons.md. DEPLOY NÃO feito. RESÍDUO diferido ao v26: balanço de layout da pág.1 (F3).",
+      "timestamp": "2026-06-01T21:28:27.909Z"
+    },
+    {
+      "id": "ce85fd0d-a4b1-4449-bf0e-139cd4e83df4",
+      "phase": 7,
+      "category": "scope",
+      "content": "CARRY-FORWARD ciclo 27 / v26 (decisão da operadora na P7 do v25): REDESIGN = TECLADO ÚNICO com tecla `2nd` (ELIMINAR o carrossel de 2 páginas — REVERTE a arquitetura do v14). Lista da operadora: (1) ELIMINAR a tecla ALL (é quase-subconjunto de ESC: confirmado que ESC=clear() faz reset()+selection='ALL' :1987, e selection='ALL' default já aplica porta-1q a todos → 'H'≡'ALL H'). ATENÇÃO: é mudança de GRAMÁTICA (não layout) com ripple largo (cards/testes usam 'ALL H'/'ALL QFT'/'ALL GHZ' → virar ESC+porta ou só porta; perde feedback 'ALL' + erro 'ALL só 1-qubit'; revalidar 'ALL preset'). (2) teclas restantes da 1ª linha de command deslocam 1 coluna à esquerda. (3) remover '.','±','π','1/√2' do numérico (sem função p/ índices inteiros; angle entry tem pad próprio). (4) mover M p/ o numérico. (5) mover BACKSPACE p/ o numérico. (6) 2ª linha de command desloca à esquerda. (7) mover bloco INPUT (|T⟩/rand/amp) da pág.2 → bloco KETS-PREPARE/FACTOR. (8) adicionar tecla `2nd` no fim da 2ª linha (ELIMINA o 2º teclado). (9) SWAP completa o bloco GATES da 1ª tela; gates restantes da pág.2 (S†/T†/√X/√Y/iSWAP) + presets/blocks viram a 2ª camada (2nd) dos gates. (10) measure&view + density&entanglement + operations viram UM bloco, excedentes na 2ª camada (2nd). DECISÕES DE DESIGN a resolver no P0-P4 enxuto: `2nd` global vs por-bloco? one-shot vs trava? lógica de expandir-display (hoje esconde zonas .zone-* da pág.2) precisa ser refeita p/ o modelo 2nd; ALL→ESC confirmação de intento. AGRUPAMENTO p/ passos: A=comando/numérico (itens 1-6), B=kets+input (item 7), C=2nd fundação+gates+ops (itens 8-10). Implementar PASSO A PASSO com validação ao vivo. Subsume o resíduo F3 (balanço pág.1) do v25.",
+      "timestamp": "2026-06-01T21:28:47.212Z"
+    },
+    {
+      "id": "4827d983-b563-40e7-bb63-fc902d4dd35a",
+      "phase": 0,
+      "category": "scope",
+      "content": "DELIVERY TARGET (ciclo 27, v26, DELTA brownfield): DELTA COMPLETO — os 10 itens do redesign 'teclado único + 2nd' entregues neste ciclo, implementados PASSO A PASSO com validação ao vivo. DECISÕES DE DESIGN P0: (a) tecla 2nd = TRAVA/TOGGLE (liga e permanece até apertar de novo; indicador visual aceso) — mais fácil de testar que one-shot; uma tecla GLOBAL que vira a 2ª camada de todos os blocos (conteúdo por-bloco). (b) ELIMINAR a tecla ALL → 'selecionar tudo' passa a ser ESC (ESC=clear() já faz reset()+selection='ALL'); reescrever todos cards/testes que usam 'ALL <porta>'/'ALL <preset>'. Mudança de gramática, ripple mecânico largo.",
+      "timestamp": "2026-06-01T21:36:55.078Z"
+    },
+    {
+      "id": "8dc2bfb6-188a-4738-9dbe-d45e101c63cc",
+      "phase": 0,
+      "category": "testing",
+      "content": "P0 v26 VIABILIDADE da remoção do ALL verificada em código: para PORTAS, applyGate só LÊ selection quando não há alvos; o alvo de 'n Q' vem do buffer (ops), e selection permanece 'ALL' (default) — nunca é mexido por gates. Logo 'ALL H'≡'H' e 'ALL QFT'≡'QFT' (preset default-ALL path :2042). selectPending (ops prob/measure/etc., :2071) é o ÚNICO que fixa selection num qubit; após op específica, ESC (clear→selection='ALL' :1987) volta a todos. CONCLUSÃO: remover a tecla ALL → ripple nos cards = DROPAR o token 'ALL' (não precisa 'ESC' antes de porta/preset). all()/allFlag viram código morto no Parser (sem tecla que dispare) — manter no motor (inócuo) ou remover; decisão P1. Atalho físico 'a'→onKey('ALL') (:4320) também sai.",
+      "timestamp": "2026-06-01T21:37:58.897Z"
+    },
+    {
+      "id": "f04c8928-8f73-4107-9144-fcc654ae8bb0",
+      "phase": 0,
+      "category": "scope",
+      "content": "P0 v26 ESCOPO FINAL (corrige decisões anteriores). A operadora RECONSIDEROU: (1) MANTER a tecla ALL (não eliminar — supersede a decisão anterior de ALL→ESC; ela queria liberar espaço mas não é necessário). (2) MANTER as POSIÇÕES atuais dos blocos de paleta (gates/kets/operations não mudam de lugar). NÚCLEO do v26 = ELIMINAR a 2ª página (carrossel) via tecla `2nd` GLOBAL com TRAVA/TOGGLE (indicador aceso): cada bloco fica no lugar e o 2nd VIRA seu conteúdo para a cauda-longa correspondente, no mesmo lugar. MAPA das camadas: (gates 1ª: H X Y Z S T Rx Ry Rz P U SWAP [SWAP promovido à 1ª, item9]) → 2nd: S† T† √X √Y iSWAP + presets QFT/QFT†/Bell/GHZ/Grover/W. (operations 1ª: prob measure Bloch ⟨φ|ψ⟩ ⊗) → 2nd: ⟨ZZ⟩ ‖ψ‖ phase factor ρ ρ_A Schmidt S(ρ) C [item10]. (kets: input |T⟩/rand/amp entra como 4ª linha do bloco kets-prepare/factor, item7 — primária, não 2nd). FAXINA COMPLETA escolhida: remover do numpad '.','±','π','1/√2' (sem função p/ índices inteiros) + mover M e ⌫ para o numpad (0 M ⌫ na última linha); comando perde M/⌫, ganha tecla 2nd (fim da linha 2), ALL permanece. Eliminar o carrossel/pageTrack/dots/swipe; religar a lógica de expandir-display (hoje esconde zonas .zone-* da pág.2) ao modelo 2nd. Validação de LAYOUT = ao vivo no app real (passo a passo), não ASCII. Implementar em grupos: A=comando/numpad (faxina+2nd), B=kets+input, C=2nd fundação+gates+ops (eliminar carrossel). Motor intocado.",
+      "timestamp": "2026-06-01T21:48:19.607Z"
+    },
+    {
+      "id": "06c12cc5-0c9f-4527-8f3a-700cfad293a6",
+      "phase": 1,
+      "category": "architecture",
+      "content": "P1 ARQUITETURA v26 (teclado único + 2nd). Padrão = REVIVAL do shift pré-v14, agora TOGGLE/trava global. 6 módulos: M1 Keymap.layout('quantum') retorna estrutura ÚNICA {strip,command,L:[blocos],R:[blocos]} (SEM pages[]); bloco={label,n,keys,keys2?}; conteúdo da pág.2 funde em keys2 do bloco correspondente. M2 renderKeypad renderiza UMA grade (sem track/dots/viewport); buildPanel(grp,second) escolhe keys2 quando secondLayer&&grp.keys2. M3 estado: let secondLayer=false; tecla 2nd (data-action 'key:2nd') toggle+re-render+indicador aceso; REMOVE page/applyPageView/switchPage/swipe(pointer handlers do track)/dots. M4 CSS: grade única, indicador 2nd, RELIGAR expand-display (zonas .zone-* da única página), remover CSS carrossel/pág.2. M5 cards: page:1…page:0 → 2nd…2nd (bracket) p/ teclas de 2ª camada (presets/variantes/ops-estendidas); DROPAR page tokens p/ SWAP/input (agora primários). M6 testes: v2/v14 (lay.pages→estrutura única), ui.spec/v22 (page:1→2nd), examples.spec regenera manual. CONTRATOS: Keymap.layout sem page; bloco+keys2; 2nd=UI puro (FSM/Parser/buffer inalterados). MAPA CAMADAS: gates keys=[H X Y Z S T Rx Ry Rz P U SWAP], keys2=[S† T† √X √Y iSWAP + QFT QFT† Bell GHZ Grover W]; operations keys=[prob measure Bloch ⟨φ|ψ⟩ ⊗], keys2=[⟨ZZ⟩ ‖ψ‖ phase factor ρ ρ_A Schmidt S(ρ) C]; kets keys=[9 kets + |T⟩ rand amp]; numpad keys=[7 8 9 4 5 6 1 2 3 0 M ⌫]; command keys=[ALL CTRL 2^j Q SET + ESC ↶ ↷ CLR 2nd] (M/⌫ saem p/ numpad; 2nd entra; ALL fica). ASSUNÇÕES: 2nd global+trava; primária/2nd nas MESMAS células (posições preservadas); motor/FSM/ALL intocados. ESCOPO NEG: motor/applyN/Presets/FSM/gramática; posições de paleta; ALL mantido; sem gates/ops novos; deploy. IMPLEMENTAÇÃO em 3 grupos validados ao vivo: A=comando/numpad faxina+2nd, B=kets+input, C=fundação 2nd+gates/ops+eliminar carrossel.",
+      "timestamp": "2026-06-01T21:51:41.181Z"
+    },
+    {
+      "id": "8891e19a-7056-4257-b709-bcd726033d0e",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 LENTES ATIVADAS v26: 7 universais + UI/UX (redesign de teclado user-facing), Migração/Coexistência (modifica UI madura — não regredir 557, reverter o carrossel do v14 + polish v33-43), Linguística/Gramática (token 2nd + bracket nos cards, contrato keys2). NÃO ativadas (offline single-file, sem rede/dados/atores/produção): Resiliência, Sustentabilidade, Ética, Processo, Governança, Observabilidade, Control Eng, Game Theory, Mecânica (coberta por Migração). 10 lentes × 6 módulos.",
+      "timestamp": "2026-06-01T21:58:23.025Z"
+    },
+    {
+      "id": "16014ef5-62cc-4a85-b403-720ac9df37cc",
+      "phase": 2,
+      "category": "architecture",
+      "content": "P2 ACHADOS+CONCENTRAÇÃO v26. Gate 🔴2 · 🟡5. POR LENTE = Migração (M2/M5/M6) sistêmico: transição da suíte + remoção do carrossel é o risco. POR MÓDULO = M3 concentra o 🔴 funcional (footgun do toggle travado). ACHADOS: G1🔴(M3·UI) footgun: com 2nd travado, célula de H mostra S†/preset → sequência mista aciona tecla errada se não destravar; mitigar com INDICADOR forte + disciplina de bracket (escolha 'trava' foi da operadora). G2🔴(M6·Migr) testes do carrossel obsoletos: swipe/dots/tap-na-transição (v21-33/34/35)/no-auto-return (v21-36)/layout lay.pages[] (v2/v14) quebram → reescrever/REMOVER. G3🟡(M1) keys2 com contagem ≠ primária (ops 5 prim vs 9 2nd; gates 12 vs 11) → bloco dimensiona pelo maior; n/colunas por camada. G4🟡(M2) remover pageStrip/applyPageView/swipe sem refs penduradas (applySheet usa pad.inert, conferir); simplifica roteamento de tap. G5🟡(M4) religar expand-display às zonas da página única. G6🟡(M5·Migr/Ling) ripple page:1→2nd bracket; dropar p/ SWAP/input; pinos anti-AP7 inalterados. G7🟡(M5·Impl) risco de omitir page:1, mitigado por replay.",
+      "timestamp": "2026-06-01T21:58:54.761Z"
+    },
+    {
+      "id": "251d1180-3bae-4dab-af06-8691874a671e",
+      "phase": 3,
+      "category": "architecture",
+      "content": "P3 RESPOSTA UNIFICADA v26 (SEM novo módulo; SIMPLIFICA — remove carrossel/swipe/dots/page-state/polish v33-43, LOC cai). G1🔴 footgun toggle: ACEITO como tradeoff da escolha 'trava' da operadora, mitigado com INDICADOR forte (tecla 2nd acesa + realce) + bracket 2nd…2nd nos cards/replay. G2🔴 testes carrossel: REMOVER obsoletos (swipe/dots/tap-na-transição v21-33/34/35, no-auto-return v21-36) — feature removida por decisão da operadora, não é corte silencioso — + reescrever layout-tests pages[]→estrutura única (M6). G3🟡 keys2 com n próprio; bloco dimensiona pela camada maior (ops 2ª=9). G4🟡 remover pageStrip/applyPageView/swipe/dots sem refs penduradas. G5🟡 religar expand-display às zonas da página única. G6/G7🟡 ripple page:1→2nd bracket; dropar SWAP/input; pinos anti-AP7 inalterados (UI-only); replay = rede de segurança. POST-CYCLE: mudança estrutural ~12% (renderKeypad reestruturado; demais editados), 0 🔴 não resolvidos → Fase 4. Anti-scope-creep 4/4 ✅ (WHAT inalterado, só ONDE as teclas ficam).",
+      "timestamp": "2026-06-01T22:00:15.222Z"
+    },
+    {
+      "id": "276fe2cf-05d1-490c-8683-f9fa8f36f8ad",
+      "phase": 7,
+      "category": "requirement",
+      "content": "P7 AVALIAÇÃO v26 (operadora): ATENDE — \"muito perfeita!!!\" (validado ao vivo no PWA em todas as etapas). Ciclo 27/v26 entregue: TECLADO ÚNICO + tecla 2nd (toggle trava; carrossel de 2 páginas eliminado); blocos com 2ª camada (keys2): gates 1q+Bell primário / S†T†√X√Y+SWAP/iSWAP+presets na 2nd; operations 8 primárias + densidade/emaranhamento na 2nd (altura constante); input no bloco kets; numpad faxinado +M/⌫; comando reordenado (CTRL Q SET 2^j 2nd / ALL ESC ↶↷ CLR); 2nd com cor Pale Banana + borda marrom Pantone Coffee; fontes brancas (ocre/verde/numérico); Bloch com contraste por tema; visor escuro no verde #a3d9bd. MANUAL revisado: explicação ANTES das teclas/resultado, Part I reescrita p/ v26, Q-omissão (`0 H`) em cards+referência, circuitos E3/E10 corrigidos. PWA: largura cheia + altura FIXA (CSS 100dvh+flex, sem o zoom JS). Motor INTOCADO. Suíte 100% verde: 397 Node + 151 Playwright. Deployado live qcalc-v26-13. Lições em specs/technical/49-v26-lessons.md. DESCARTADOS (decisão da operadora): seleção-múltipla/broadcast (`0 Q 1 Q 2 Q H`) e `0123 X` — a Q-omissão `0 H 1 H 2 H` já cobre, mais curto e inequívoco; motor preservado.",
+      "timestamp": "2026-06-02T13:52:18.760Z"
     }
   ],
-  "exitCriteria": [],
+  "exitCriteria": [
+    {
+      "phase": 0,
+      "criterion": "score_90",
+      "met": true,
+      "details": "95 (meetsThreshold)."
+    },
+    {
+      "phase": 0,
+      "criterion": "user_confirmed",
+      "met": true,
+      "details": "Operadora corrigiu o entendimento (manter ALL, manter posições, faxina completa + 2nd toggle) e confirmou o escopo final via respostas. Núcleo = eliminar carrossel via 2nd."
+    },
+    {
+      "phase": 0,
+      "criterion": "ambiguities_zero",
+      "met": true,
+      "details": "Resolvidas: ALL mantido, posições mantidas, 2nd=toggle global, faxina completa, mapa das 2ª-camadas definido. Detalhes finos de layout = validação ao vivo em P5 (aceito)."
+    },
+    {
+      "phase": 0,
+      "criterion": "use_cases_complete",
+      "met": true,
+      "details": "Casos: digitar/aplicar com teclado único; alternar 2nd p/ cauda-longa (variantes/presets/ops estendidas) sem swipe; input via bloco kets; numpad enxuto com M/⌫."
+    },
+    {
+      "phase": 0,
+      "criterion": "vocabulary_agreed",
+      "met": true,
+      "details": "Herdado: keypad/bloco/zone/2nd-camada/carrossel/Keymap.layout. '2nd' = revival do shift pré-v14, agora toggle."
+    },
+    {
+      "phase": 0,
+      "criterion": "out_of_scope_clear",
+      "met": true,
+      "details": "Out: motor/applyN/Presets; gramática de operandos (n Q/CTRL/2^j); deploy; eliminar ALL (revertido — ALL fica); mover blocos de paleta de lugar (posições mantidas)."
+    },
+    {
+      "phase": 0,
+      "criterion": "tech_feasibility",
+      "met": true,
+      "details": "2nd-toggle é revival do mecanismo shift pré-v14 (Keymap já modela camadas); eliminar carrossel = remover pageTrack/dots/swipe e renderizar 1 grade. Verificado: ALL/seleção seguro; expandir-display religável ao 2nd. Sem mecanismo essencial ausente."
+    },
+    {
+      "phase": 0,
+      "criterion": "implementation_feasibility",
+      "met": true,
+      "details": "Tier 1 — reaproveita Keymap/renderKeypad existentes; delta = config de layout + estado 2nd + CSS. Sem Tier 3."
+    },
+    {
+      "phase": 0,
+      "criterion": "specs_populated",
+      "met": true,
+      "details": "specs/ preservado do ciclo anterior + 48-v25-lessons.md. UI delta sem novos parâmetros científicos."
+    },
+    {
+      "phase": 0,
+      "criterion": "technical_scientific_research",
+      "met": true,
+      "details": "N/A — redesign de UI (layout de teclado), sem domínio científico novo nem parâmetros a citar."
+    },
+    {
+      "phase": 1,
+      "criterion": "patterns_defined",
+      "met": true,
+      "details": "Padrão = revival do shift pré-v14 como TOGGLE global (keys2 por bloco). Herdados: dados→DOM, single-file IIFE, KISS. Confirmado pela operadora."
+    },
+    {
+      "phase": 1,
+      "criterion": "modules_responsibility",
+      "met": true,
+      "details": "6 módulos: M1 Keymap (página única+keys2), M2 renderKeypad (grade única+2nd), M3 estado 2nd (remove page/swipe/dots), M4 CSS, M5 cards (page:1→2nd), M6 testes."
+    },
+    {
+      "phase": 1,
+      "criterion": "interfaces_defined",
+      "met": true,
+      "details": "Keymap.layout('quantum')→{strip,command,L,R} sem page; bloco={label,n,keys,keys2?}; buildPanel(grp,second); 2nd=data-action 'key:2nd' toggle global; cards page:1↔2nd. FSM/Parser inalterados."
+    },
+    {
+      "phase": 1,
+      "criterion": "dependencies_explicit",
+      "met": true,
+      "details": "M1→M2 (layout alimenta render); M3 toggla estado→M2 re-render; M4 CSS depende das zonas de M2; M5 cards dependem de M1/M3 (token 2nd existir) — ATÔMICO com M2/M3; M6 testes dependem de M1 (estrutura) e M2/M3 (token). Motor = dependência intocada."
+    },
+    {
+      "phase": 1,
+      "criterion": "assumptions_listed",
+      "met": true,
+      "details": "2nd global+trava; primária/2nd nas mesmas células (posições preservadas); motor/FSM/ALL intocados; expand-display mapeia p/ zonas da página única."
+    },
+    {
+      "phase": 1,
+      "criterion": "architecture_doc",
+      "met": true,
+      "details": "Arquitetura (6 módulos + contratos + mapa de camadas + assunções + escopo neg) registrada na decisão P1, ~1.5k tokens."
+    },
+    {
+      "phase": 1,
+      "criterion": "tech_100_scope",
+      "met": true,
+      "details": "Stack existente cobre 100% (1 opção). 2nd-toggle e grade única são mecanismos já presentes (Keymap/renderKeypad/CSS). Sem redução de escopo forçada."
+    },
+    {
+      "phase": 1,
+      "criterion": "modules_adherent_patterns",
+      "met": true,
+      "details": "Aderem aos padrões herdados: dados→DOM (Keymap/buildPanel), UI-only (motor intocado), KISS (toggle global simples). M5/M6 = Single Source of Truth + test-as-spec."
+    },
+    {
+      "phase": 2,
+      "criterion": "activated_lenses_recorded",
+      "met": true,
+      "details": "7 universais + UI/UX, Migração, Linguística; não-ativadas justificadas (offline single-file). Registrado."
+    },
+    {
+      "phase": 2,
+      "criterion": "lenses_applied",
+      "met": true,
+      "details": "10 lentes × 6 módulos, matriz completa exibida."
+    },
+    {
+      "phase": 2,
+      "criterion": "coverage_matrix",
+      "met": true,
+      "details": "Matriz 6×10 exibida com 🔴🟡🟢."
+    },
+    {
+      "phase": 2,
+      "criterion": "criticals_identified",
+      "met": true,
+      "details": "2 🔴: G1 footgun toggle travado (M3), G2 testes do carrossel obsoletos (M6). + 5 🟡."
+    },
+    {
+      "phase": 2,
+      "criterion": "concentration_analyzed",
+      "met": true,
+      "details": "Por lente: Migração (M2/M5/M6) sistêmica. Por módulo: M3 (footgun, consequência da escolha trava)."
+    },
+    {
+      "phase": 3,
+      "criterion": "criticals_addressed",
+      "met": true,
+      "details": "G1 (footgun) mitigado: indicador forte 2nd + bracket nos cards (tradeoff aceito pela operadora). G2 (testes carrossel) endereçado: remover obsoletos + reescrever layout-tests no M6. 0 não resolvidos."
+    },
+    {
+      "phase": 3,
+      "criterion": "important_decided",
+      "met": true,
+      "details": "G3 (keys2 n próprio), G4 (remover carrossel sem refs penduradas), G5 (religar expand-display), G6/G7 (ripple page:1→2nd bracket + replay safety) — todos com decisão integrada nos módulos."
+    },
+    {
+      "phase": 3,
+      "criterion": "scope_preserved",
+      "met": true,
+      "details": "Checklist 4/4 ✅: requisitos P0 cobertos, sem features não-solicitadas (2nd/fim-do-carrossel são pedidos), WHAT inalterado (mesmos gates/ops/gramática, só ONDE as teclas ficam), casos de uso válidos."
+    },
+    {
+      "phase": 3,
+      "criterion": "architecture_simplified",
+      "met": true,
+      "details": "v26 SIMPLIFICA: remove carrossel (pageStrip/track/translateX), swipe/gesture handlers, dots, page-state (applyPageView/switchPage) e o polish v33-43 do tap-na-transição. 2nd-toggle é mais simples que o carrossel. LOC líquida cai (AP2 respeitado)."
+    },
+    {
+      "phase": 4,
+      "criterion": "exit_criteria_p2p3",
+      "met": true,
+      "details": "P2 5/5 (lentes/matriz/críticos/concentração) + P3 4/4 (críticos endereçados, importantes decididos, escopo preservado, arquitetura simplificada)."
+    },
+    {
+      "phase": 4,
+      "criterion": "safeguards_s1_s5",
+      "met": true,
+      "details": "check_all_safeguards: 0 violados. S2 (stop=operadora; ela revisou e disse 'pode seguir') e S4 (human-AV: validará layout ao vivo no P5) OK."
+    },
+    {
+      "phase": 5,
+      "criterion": "all_modules",
+      "met": true,
+      "details": "v26 implementado: M1 keypad (página única + 2nd toggle, Bell primário, SWAP/iSWAP+variantes+presets em keys2, operations 8+keys2, comando reordenado, numpad faxina+M/⌫, 2nd cor/borda Pantone), M2 examples-data (Q-omissão, Bell/SWAP, input→kets, page→2nd), M3 examples-render (REFERENCE_HTML v26 + resultBlock explicação-antes + circuitos E3/E10 + §10 Q-omissão), M4 ui.spec/v2/v14/v22 reescritos, M5 manual regenerado, M6 v21.test runSteps (2nd ignorado + Q-omissão). + polish PWA (CSS 100dvh/flex altura fixa, largura cheia, fontes brancas, cores Bloch/visor). Motor INTOCADO. 397 Node + 151 PW verde."
+    },
+    {
+      "phase": 5,
+      "criterion": "specs_consulted",
+      "met": true,
+      "details": "Código real lido antes de cada módulo (Keymap/renderKeypad/buildPanel/fitViewport/CSS, applyGate, runSteps). specs/ preservado do ciclo anterior. UI delta sem novos parâmetros científicos."
+    },
+    {
+      "phase": 5,
+      "criterion": "s6_applied",
+      "met": true,
+      "details": "Tier 1 — reaproveita Keymap/renderKeypad/CSS existentes (revival do shift pré-v14 como toggle). Sem novo algoritmo/Tier 3. 2nd é UI puro; estados pinados inalterados (Q-omissão e 2nd não mudam o motor — provado pela suíte anti-AP7)."
+    },
+    {
+      "phase": 5,
+      "criterion": "ui_runnable",
+      "met": true,
+      "details": "Operadora testou no app real (PWA no celular) em TODAS as etapas (grupos A/B/C + cada refinamento), validou o teclado único + 2nd, layout, cores, manual, e confirmou \"muito perfeita!!!\". Casos de uso P0 (construir/aplicar portas, alternar 2nd, presets) rodam ponta a ponta. Deployado live (qcalc-v26-13)."
+    },
+    {
+      "phase": 6,
+      "criterion": "tests_passing",
+      "met": true,
+      "details": "397 Node + 151 Playwright executados (run completo), 0 falhas. Inclui v21 anti-AP7 (estados idênticos sob 2nd+Q-omissão), v2/v14 (layout página única + keys2 + comando reordenado), ui.spec (2nd toggle, faxina), examples.spec (regenera manual), no-pt-leak."
+    },
+    {
+      "phase": 6,
+      "criterion": "manual_testing",
+      "met": true,
+      "details": "Human-AV extenso: operadora testou no PWA real (Motorola Edge 50 Ultra) cada grupo + cada refinamento (2nd toggle, layout, largura/altura PWA, cores das teclas/Bloch/visor, manual), iterou e aprovou \"muito perfeita!!!\". CSS standalone (não coberto por Playwright) validado por ela."
+    },
+    {
+      "phase": 6,
+      "criterion": "edge_cases",
+      "met": true,
+      "details": "Edges: 2nd latching parity (bracket nos cards, replay reload por result); Q-omissão só p/ 1-alvo (CTRL/SET/multi-alvo mantêm Q); PWA altura calc(100dvh-12px) + overflow:hidden (sem pull); contraste de cor por tema; circuitos conferidos vs steps (E3/E10 corrigidos). Pinos anti-AP7 inalterados."
+    },
+    {
+      "phase": 7,
+      "criterion": "specs_updated",
+      "met": true,
+      "details": "specs/technical/49-v26-lessons.md criado (8 lições + decisões + resíduo). projectSpec atualizado no P1 (patterns/outOfScope/constraints v26)."
+    },
+    {
+      "phase": 7,
+      "criterion": "lessons_documented",
+      "met": true,
+      "details": "8 lições em 49-v26-lessons.md: L1 margin:auto quebra stretch em flex-coluna, L2 CSS dvh+flex>JS zoom, L3 altura fixa=calc(-margem)+overflow hidden, L4 footgun de paridade do toggle no replay, L5 Q-omissão exige runSteps espelhar o app, L6 auditar diagramas hand-authored vs steps, L7 comentário PT vaza p/ manual gerado, L8 reverter arquitetura é seguro com handlers que degradam."
+    },
+    {
+      "phase": 7,
+      "criterion": "human_feedback",
+      "met": true,
+      "details": "Operadora: \"muito perfeita!!!\" (aprovação plena, validado ao vivo no PWA). Deploy feito (qcalc-v26-13)."
+    }
+  ],
   "safeguards": [
     {
       "id": "S0",
@@ -3183,7 +3669,9 @@
     },
     {
       "id": "S2",
-      "status": "ok"
+      "status": "ok",
+      "details": "Stopping Criterion: behavioral check — requires agent attention. Stopping criterion belongs to the USER, not the AI.",
+      "lastChecked": "2026-06-01T22:01:07.181Z"
     },
     {
       "id": "S3",
@@ -3191,7 +3679,9 @@
     },
     {
       "id": "S4",
-      "status": "ok"
+      "status": "ok",
+      "details": "Explicit Verification (mandatory human-AV): behavioral check — requires agent attention. Human-AV is irreplaceable at each gate. Automated tests verify formalizable properties. Semantic adequacy, usability, and domain correctness REQUIRE human judgment. P0: human validates synthesis. P2: human arbitrated trade-offs. P4: human confirms convergence. P6: NEVER assume tests passed — execute and verify + mandatory manual exploratory testing.",
+      "lastChecked": "2026-06-01T22:01:07.181Z"
     },
     {
       "id": "S5",
@@ -3207,13 +3697,13 @@
     }
   ],
   "loopCounter": {
-    "pattern": "",
-    "count": 0,
-    "firstSeen": "",
-    "lastSeen": ""
+    "pattern": "cd /home/jasmine/doutorado/quantum/quantumcalc && ",
+    "count": 1,
+    "firstSeen": "2026-06-02T14:18:00.877Z",
+    "lastSeen": "2026-06-02T14:18:00.877Z"
   },
   "createdAt": "2026-05-21T15:58:53.706Z",
-  "updatedAt": "2026-06-01T17:39:37.093Z",
+  "updatedAt": "2026-06-02T14:18:00.877Z",
   "history": [
     {
       "from": 0,
@@ -5434,7 +5924,282 @@
         "lessons_documented",
         "human_feedback"
       ]
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "timestamp": "2026-06-01T18:05:35.250Z",
+      "criteriaMet": [
+        "score_90",
+        "user_confirmed",
+        "ambiguities_zero",
+        "use_cases_complete",
+        "vocabulary_agreed",
+        "out_of_scope_clear",
+        "tech_feasibility",
+        "implementation_feasibility",
+        "specs_populated",
+        "technical_scientific_research"
+      ]
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "timestamp": "2026-06-01T18:20:28.576Z",
+      "criteriaMet": [
+        "patterns_defined",
+        "modules_responsibility",
+        "interfaces_defined",
+        "dependencies_explicit",
+        "assumptions_listed",
+        "architecture_doc",
+        "tech_100_scope",
+        "modules_adherent_patterns"
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "timestamp": "2026-06-01T18:22:35.319Z",
+      "criteriaMet": [
+        "activated_lenses_recorded",
+        "lenses_applied",
+        "coverage_matrix",
+        "criticals_identified",
+        "concentration_analyzed"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "timestamp": "2026-06-01T18:25:14.511Z",
+      "criteriaMet": [
+        "criticals_addressed",
+        "important_decided",
+        "scope_preserved",
+        "architecture_simplified"
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "timestamp": "2026-06-01T18:27:19.823Z",
+      "criteriaMet": [
+        "exit_criteria_p2p3",
+        "safeguards_s1_s5"
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "timestamp": "2026-06-01T19:26:54.160Z",
+      "criteriaMet": [
+        "all_modules",
+        "specs_consulted",
+        "s6_applied",
+        "ui_runnable"
+      ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "timestamp": "2026-06-01T19:41:18.021Z",
+      "criteriaMet": [
+        "tests_passing",
+        "manual_testing",
+        "edge_cases"
+      ]
+    },
+    {
+      "from": 7,
+      "to": 0,
+      "timestamp": "2026-06-01T19:58:52.686Z",
+      "criteriaMet": [
+        "specs_updated",
+        "lessons_documented",
+        "human_feedback"
+      ]
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "timestamp": "2026-06-01T20:15:09.426Z",
+      "criteriaMet": [
+        "score_90",
+        "user_confirmed",
+        "ambiguities_zero",
+        "use_cases_complete",
+        "vocabulary_agreed",
+        "out_of_scope_clear",
+        "tech_feasibility",
+        "implementation_feasibility",
+        "specs_populated",
+        "technical_scientific_research"
+      ]
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "timestamp": "2026-06-01T20:23:04.709Z",
+      "criteriaMet": [
+        "patterns_defined",
+        "modules_responsibility",
+        "interfaces_defined",
+        "dependencies_explicit",
+        "assumptions_listed",
+        "architecture_doc",
+        "tech_100_scope",
+        "modules_adherent_patterns"
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "timestamp": "2026-06-01T20:26:51.364Z",
+      "criteriaMet": [
+        "activated_lenses_recorded",
+        "lenses_applied",
+        "coverage_matrix",
+        "criticals_identified",
+        "concentration_analyzed"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "timestamp": "2026-06-01T20:34:56.575Z",
+      "criteriaMet": [
+        "criticals_addressed",
+        "important_decided",
+        "scope_preserved",
+        "architecture_simplified"
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "timestamp": "2026-06-01T20:35:41.345Z",
+      "criteriaMet": [
+        "exit_criteria_p2p3",
+        "safeguards_s1_s5"
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "timestamp": "2026-06-01T21:26:49.564Z",
+      "criteriaMet": [
+        "all_modules",
+        "specs_consulted",
+        "s6_applied",
+        "ui_runnable"
+      ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "timestamp": "2026-06-01T21:27:32.111Z",
+      "criteriaMet": [
+        "tests_passing",
+        "manual_testing",
+        "edge_cases"
+      ]
+    },
+    {
+      "from": 7,
+      "to": 0,
+      "timestamp": "2026-06-01T21:34:56.607Z",
+      "criteriaMet": [
+        "specs_updated",
+        "lessons_documented",
+        "human_feedback"
+      ]
+    },
+    {
+      "from": 0,
+      "to": 1,
+      "timestamp": "2026-06-01T21:49:45.140Z",
+      "criteriaMet": [
+        "score_90",
+        "user_confirmed",
+        "ambiguities_zero",
+        "use_cases_complete",
+        "vocabulary_agreed",
+        "out_of_scope_clear",
+        "tech_feasibility",
+        "implementation_feasibility",
+        "specs_populated",
+        "technical_scientific_research"
+      ]
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "timestamp": "2026-06-01T21:57:33.239Z",
+      "criteriaMet": [
+        "patterns_defined",
+        "modules_responsibility",
+        "interfaces_defined",
+        "dependencies_explicit",
+        "assumptions_listed",
+        "architecture_doc",
+        "tech_100_scope",
+        "modules_adherent_patterns"
+      ]
+    },
+    {
+      "from": 2,
+      "to": 3,
+      "timestamp": "2026-06-01T21:59:28.339Z",
+      "criteriaMet": [
+        "activated_lenses_recorded",
+        "lenses_applied",
+        "coverage_matrix",
+        "criticals_identified",
+        "concentration_analyzed"
+      ]
+    },
+    {
+      "from": 3,
+      "to": 4,
+      "timestamp": "2026-06-01T22:00:57.496Z",
+      "criteriaMet": [
+        "criticals_addressed",
+        "important_decided",
+        "scope_preserved",
+        "architecture_simplified"
+      ]
+    },
+    {
+      "from": 4,
+      "to": 5,
+      "timestamp": "2026-06-01T22:01:23.269Z",
+      "criteriaMet": [
+        "exit_criteria_p2p3",
+        "safeguards_s1_s5"
+      ]
+    },
+    {
+      "from": 5,
+      "to": 6,
+      "timestamp": "2026-06-02T13:50:12.139Z",
+      "criteriaMet": [
+        "all_modules",
+        "specs_consulted",
+        "s6_applied",
+        "ui_runnable"
+      ]
+    },
+    {
+      "from": 6,
+      "to": 7,
+      "timestamp": "2026-06-02T13:50:58.015Z",
+      "criteriaMet": [
+        "tests_passing",
+        "manual_testing",
+        "edge_cases"
+      ]
     }
   ],
-  "lastPhaseStateCheck": "2026-06-01T16:01:48.916Z"
+  "lastPhaseStateCheck": "2026-06-01T20:01:53.907Z"
 }

@@ -41,25 +41,29 @@ function evalAngle(expr){
 // Minimal step interpreter mirroring the keypad FSM for the vocabulary the algorithm cards use:
 // key:<digit>, key:Q, key:CTRL, key:ALL, key:SET, gate:<NAME>, preset:<NAME>, page:0/page:1 (no-op), calc:*, eval.
 function runSteps(steps){
-  let s = null, num = '', targets = [], controls = [], allFlag = false, kets = [];
+  let s = null, num = '', targets = [], controls = [], allFlag = false, kets = [], pow = null;
   let pending = null, expr = '';   // pending parametric gate awaiting eval
-  const reset = () => { num=''; targets=[]; controls=[]; allFlag=false; };
-  // v23: faithful to the UI's cmd.kind==='apply' path — Engine.apply (concrete, strict arity) /
-  // SymEngine.apply (symbolic). The new cards use named multi-control gates (CSWAP, CCX, CZ) so the
-  // strict-arity Engine.apply accepts them; E10 carries a symbolic |ψ⟩ through SymEngine.
+  const reset = () => { num=''; targets=[]; controls=[]; allFlag=false; pow=null; };
+  const reps = () => pow == null ? 1 : (1 << pow);   // v24: 2ʲ repetitions (POW token)
+  // v24: faithful to the UI's cmd.kind==='apply' path — Engine.applyN (concrete; validates range+dups
+  // only, so generalized CTRL = extra controls works) / SymEngine.apply (symbolic), repeated 2ʲ times.
+  // The v24 cards add controlled-Z / controlled-Grover (extra controls) and controlled-T^{2ʲ} (POW).
   const applyGate = (name, params) => {
-    if (s && s.sym){
-      if (allFlag){ for (let q=0;q<s.n;q++) s = SymEngine.apply(s,{gate:name,targets:[q],controls:[],params}); }
-      else s = SymEngine.apply(s,{gate:name,targets:targets.slice(),controls:controls.slice(),params});
-    } else if (allFlag){ for (let q=0;q<s.n;q++) s = Engine.apply(s,name,{targets:[q],controls:[],params}); }
-    else s = Engine.apply(s, name, { targets:targets.slice(), controls:controls.slice(), params });
+    const r = reps();
+    for (let i = 0; i < r; i++){
+      if (s && s.sym){
+        if (allFlag){ for (let q=0;q<s.n;q++) s = SymEngine.apply(s,{gate:name,targets:[q],controls:[],params}); }
+        else s = SymEngine.apply(s,{gate:name,targets:targets.slice(),controls:controls.slice(),params});
+      } else if (allFlag){ for (let q=0;q<s.n;q++) s = Engine.applyN(s,name,{targets:[q],controls:[],params}); }
+      else s = Engine.applyN(s, name, { targets:targets.slice(), controls:controls.slice(), params });
+    }
     reset();
   };
   for (const step of steps){
     const [k, v] = step.includes(':') ? [step.slice(0,step.indexOf(':')), step.slice(step.indexOf(':')+1)] : [step,''];
     if (pending){                                   // angle-entry mode
       if (k === 'calc'){ expr += (v === '-' ? '-' : v); continue; }
-      if (step === 'eval'){ const p = pending; pending=null; applyGate(p.name,[evalAngle(expr)]); expr=''; continue; }
+      if (step === 'eval'){ const p = pending; pending=null; targets=p.targets; controls=p.controls; pow=p.pow; applyGate(p.name,[evalAngle(expr)]); expr=''; continue; }
       throw new Error('unexpected step during angle entry: ' + step);
     }
     if (k === 'ket'){ kets.push(v); continue; }      // v23: symbolic / cardinal ket (raw label for SymState.fromKets)
@@ -67,6 +71,8 @@ function runSteps(steps){
       if (/^[0-9]+$/.test(v)) { num += v; continue; }
       if (v === 'Q')   { targets.push(parseInt(num,10)); num=''; continue; }
       if (v === 'CTRL'){ controls.push(parseInt(num,10)); num=''; continue; }
+      if (v === 'POW') { pow = parseInt(num,10); num=''; continue; }   // v24: expoente 2ʲ
+      if (v === '2nd') { continue; }                  // v26: tecla 2nd = UI puro (alterna a 2ª camada do teclado); não afeta o motor
       if (v === 'ALL') { reset(); allFlag = true; continue; }
       if (v === 'SET') {                              // v23: ket-string → SymState; else N-qubit computational
         s = kets.length ? SymState.fromKets(kets) : State.computational(targets[0]);
@@ -75,17 +81,20 @@ function runSteps(steps){
       throw new Error('unknown key step: ' + step);
     }
     if (k === 'gate'){
-      if (PARAM_GATES.has(v)){ pending = { name:v, targets:targets.slice(), controls:controls.slice() }; expr=''; continue; }
+      if (num !== ''){ targets.push(parseInt(num,10)); num=''; }   // v26: Q-omissão — dígito solto antes da porta vira o alvo (espelha applyGate do app)
+      if (PARAM_GATES.has(v)){ pending = { name:v, targets:targets.slice(), controls:controls.slice(), pow }; expr=''; continue; }
       applyGate(v, undefined); continue;
     }
     if (k === 'preset'){
+      if (num !== ''){ targets.push(parseInt(num,10)); num=''; }   // v26: Q-omissão (dígito solto = alvo)
       const qs = allFlag ? Array.from({length:s.n},(_,i)=>i)
         : (targets.length===1 ? targets.slice() : Array.from({length:Math.max(...targets)-Math.min(...targets)+1},(_,i)=>Math.min(...targets)+i));
+      const ctrls = controls.slice(), r = reps();    // v24: controles injetados em cada op; preset aplicado 2ʲ vezes
       const { ops } = Presets.expand(v, qs);
-      // v23: a preset may run on a symbolic state (E10 Bell preset on |ψ⟩|0⟩|0⟩) → SymEngine.
-      for (const o of ops) s = (s && s.sym)
-        ? SymEngine.apply(s, { gate:o.gate, targets:o.targets||[], controls:o.controls||[], params:o.params||[] })
-        : Engine.applyN(s, o.gate, o);
+      for (let i = 0; i < r; i++) for (const o of ops){
+        const inj = { gate:o.gate, targets:o.targets||[], controls:[...(o.controls||[]), ...ctrls], params:o.params||[] };
+        s = (s && s.sym) ? SymEngine.apply(s, inj) : Engine.applyN(s, o.gate, inj);
+      }
       reset(); continue;
     }
     if (k === 'page') continue;                      // carousel navigation (page:0/page:1) — no engine effect
@@ -114,7 +123,10 @@ const EXPECT = {
     '(1/2)|000001⟩ + (1/2)|011011⟩ + (1/2)|100001⟩ + (1/2)|111011⟩',
   'E8/after QFT† — counting register peaks at {0, 2}':
     '(1/2)|000001⟩ + (1/2)|001011⟩ + (1/2)|100001⟩ − (1/2)|101011⟩',
-  // E9 (Quantum counting) deferred to the next cycle — see the P5 scope decision.
+  // E9 (Quantum counting, N=4 M=2 t=3) — v24: controlled-Z oracle + controlled-Grover diffuser via the
+  // generalized CTRL; q0→G⁴=I omitted (exact, like Shor a=11). Counting register peaks at c={2,6}.
+  'E9/count peaks at c ∈ {2, 6} → M = N·sin²θ = 2':
+    '(1/2√2·e^{i7π/4})|01000⟩ + (1/2√2·e^{i7π/4})|01001⟩ + (1/2√2·e^{iπ/4})|01010⟩ + (1/2√2·e^{iπ/4})|01011⟩ + (1/2√2·e^{iπ/4})|11000⟩ + (1/2√2·e^{iπ/4})|11001⟩ + (1/2√2·e^{i7π/4})|11010⟩ + (1/2√2·e^{i7π/4})|11011⟩',
   'E10/|ψ⟩|0⟩|0⟩ SET': '|ψ⟩⊗|00⟩',
   'E10/pre-measurement: |ψ⟩ spread over the 4 (q0,q1) branches':
     '(1/2·ψ₀)|000⟩ + (1/2·ψ₀)|100⟩ + (1/2·ψ₁)|010⟩ − (1/2·ψ₁)|110⟩ + (1/2·ψ₀)|011⟩ + (1/2·ψ₀)|111⟩ + (1/2·ψ₁)|001⟩ − (1/2·ψ₁)|101⟩',
@@ -124,8 +136,8 @@ const EXPECT = {
 
 const algos = examples.filter(e => e.part === 'III');
 
-test('v23: Part III has 9 algorithm cards E1–E8 + E10 (E9 deferred)', () => {
-  assert.deepEqual(algos.map(e=>e.id).sort(), ['E1','E10','E2','E3','E4','E5','E6','E7','E8']);
+test('v24: Part III has 10 algorithm cards E1–E10 (E9 quantum counting added)', () => {
+  assert.deepEqual(algos.map(e=>e.id).sort(), ['E1','E10','E2','E3','E4','E5','E6','E7','E8','E9']);
   for (const e of algos){ assert.ok(e.motivation, `${e.id}.motivation`); assert.ok(e.result, `${e.id}.result`); }
 });
 

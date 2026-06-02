@@ -65,30 +65,32 @@ test('keymap paginado (v14): comando fixo + 2 páginas + faixa de vistas', () =>
   assert.deepEqual(Keymap.MODES, ['quantum','calc']);
   const lay = Keymap.layout('quantum', 0);
   // estrutura v14: { strip:[[action,label,cls]], command:{label,n,keys}, pages:[{L:[grupos],R:grupo|null}, ...] }
-  assert.ok(lay.strip && lay.command && Array.isArray(lay.pages) && lay.pages.length === 2);
-  const zoneActs = (z) => !z ? [] : Array.isArray(z) ? z.flatMap(g => g.keys.map(k => k[0])) : z.keys.map(k => k[0]);   // v22-6: pg.R pode ser array (pág2 = 2 colunas)
+  assert.ok(lay.strip && lay.command && Array.isArray(lay.pages) && lay.pages.length === 1, 'v26: PÁGINA ÚNICA');
+  const zoneActs = (z) => !z ? [] : Array.isArray(z) ? z.flatMap(g => g.keys.map(k => k[0])) : z.keys.map(k => k[0]);
   const pageActs = (pg) => pg.L.flatMap(g => g.keys.map(k => k[0])).concat(zoneActs(pg.R));
   const cmd = lay.command.keys.map(k => k[0]);
-  const p0 = pageActs(lay.pages[0]);   // paleta frequente + numérico
-  const p1 = pageActs(lay.pages[1]);   // cauda longa
+  const p0 = pageActs(lay.pages[0]);                                  // página única (camada primária)
+  const gates = lay.pages[0].L.find(g => g.label === 'gates');
+  const ops = lay.pages[0].L.find(g => g.label === 'operations');
+  const g2 = gates.keys2.map(k=>k[0]), o2 = ops.keys2.map(k=>k[0]);   // v26: 2ª camada (2nd)
   const strip = lay.strip.map(s => s[0]);
-  // v14: comando FIXO com M (op:saveBra) no slot que o '2nd' liberou; tecla 'shift'/'2nd' REMOVIDA
-  assert.ok(cmd.includes('op:saveBra'), 'M no comando fixo');
-  assert.ok(!cmd.includes('shift'), "tecla '2nd'/shift removida do comando");
+  // v26: comando FIXO tem a tecla 2nd; M migrou p/ o numpad; ALL mantido; ação legada 'shift' inexistente
+  assert.ok(cmd.includes('key:2nd'), 'v26: tecla 2nd no comando');
+  assert.ok(!cmd.includes('op:saveBra'), 'v26: M saiu do comando');
+  assert.ok(!cmd.includes('shift'), "ação legada 'shift' inexistente");
   assert.ok(cmd.includes('key:ALL') && cmd.includes('key:Q') && cmd.includes('key:SET'));
-  // numérico (pág0.R) já NÃO tem M
-  assert.ok(zoneActs(lay.pages[0].R).includes('key:7') && !zoneActs(lay.pages[0].R).includes('op:saveBra'), 'numérico na pág0, sem M');
-  // página 0 = frequentes (gates/kets/controlled/operations)
-  assert.ok(p0.includes('gate:H') && p0.includes('gate:CP') && p0.includes('op:inner') && p0.includes('gate:Rx'));   // ⟨φ|ψ⟩ no primário
-  assert.ok(p0.includes('op:tensor') && !p0.includes('op:norm') && !p0.includes('evidence'));   // ⊗ no primário; ‖ψ‖/factor na pág2
-  assert.ok(!p0.includes('gate:SWAP') && !p0.includes('op:schmidt'));   // cauda longa fora da pág0
-  // página 1 = cauda longa em 2 COLUNAS (v22-6: L=input+operations · R=variants+2q+presets), SEM dígitos
-  assert.ok(Array.isArray(lay.pages[1].R), 'pág2 tem coluna direita (array de grupos)');
-  assert.ok(p1.includes('gate:SWAP') && p1.includes('op:schmidt') && p1.includes('gate:U') && p1.includes('op:norm') && p1.includes('evidence'));
-  assert.ok(p1.includes('input:T') && p1.includes('input:rand') && p1.includes('input:amp'), 'grupo input na pág2');
-  assert.ok(!p1.some(a => /^key:[0-9]$/.test(a)), 'pág2 sem dígitos');
-  // M está SÓ no comando fixo (não nas páginas) — visível nas 2 páginas por ser fixo
-  assert.ok(!p0.includes('op:saveBra') && !p1.includes('op:saveBra'));
+  // v26: numérico (pág0.R) GANHOU M e ⌫
+  assert.ok(zoneActs(lay.pages[0].R).includes('key:7') && zoneActs(lay.pages[0].R).includes('op:saveBra') && zoneActs(lay.pages[0].R).includes('key:BKSP'), 'v26: numérico com M e ⌫');
+  // camada PRIMÁRIA: gates 1q (incl. P/U) + Bell promovido + kets(+input) + operations base
+  assert.ok(p0.includes('gate:H') && p0.includes('gate:P') && p0.includes('gate:U') && p0.includes('preset:Bell') && p0.includes('op:inner') && p0.includes('gate:Rx'));   // v26: Bell promovido ao primário; SWAP foi p/ a 2ª camada
+  assert.ok(!p0.includes('gate:CNOT') && !p0.includes('gate:CP') && !p0.includes('gate:CCX') && !p0.includes('gate:SWAP'));   // v25: controladas removidas; v26: SWAP na 2ª camada
+  assert.ok(p0.includes('op:tensor') && p0.includes('input:T') && p0.includes('input:rand') && p0.includes('input:amp'));   // ⊗ no primário; input no bloco kets
+  // 2ª camada (keys2): variantes + SWAP/iSWAP + presets restantes nos gates; ops estendidas nas operations
+  assert.ok(g2.includes('gate:Sdg') && g2.includes('gate:SX') && g2.includes('gate:SWAP') && g2.includes('preset:QFT') && !g2.includes('preset:Bell'), 'v26: gates keys2 = variantes + SWAP/iSWAP + presets (Bell promovido)');
+  assert.ok(o2.includes('op:schmidt') && o2.includes('op:concurrence') && o2.includes('op:density'), 'v26: operations keys2 = densidade/emaranhamento');
+  assert.ok(p0.includes('op:norm') && p0.includes('op:corr') && p0.includes('evidence'), 'v26: ‖ψ‖/⟨ZZ⟩/factor promovidos ao primário');
+  assert.ok(!p0.includes('op:schmidt'), 'densidade/emaranhamento só na 2ª camada');
+  assert.ok(p0.filter(a => /^preset:/.test(a)).length === 1 && p0.includes('preset:Bell'), 'v26: só Bell promovido ao primário; demais presets na 2ª camada');
   // faixa de vistas: ações + labels desambiguados (v14)
   assert.deepEqual(strip, ['chbase','fmtcycle','angcycle','viewform']);
   assert.deepEqual(lay.strip.map(s => s[1]), ['basis','fmt','rad/trn','view']);
@@ -124,9 +126,12 @@ test('CRz aplica fases ±θ/2 nos ramos com controle=1', () => {
   const r = Engine.apply(State.fromBits('10'),'CRz',{controls:[0],targets:[1],params:[Math.PI]});
   assert.equal(fmt(r.amplitudes()[0].amp),'-i');
 });
-test('keymap expõe CP/CRz/CU no layout quântico (primário)', () => {
+test('v25: keymap expõe as bases P/Rz/U no primário e NÃO tem teclas controladas dedicadas', () => {
   const prim = JSON.stringify(Keymap.layout('quantum', false));
-  assert.ok(prim.includes('gate:CP') && prim.includes('gate:CRz') && prim.includes('gate:CU'));
+  assert.ok(prim.includes('gate:P') && prim.includes('gate:Rz') && prim.includes('gate:U'), 'bases P/Rz/U no primário (controladas via CTRL)');
+  const full = JSON.stringify(Keymap.layout('quantum', 1));
+  for (const g of ['CNOT','CZ','CP','CRz','CU','CCX','CSWAP'])
+    assert.ok(!full.includes(`gate:${g}`), `tecla controlada dedicada gate:${g} removida do teclado`);
 });
 
 // ---- ângulo simbólico: múltiplo racional de π ----
@@ -180,12 +185,15 @@ test('Render.stateTex(Bell) → LaTeX com \\sqrt{2} e \\lvert', () => {
   assert.match(tex, /\\lvert 11\\rangle/);
 });
 
-// v12: botão I (identidade) removido do teclado; gate-variants 4 teclas; 2-qubits sem espaçador
-test('v14 keymap: sem botão I; gate-variants/2-qubits na página 2 (cauda longa)', () => {
-  const p1 = Keymap.layout('quantum', 1).pages[1];   // página 2 (cauda longa, v22-6: 2 colunas)
-  const cols = [...p1.L, ...(Array.isArray(p1.R) ? p1.R : p1.R ? [p1.R] : [])];   // L + R (R = array na pág2)
-  const all = cols.flatMap(g => g.keys.map(k => k[0]));
+// v12: botão I removido · v26: variantes na 2ª camada (keys2) dos gates; SWAP no primário
+test('v26 keymap: sem botão I; variantes S†/T†/√X/iSWAP na keys2 dos gates; SWAP no primário; CSWAP/CCX ausentes', () => {
+  const p0 = Keymap.layout('quantum', 0).pages[0];
+  const gates = p0.L.find(g => g.label === 'gates');
+  const prim = gates.keys.map(k=>k[0]);
+  const g2 = gates.keys2.map(k=>k[0]);
+  const all = [...prim, ...g2];
   assert.ok(!all.includes('gate:I'), 'botão gate:I removido do teclado');
-  assert.ok(all.includes('gate:Sdg') && all.includes('gate:Tdg') && all.includes('gate:U'), 'demais variantes presentes');
-  assert.ok(all.includes('gate:SWAP') && all.includes('gate:CSWAP'), '2-qubits presentes');
+  assert.ok(g2.includes('gate:Sdg') && g2.includes('gate:Tdg') && g2.includes('gate:SX') && g2.includes('gate:iSWAP') && g2.includes('gate:SWAP'), 'v26: variantes S†/T†/√X + SWAP/iSWAP na 2ª camada');
+  assert.ok(prim.includes('preset:Bell'), 'v26: Bell promovido ao primário');
+  assert.ok(!all.includes('gate:CSWAP') && !all.includes('gate:CCX'), 'v25: CSWAP/CCX ausentes (CTRL+base)');
 });

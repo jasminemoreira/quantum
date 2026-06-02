@@ -10,15 +10,13 @@ const dirac = (p) => p.locator('#stateDisplay').evaluate(el => el.dataset.plain 
 
 test.beforeEach(async ({ page }) => { await page.goto(URL); });
 
-test('v22 pág.2 expõe o grupo input (|T⟩ / rand / amp)', async ({ page }) => {
-  await act(page, 'page:1');
+test('v22/v26 bloco kets (pág.1) expõe o input (|T⟩ / rand / amp)', async ({ page }) => {
   await expect(page.locator('[data-action="input:T"]')).toBeVisible();
   await expect(page.locator('[data-action="input:rand"]')).toBeVisible();
   await expect(page.locator('[data-action="input:amp"]')).toBeVisible();
 });
 
 test('v22 |T⟩ = (|0⟩ + e^{iπ/4}|1⟩)/√2 EXATO (badge ≈ OFF)', async ({ page }) => {
-  await act(page, 'page:1');
   await act(page, 'input:T');
   const d = await dirac(page);
   expect(d).toContain('|0⟩');
@@ -30,7 +28,6 @@ test('v22 |T⟩ = (|0⟩ + e^{iπ/4}|1⟩)/√2 EXATO (badge ≈ OFF)', async ({
 });
 
 test('v22 rand → estado fresco de 1 qubit, badge ≈ ON', async ({ page }) => {
-  await act(page, 'page:1');
   await act(page, 'input:rand');
   await expect(page.locator('#approxBadge')).toBeVisible();   // numérico → ≈
   const n = await page.evaluate(() => window.QC.History.current().n);
@@ -47,7 +44,6 @@ test('v22 rand → estado fresco de 1 qubit, badge ≈ ON', async ({ page }) => 
 // entrada de amplitude: 2 EXPRESSÕES COMPLEXAS (α, β) digitadas pelo PAD CIENTÍFICO do app.
 // exprs = ['1','i'] → digita a expr de α, '=', a expr de β, '='. Cada char vira data-action calc:<char>.
 async function ampEnter(page, exprs){
-  await act(page, 'page:1');
   await act(page, 'input:amp');
   await expect(page.locator('#angleSheet')).toBeVisible();     // reusa a gaveta (slide), mas com pad CIENTÍFICO
   for (const e of exprs){
@@ -57,7 +53,6 @@ async function ampEnter(page, exprs){
 }
 
 test('v22 amp: pad CIENTÍFICO próprio (√ sin cos exp e i) — sem <input> nativo', async ({ page }) => {
-  await act(page, 'page:1');
   await act(page, 'input:amp');
   await expect(page.locator('#angleSheet')).toBeVisible();
   await expect(page.locator('input')).toHaveCount(0);          // NENHUM campo de texto nativo
@@ -99,7 +94,6 @@ test('v22 amp: α=1, β=i → (|0⟩+i|1⟩)/√2 (entrada complexa direta)', as
 
 test('v22 amp: fase via exp(i·θ) — α=1, β=exp(i·π/2) → i/√2', async ({ page }) => {
   // β = exp( i × π / 2 ) = i. exp insere "exp(" ; π via calc:π.
-  await act(page, 'page:1');
   await act(page, 'input:amp');
   await act(page, 'calc:1'); await act(page, 'eval');                 // α = 1
   for (const k of ['calc:exp','calc:i','calc:*','calc:π','calc:/','calc:2','calc:)']) await act(page, k);
@@ -113,7 +107,6 @@ test('v22 amp: fase via exp(i·θ) — α=1, β=exp(i·π/2) → i/√2', async 
 });
 
 test('v22-13 amp: tecla 1/√2 — α=1/√2, β=1/√2 → |+⟩ EXATO (sem ≈)', async ({ page }) => {
-  await act(page, 'page:1');
   await act(page, 'input:amp');
   await act(page, 'calc:1/√2'); await act(page, 'eval');              // α = 1/√2
   await act(page, 'calc:1/√2'); await act(page, 'eval');              // β = 1/√2
@@ -129,7 +122,6 @@ test('v22 amp: α=β=0 (vetor nulo) → erro, sequência reinicia, gaveta perman
 });
 
 test('v22 amp: ESC cancela sem mudar o estado', async ({ page }) => {
-  await act(page, 'page:1');
   await act(page, 'input:amp');
   await page.keyboard.press('Escape');
   await expect(page.locator('#angleSheet')).toHaveCount(0);
@@ -151,26 +143,26 @@ test('v22 atalho de ângulo SUBSTITUI o buffer (π/4) na gaveta de ângulo', asy
 async function bell(p){   // |Φ+⟩ = (1/√2)(|00⟩+|11⟩)
   await act(p,'key:2'); await act(p,'key:Q'); await act(p,'key:SET');
   await act(p,'key:0'); await act(p,'key:Q'); await act(p,'gate:H');
-  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:CNOT');
+  await act(p,'key:0'); await act(p,'key:CTRL'); await act(p,'key:1'); await act(p,'key:Q'); await act(p,'gate:X');   // v25: CTRL X = CNOT
 }
 
 test('v22-8 ρ_A via n Q (0 Q ρ_A) — sem prompt nativo', async ({ page }) => {
   await bell(page);
   await act(page,'key:0'); await act(page,'key:Q');     // KEEP Q0
-  await act(page,'page:1'); await act(page,'op:partial');
+  await act(page,'key:2nd'); await act(page,'op:partial');
   await expect(page.locator('#auxOutput')).toContainText('ρ_A (keeping Q0)');
 });
 
 test('v22-8 S(ρ) via n Q: Bell, A=Q0 → S = 1 bit', async ({ page }) => {
   await bell(page);
   await act(page,'key:0'); await act(page,'key:Q');
-  await act(page,'page:1'); await act(page,'op:vonneumann');
+  await act(page,'key:2nd'); await act(page,'op:vonneumann');
   await expect(page.locator('#auxOutput')).toContainText('S = 1');
 });
 
 test('v22-8 ρ_A sem seleção → erro guiado (n Q), gaveta nativa nunca abre', async ({ page }) => {
   await bell(page);
-  await act(page,'page:1'); await act(page,'op:partial');
+  await act(page,'key:2nd'); await act(page,'op:partial');
   await expect(page.locator('#statusLine')).toContainText('KEEP');
 });
 
@@ -181,7 +173,7 @@ async function psi00(p){   // |ψ⟩|0⟩|0⟩ (Q0 abstrato, Q1/Q2 concretos)
 test('v22-15 preset Bell nos qubits concretos de |ψ⟩|0⟩|0⟩ → |ψ⟩⊗(|00⟩+|11⟩)/√2', async ({ page }) => {
   await psi00(page);
   await act(page,'key:1'); await act(page,'key:Q'); await act(page,'key:2'); await act(page,'key:Q');   // 1 Q 2 Q
-  await act(page,'page:1'); await act(page,'preset:Bell');
+  await act(page,'preset:Bell');
   const d = await dirac(page);
   expect(d).toContain('ψ');
   expect(d.replace(/\s/g,'')).toContain('(1/√2)|00⟩+(1/√2)|11⟩');
@@ -190,6 +182,6 @@ test('v22-15 preset Bell nos qubits concretos de |ψ⟩|0⟩|0⟩ → |ψ⟩⊗(
 test('v22-15 preset recusa quando o alvo é o slot abstrato |ψ⟩ (0 Q 1 Q Bell)', async ({ page }) => {
   await psi00(page);
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'key:1'); await act(page,'key:Q');   // Q0 = |ψ⟩
-  await act(page,'page:1'); await act(page,'preset:Bell');
+  await act(page,'preset:Bell');
   await expect(page.locator('#statusLine')).toContainText('abstract');
 });
