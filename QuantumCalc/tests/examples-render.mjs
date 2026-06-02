@@ -22,7 +22,7 @@ const TIERS = [
 const REFERENCE_TOC = [
   ['display',    '1', 'The display (LCD)'],
   ['modes',      '2', 'Modes and theme'],
-  ['keypad',     '3', 'The keypad: fixed command + sliding pages'],
+  ['keypad',     '3', 'The keypad: fixed command + single page (2nd layer)'],
   ['grammar',    '4', '“Paper keys” grammar'],
   ['prepare',    '5', 'Preparing the state (SET)'],
   ['gates',      '6', 'Gates'],
@@ -30,7 +30,7 @@ const REFERENCE_TOC = [
   ['symbolic',   '8', 'Symbolic engine |ψ⟩'],
   ['views',      '9', 'Views (basis/fmt/rad·turns/view)'],
   ['examples',  '10', 'Guided examples'],
-  ['presets',   '11', 'Presets / macros (page 2)'],
+  ['presets',   '11', 'Presets / macros (2nd layer)'],
   ['exactness', '12', 'Exactness & conventions'],
 ];
 
@@ -50,20 +50,21 @@ const REFERENCE_HTML = `
   <h2 id="modes"><span class="n">2</span>Theme &amp; inline entry</h2>
   <ul>
     <li><span class="key">☾</span> / <span class="key">☀</span> — toggles the <b>theme</b>; <span class="key">?</span> opens the manual/help (new tab). Both are icon buttons below the display, right-aligned. The LCD and the Bloch sphere follow along.</li>
-    <li><b>Inline angle / eigenvalue entry (drawer):</b> a parametric gate (<code>Rx, Ry, Rz, P, U, CP, CRz, C‑U</code>) or a gate on an abstract <code>|ψ⟩</code> slides a small numeric/expression <b>drawer</b> up over the keypad — type the angle (or eigenvalue) and <span class="key">=</span> (see §6, §8). Quick-angle keys <span class="key">π/8</span> <span class="key">π/4</span> <span class="key">π/2</span> fill the field in one tap. It is exact when possible (fractions, √2, π) and falls back to numeric (<code>≈</code>) otherwise. Cancel by <b>swiping the drawer down</b> (or pressing <span class="key">Esc</span> on a keyboard); on a gate over <code>|ψ⟩</code>, cancelling leaves the symbolic node <code>U|ψ⟩</code>.</li>
-    <li><b>Amplitude entry (drawer):</b> the <span class="key">amp</span> key (page 2, input) opens a <b>scientific drawer</b> (√, sin, cos, exp, 1/√2, i, π) to type the amplitudes α, β as complex expressions — same keyboard idiom, normalized on confirm (see §5).</li>
+    <li><b>Inline angle / eigenvalue entry (drawer):</b> a parametric gate (<code>Rx, Ry, Rz, P, U</code> — controlled via <code>CTRL</code>) or a gate on an abstract <code>|ψ⟩</code> slides a small numeric/expression <b>drawer</b> up over the keypad — type the angle (or eigenvalue) and <span class="key">=</span> (see §6, §8). Quick-angle keys <span class="key">π/8</span> <span class="key">π/4</span> <span class="key">π/2</span> fill the field in one tap. It is exact when possible (fractions, √2, π) and falls back to numeric (<code>≈</code>) otherwise. Cancel by <b>swiping the drawer down</b> (or pressing <span class="key">Esc</span> on a keyboard); on a gate over <code>|ψ⟩</code>, cancelling leaves the symbolic node <code>U|ψ⟩</code>.</li>
+    <li><b>Amplitude entry (drawer):</b> the <span class="key">amp</span> key (in the kets block) opens a <b>scientific drawer</b> (√, sin, cos, exp, 1/√2, i, π) to type the amplitudes α, β as complex expressions — same keyboard idiom, normalized on confirm (see §5).</li>
   </ul>
 
-  <h2 id="keypad"><span class="n">3</span>The keypad: fixed command + sliding pages</h2>
-  <p>A <b>fixed command block</b> on top, and below it a <b>carousel of two pages</b> that slide horizontally. Groups by color (Pantone palette of the year):</p>
+  <h2 id="keypad"><span class="n">3</span>The keypad: fixed command + a single page with a 2nd layer</h2>
+  <p>A <b>fixed command block</b> on top, and below it a <b>single page</b> of blocks (no carousel). Each block can carry a <b>second layer</b> revealed by the <span class="key">2nd</span> key — a latching toggle (it stays on until you press it again; its key lights up). Groups by color (Pantone palette of the year):</p>
   <ul>
-    <li><b>Command block (fixed, always visible):</b> <span class="sw" style="background:#C47E4F"></span>ALL/CTRL/Q/SET/<span class="key">M</span> (memory — see §7) · CLR/⌫/undo/redo/reset.</li>
-    <li><b>Page 1 (frequent):</b> <span class="sw" style="background:#93B4D7"></span>gates · 1 qubit · <span class="sw" style="background:#EAB5C5"></span>kets · <span class="sw" style="background:#7E9B76"></span>controlled · <span class="sw" style="background:#8E6BA8"></span>operations (prob, measure, Bloch, ⟨φ|ψ⟩, ⊗) · and the <span class="sw" style="background:#AB97A1"></span>numeric keypad (digits, π, 1/√2).</li>
-    <li><b>Page 2 (long tail, two columns):</b> <i>left</i> — <span class="sw" style="background:#EAB5C5"></span><b>input</b> (|T⟩, rand, amp — see §5), <span class="sw" style="background:#8E6BA8"></span><b>measure &amp; view</b> (⟨ZZ⟩, ‖ψ‖, phase, factor) and <b>density &amp; entanglement</b> (ρ, ρ_A, Schmidt, S(ρ), C); <i>right</i> — <span class="sw" style="background:#93B4D7"></span><b>gate variants</b> S†, T†, P, U, √X, √Y, <span class="sw" style="background:#7E9B76"></span>2 qubits SWAP, iSWAP, CCX, CSWAP, and the <b>presets</b> QFT, QFT†, Bell, GHZ, Grover, W (see §11). No digits on page 2.</li>
+    <li><b>Command block:</b> <span class="sw" style="background:#C47E4F"></span><code>CTRL</code> · <code>Q</code> · <code>SET</code> · <code>2^j</code> · <span class="sw" style="background:#EBD89A"></span><span class="key">2nd</span> (the layer toggle, its own colour + red‑brown border) · <code>ALL</code> · <code>ESC</code> · ↶ · ↷ · <code>CLR</code>.</li>
+    <li><span class="sw" style="background:#93B4D7"></span><b>gates</b> — 1 qubit: <code>H X Y Z S T Rx Ry Rz P(φ) U(θ,φ,λ)</code> + <span class="sw" style="background:#7E9B76"></span><code>Bell</code>. <b>2nd layer:</b> <code>S† T† √X √Y</code> · <code>SWAP iSWAP</code> · presets <code>QFT QFT† GHZ Grover W</code>. Any gate becomes <b>controlled</b> by prefixing <span class="key">CTRL</span> — there is no separate “controlled” block.</li>
+    <li><span class="sw" style="background:#EAB5C5"></span><b>kets · prepare/factor</b> — cardinals <code>|0⟩ |1⟩ |+⟩ |−⟩ |i⟩ |−i⟩</code>, abstract <code>|ψ⟩ |φ⟩ |χ⟩</code>, and the <b>input</b> keys <code>|T⟩ rand amp</code> (fresh 1‑qubit states — see §5).</li>
+    <li><span class="sw" style="background:#AB97A1"></span><b>numeric</b> — digits <code>0…9</code> + <span class="key">M</span> (memory — see §7) + <code>⌫</code>.</li>
+    <li><span class="sw" style="background:#8E6BA8"></span><b>operations</b> — <code>prob · measure · Bloch · ⟨φ|ψ⟩ · ⊗ · ‖ψ‖ · ⟨ZZ⟩ · factor</code>. <b>2nd layer:</b> <code>phase · ρ · ρ_A · Schmidt · S(ρ) · C</code>.</li>
     <li><b>Views strip</b> (below the display): basis · fmt · rad/trn · view.</li>
   </ul>
-  <p>Tap the bottom arrow <code>▼</code> to <b>expand the display</b> (the input/gate zones collapse to give the state more room); tap <code>▲</code> to restore.</p>
-  <p>To reach page 2: <b>swipe</b> left/right (touch), click the <b>page dots</b> <code>•○</code>, press the <b>arrow keys</b> <code>←/→</code>, or drag with the mouse. The command block stays put and the typed buffer persists across the swipe. The keypad <b>stays on the current page</b> after applying a gate/preset — so you can chain several page-2 gates in a row; swipe back to page 1 when you're done.</p>
+  <p>Press <span class="key">2nd</span> to flip every block to its second layer (gate variants/presets, extended operations); press it again to return. Press the bottom arrow <code>▼</code> to <b>expand the display</b> (the kets/gate palettes collapse to give the state more room); <code>▲</code> restores.</p>
 
   <h2 id="grammar"><span class="n">4</span>“Paper keys” grammar (FSM)</h2>
   <p>Commands are assembled without spaces, using explicit tokens:</p>
@@ -77,15 +78,15 @@ const REFERENCE_HTML = `
   <div class="note"><b>Q is optional for a single qubit.</b> Before a <b>1-qubit</b> gate or operation, a bare digit already
      means “that qubit” — <code>0 H</code> ≡ <code>0 Q H</code>, <code>2 prob</code> ≡ <code>2 Q prob</code>. You only
      need <span class="key">Q</span> to <b>separate operands</b>: multiple targets, a control, or a range
-     (<code>0 Q 1 Q SWAP</code>, <code>0 CTRL 1 Q CNOT</code>, <code>0 Q 2 Q ⟨ZZ⟩</code>). With no digit at all, a
+     (<code>0 Q 1 Q SWAP</code>, <code>0 CTRL 1 Q X</code>, <code>0 Q 2 Q ⟨ZZ⟩</code>). With no digit at all, a
      1-qubit gate uses the <b>current selection</b> (or all of them when it shows <code>ALL</code>).</div>
   <pre><b>ALL H</b>                 <span class="c">→ H on all qubits</span>
 <b>0 H</b>                   <span class="c">→ H on Q0  (the Q is optional for one qubit)</span>
 <b>0 Q H</b>                 <span class="c">→ same — explicit Q</span>
 <b>1 0 Q H</b>               <span class="c">→ H on Q10 (multi-digit; Q closes the number)</span>
-<b>0 CTRL 1 Q CNOT</b>       <span class="c">→ control Q0, target Q1</span>
-<b>0 CTRL 1 CTRL 2 Q CCX</b> <span class="c">→ Toffoli (2 controls, target Q2)</span>
-<b>0 CTRL 1 Q 2 Q CSWAP</b>  <span class="c">→ Fredkin (control Q0, swaps Q1↔Q2)</span></pre>
+<b>0 CTRL 1 Q X</b>          <span class="c">→ controlled-X (CNOT): control Q0, target Q1</span>
+<b>0 CTRL 1 CTRL 2 Q X</b>   <span class="c">→ Toffoli (CCX): 2 controls, target Q2</span>
+<b>0 CTRL 1 Q 2 Q SWAP</b>   <span class="c">→ Fredkin (controlled-SWAP): control Q0, swaps Q1↔Q2</span></pre>
   <div class="note">Incomplete command or wrong arity → clear error in the footer, <b>nothing applied</b>.</div>
 
   <h2 id="prepare"><span class="n">5</span>Preparing the state (SET)</h2>
@@ -99,8 +100,8 @@ const REFERENCE_HTML = `
   <p>Cardinal kets available: <code>|0⟩ |1⟩ |+⟩ |−⟩ |i⟩ |−i⟩</code>. Abstract kets: <code>|ψ⟩ |φ⟩ |χ⟩</code>.
      Mixing a digit and a ket in the same input is an error. Big-endian ordering: the 1st ket is Q0.</p>
 
-  <h3>Input keys (page 2) — single-qubit composition</h3>
-  <p>The <b>input</b> group on page 2 prepares a <b>fresh 1-qubit state</b> (like SET — it replaces the register, one undo step):</p>
+  <h3>Input keys (in the kets block) — single-qubit composition</h3>
+  <p>The <b>input</b> group (in the kets · prepare block) prepares a <b>fresh 1-qubit state</b> (like SET — it replaces the register, one undo step):</p>
   <table>
     <tr><th>Key</th><th>Result</th></tr>
     <tr><td><span class="key">|T⟩</span></td><td><b>exact</b> macro H·T on |0⟩ → <code>(|0⟩ + e^{iπ/4}|1⟩)/√2</code> (the “magic” T-state). In ℤ[ζ₁₆], so <b>no ≈</b>.</td></tr>
@@ -112,26 +113,29 @@ const REFERENCE_HTML = `
   <h2 id="gates"><span class="n">6</span>Gates</h2>
   <table>
     <tr><th>Group</th><th>Gates</th></tr>
-    <tr><td>1 qubit</td><td><code>H X Y Z S T Rx Ry Rz</code> · <b>page 2</b>: <code>S† T† P(φ) U(θ,φ,λ) √X √Y</code></td></tr>
-    <tr><td>2 qubits / controlled</td><td><code>CNOT CZ CP(λ) CRz C‑U</code> · <b>page 2</b>: <code>SWAP iSWAP CCX CSWAP</code></td></tr>
+    <tr><td>1 qubit</td><td><code>H X Y Z S T Rx Ry Rz P(φ) U(θ,φ,λ)</code> · <b>2nd layer</b>: <code>S† T† √X √Y</code></td></tr>
+    <tr><td>2 qubits</td><td><b>2nd layer of gates</b>: <code>SWAP iSWAP</code> (genuine 2-qubit primitives, not controlled)</td></tr>
   </table>
-  <p><code>√X</code> and <code>√Y</code> (page 2, gate variants) are <b>exact</b> square-root gates in ℤ[ζ₁₆]
+  <div class="note"><b>Any gate becomes controlled by prefixing <span class="key">CTRL</span>:</b> <code>c CTRL t Q X</code> = CNOT,
+     <code>c CTRL t Q Z</code> = CZ, <code>c CTRL t Q P</code> = controlled-phase. <b>Stack CTRLs</b> for multi-control:
+     <code>c CTRL c CTRL t Q X</code> = CCX (Toffoli). One grammar, every gate — there are no dedicated controlled keys.</div>
+  <p><code>√X</code> and <code>√Y</code> (2nd layer of gates) are <b>exact</b> square-root gates in ℤ[ζ₁₆]
      (Qiskit convention): <code>√X·√X = X</code>, <code>√Y·√Y = Y</code> exactly. <code>√X|0⟩ = (1+i)/2 |0⟩ + (1−i)/2 |1⟩</code>.</p>
-  <p>Parametrized gates (<code>Rx, Ry, Rz, P, U, CP, CRz, C‑U</code>) ask for the angle(s) on an
+  <p>Parametrized gates (<code>Rx, Ry, Rz, P, U</code> — and their controlled forms via <code>CTRL</code>) ask for the angle(s) on an
      <b>inline drawer</b> (type the expression and <span class="key">=</span>). E.g.: <code>π/2</code>, <code>2πθ</code>, <code>π/4</code>.
      A notable angle (multiple of <b>π/8</b>) → exact; an arbitrary angle → numeric, marked <code>≈</code>.
      The drawer has <b>quick-angle keys</b> <span class="key">π/8</span> <span class="key">π/4</span> <span class="key">π/2</span> that <b>replace</b> the field (one tap = that angle).</p>
 
-  <h3>CP vs CRz — controlled phase vs controlled rotation</h3>
-  <p>They look alike but differ where it matters (the difference is invisible on 1 qubit but becomes a
-     <i>relative</i> phase once controlled):</p>
+  <h3>CTRL P vs CTRL Rz — controlled phase vs controlled rotation</h3>
+  <p>Built from the base gates <code>P</code> and <code>Rz</code> with a <code>CTRL</code> prefix, they look alike but differ
+     where it matters (the difference is invisible on 1 qubit but becomes a <i>relative</i> phase once controlled):</p>
   <table>
     <tr><th>Gate</th><th>diag on (|00⟩,|01⟩,|10⟩,|11⟩)</th><th>Effect</th></tr>
-    <tr><td><code>CP(λ)</code></td><td><code>(1, 1, 1, e^{iλ})</code></td><td>phase <b>only on |11⟩</b>; |10⟩ untouched. <b>Symmetric</b> (control↔target).</td></tr>
-    <tr><td><code>CRz(θ)</code></td><td><code>(1, 1, e^{-iθ/2}, e^{+iθ/2})</code></td><td>touches <b>both</b> control=1 states (∓θ/2). Relation: <code>CRz(θ) = CP(θ) · [P(−θ/2) on control]</code>.</td></tr>
+    <tr><td><code>CTRL P(λ)</code></td><td><code>(1, 1, 1, e^{iλ})</code></td><td>phase <b>only on |11⟩</b>; |10⟩ untouched. <b>Symmetric</b> (control↔target).</td></tr>
+    <tr><td><code>CTRL Rz(θ)</code></td><td><code>(1, 1, e^{-iθ/2}, e^{+iθ/2})</code></td><td>touches <b>both</b> control=1 states (∓θ/2). Relation: <code>CTRL Rz(θ) = CTRL P(θ) · [P(−θ/2) on control]</code>.</td></tr>
   </table>
-  <p>Common shortcuts use <b>CP</b>: <code>controlled-T = CP(π/4)</code>, <code>controlled-S = CP(π/2)</code>,
-     <code>controlled-Z = CP(π)</code>; the QFT uses <code>R_k = CP(2π/2^k)</code>.</p>
+  <p>Common shortcuts use <b>CTRL P</b>: <code>controlled-T = CTRL P(π/4)</code>, <code>controlled-S = CTRL P(π/2)</code>,
+     <code>controlled-Z = CTRL P(π)</code>; the QFT uses <code>R_k = CTRL P(2π/2^k)</code>.</p>
   <div class="note">Phase kickback needs the <b>target to be an eigenstate</b> of the controlled gate.
      <code>|+⟩</code> is <b>not</b> an eigenstate of T (<code>T|+⟩ = (|0⟩+e^{iπ/4}|1⟩)/√2</code>); the eigenstates of
      T are <code>|0⟩</code> (eigenvalue 1) and <code>|1⟩</code> (eigenvalue e^{iπ/4}). Use <code>|1⟩</code> as the
@@ -157,11 +161,13 @@ const REFERENCE_HTML = `
     <tr><td><span class="key">prob</span></td><td><b>follows the current selection</b> (live): with <span class="key">ALL</span> the full distribution P(ket) (exact fractions + bars, in the active display basis); with a single qubit, its <b>marginal</b> P(Qn=0)/P(Qn=1). Change the selection (or apply gates) and the readout updates on its own. Pressing <span class="key">prob</span> <b>alone toggles</b> it on/off; typing a qubit first (<code>n</code> or <code>n Q</code>) <b>always shows</b> that qubit — it won't toggle off (same for <code>n</code> + <span class="key">Bloch</span>/<span class="key">measure</span>).</td></tr>
     <tr><td><span class="key">measure</span></td><td>measures the selected qubits: shows the exact branch probabilities and <b>collapses immediately</b> to a sampled branch (∝ probability) — no confirmation. Use <span class="key">prob</span> to see the distribution without collapsing.</td></tr>
     <tr><td><span class="key">Bloch</span></td><td>toggles the Bloch sphere of the selected qubit. Opening it <b>selects</b> that qubit (so <span class="key">prob</span> shows its marginal and the corner indicator matches); <b>tap the sphere</b> to cycle to the next separable qubit — the selection follows; <span class="key">ALL</span> closes it (the sphere is single-qubit).</td></tr>
-    <tr><td><span class="key">⟨ZZ⟩</span></td><td><b>quantum correlation</b> (page 2) — the exact parity expectation ⟨⊗Z⟩ of the selected qubits: ⟨Z<sub>i</sub>Z<sub>j</sub>⟩ = Σ(−1)<sup>parity(i,j)</sup>|amp|². With <span class="key">ALL</span> it spans every qubit; <code>n Q</code> gives the single-qubit ⟨Z<sub>n</sub>⟩ = P0−P1 (the Bloch z-component); <code>i Q j Q</code> gives the two-qubit ⟨Z<sub>i</sub>Z<sub>j</sub>⟩ — the CHSH correlation E(A,B) = P00+P11−P01−P10. Concrete states only; result is exact in ℤ[ζ₁₆] (e.g. 1/√2 for the CHSH state).</td></tr>
+    <tr><td><span class="key">⟨ZZ⟩</span></td><td><b>quantum correlation</b> (operations) — the exact parity expectation ⟨⊗Z⟩ of the selected qubits: ⟨Z<sub>i</sub>Z<sub>j</sub>⟩ = Σ(−1)<sup>parity(i,j)</sup>|amp|². With <span class="key">ALL</span> it spans every qubit; <code>n Q</code> gives the single-qubit ⟨Z<sub>n</sub>⟩ = P0−P1 (the Bloch z-component); <code>i Q j Q</code> gives the two-qubit ⟨Z<sub>i</sub>Z<sub>j</sub>⟩ — the CHSH correlation E(A,B) = P00+P11−P01−P10. Concrete states only; result is exact in ℤ[ζ₁₆] (e.g. 1/√2 for the CHSH state).</td></tr>
     <tr><td><span class="key">⟨φ|ψ⟩</span></td><td>inner product of the saved φ with the current ψ — <b>concrete states</b> (save φ first with <span class="key">M</span>)</td></tr>
     <tr><td><span class="key">⊗</span></td><td>tensor product φ ⊗ ψ — works on <b>concrete AND symbolic</b> states (e.g. build <code>T·H|ψ⟩ ⊗ |φ⟩</code>); a concrete operand is promoted automatically; save φ first with <span class="key">M</span> (see §8)</td></tr>
-    <tr><td><span class="key">M</span></td><td><b>memory</b> (in the fixed command block): stores the current state as φ — concrete or symbolic — read by ⟨φ|ψ⟩ and ⊗; visible on <b>both pages</b> (the command block never slides)</td></tr>
-    <tr><td colspan="2"><b>page 2 — density &amp; entanglement:</b> <span class="key">ρ</span> density matrix · <span class="key">ρ_A</span> partial trace · <span class="key">Schmidt</span> · <span class="key">S(ρ)</span> von Neumann entropy · <span class="key">C</span> concurrence. <b>measure &amp; view:</b> <span class="key">⟨ZZ⟩</span> quantum correlation (parity expectation) · <span class="key">‖ψ‖</span> norm ⟨ψ|ψ⟩ · <span class="key">phase</span> factor out the global phase · <span class="key">factor</span> per-qubit factored view</td></tr>
+    <tr><td><span class="key">M</span></td><td><b>memory</b> (in the numeric block): stores the current state as φ — concrete or symbolic — read by ⟨φ|ψ⟩ and ⊗</td></tr>
+    <tr><td><span class="key">‖ψ‖</span></td><td><b>norm</b> ⟨ψ|ψ⟩ (operations)</td></tr>
+    <tr><td><span class="key">factor</span></td><td>per-qubit <b>factored view</b> of the state (operations)</td></tr>
+    <tr><td colspan="2"><b>2nd layer of operations:</b> <span class="key">phase</span> factor out the global phase · <span class="key">ρ</span> density matrix · <span class="key">ρ_A</span> partial trace · <span class="key">Schmidt</span> · <span class="key">S(ρ)</span> von Neumann entropy · <span class="key">C</span> concurrence</td></tr>
   </table>
   <div class="note"><span class="key">ρ_A</span> (partial trace) and <span class="key">S(ρ)</span> (von Neumann entropy of subsystem A) take the qubits to <b>keep</b> from the same <code>n Q</code> operand grammar as ⟨ZZ⟩ — e.g. <code>0 Q ρ_A</code>, <code>0 Q 1 Q S(ρ)</code>. With no selection they show a guiding error (no native pop-up).</div>
 
@@ -177,10 +183,10 @@ const REFERENCE_HTML = `
     <li><b>swipe the drawer down</b> (or press <span class="key">Esc</span>) → leaves <code>U|ψ⟩</code> as an unevaluated node (cancels the eigenvalue entry).</li>
   </ul>
   <p>On a controlled gate with a concrete control, the phase “kicks back” to the control (phase kickback):
-     <code>CRz</code> on <code>|+⟩⊗|ψ⟩</code> with <span class="key">=</span> → <code>((1/√2)|0⟩ + (1/√2·e^{iθ})|1⟩)⊗|ψ⟩</code>.</p>
+     <code>CTRL Rz</code> on <code>|+⟩⊗|ψ⟩</code> with <span class="key">=</span> → <code>((1/√2)|0⟩ + (1/√2·e^{iθ})|1⟩)⊗|ψ⟩</code>.</p>
   <pre><span class="c">// kickback with φ=π/4 — the phase lands on the control (no H needed)</span>
 |+⟩ |ψ⟩ <b>SET</b>
-0 CTRL 1 Q <b>CU</b>   <span class="c">→ λ: π/4 =   → (1/√2)|0⟩⊗|ψ⟩ + (1/√2·e^{iπ/4})|1⟩⊗|ψ⟩</span></pre>
+0 CTRL 1 Q <b>U</b>   <span class="c">→ λ: π/4 =   → (1/√2)|0⟩⊗|ψ⟩ + (1/√2·e^{iπ/4})|1⟩⊗|ψ⟩</span></pre>
 
   <h3>(b) Unknown qubit — |ψ⟩ as control (teleportation)</h3>
   <p>When <code>|ψ⟩</code> is the <b>control</b> of a gate, it is expanded into the generic qubit
@@ -220,31 +226,31 @@ const REFERENCE_HTML = `
 
   <h3>Bell pair  (1/√2)(|00⟩+|11⟩)</h3>
   <pre>2 Q <b>SET</b>            <span class="c">→ |00⟩</span>
-0 Q <b>H</b>             <span class="c">→ (1/√2)|00⟩ + (1/√2)|10⟩</span>
-0 CTRL 1 Q <b>CNOT</b>   <span class="c">→ (1/√2)|00⟩ + (1/√2)|11⟩</span></pre>
-  <div class="note">Shortcut (§11): <code>2 Q <b>SET</b> · 0 Q 1 Q <b>p2 Bell</b></code> — same result in one key (p2 = page 2).</div>
+0 <b>H</b>             <span class="c">→ (1/√2)|00⟩ + (1/√2)|10⟩</span>
+0 CTRL 1 Q <b>X</b>      <span class="c">→ (1/√2)|00⟩ + (1/√2)|11⟩  (controlled-X = CNOT)</span></pre>
+  <div class="note">Shortcut (§11): <code>2 Q <b>SET</b> · 0 Q 1 Q <b>Bell</b></code> — Bell is a primary gate-block key (one tap).</div>
 
   <h3>GHZ₃  (1/√2)(|000⟩+|111⟩)</h3>
-  <pre>3 Q <b>SET</b> · 0 Q <b>H</b> · 0 CTRL 1 Q <b>CNOT</b> · 0 CTRL 2 Q <b>CNOT</b></pre>
-  <div class="note">Shortcut (§11): <code>3 Q <b>SET</b> · <b>ALL</b> <b>p2 GHZ</b></code>.</div>
+  <pre>3 Q <b>SET</b> · 0 <b>H</b> · 0 CTRL 1 Q <b>X</b> · 0 CTRL 2 Q <b>X</b></pre>
+  <div class="note">Shortcut (§11): <code>3 Q <b>SET</b> · <b>ALL</b> <b>2nd GHZ</b></code> (GHZ lives in the 2nd layer).</div>
 
   <h3>Hadamard test / kickback (eigenvalue)</h3>
   <pre>|+⟩ |ψ⟩ <b>SET</b>
-0 CTRL 1 Q <b>CU</b>  <span class="c">→ λ: π  =   (φ=π → λ=−1)</span>
-0 Q <b>H</b>          <span class="c">→ |1⟩⊗|ψ⟩  (the control collapses)</span></pre>
+0 CTRL 1 Q <b>U</b>   <span class="c">→ λ: π  =   (φ=π → λ=−1)</span>
+0 <b>H</b>          <span class="c">→ |1⟩⊗|ψ⟩  (the control collapses)</span></pre>
 
   <h3>Teleportation (complete)</h3>
   <pre><span class="c">// |ψ⟩ on Q0; Bell pair on Q1,Q2</span>
 |ψ⟩ |0⟩ |0⟩ <b>SET</b>
-1 Q <b>H</b> · 1 CTRL 2 Q <b>CNOT</b>        <span class="c">→ Bell on (1,2)</span>
-0 CTRL 1 Q <b>CNOT</b>                  <span class="c">→ abstract control: |ψ⟩ = ψ₀|0⟩+ψ₁|1⟩</span>
-0 Q <b>H</b>                            <span class="c">→ 4 measurement branches</span>
-0 Q <b>measure</b> · 1 Q <b>measure</b>      <span class="c">→ collapses q0,q1 (sample) and renormalizes</span>
+1 <b>H</b> · 1 CTRL 2 Q <b>X</b>           <span class="c">→ Bell on (1,2)</span>
+0 CTRL 1 Q <b>X</b>                     <span class="c">→ abstract control: |ψ⟩ = ψ₀|0⟩+ψ₁|1⟩</span>
+0 <b>H</b>                            <span class="c">→ 4 measurement branches</span>
+0 <b>measure</b> · 1 <b>measure</b>      <span class="c">→ collapses q0,q1 (sample) and renormalizes</span>
 <span class="c">// Pauli correction on the target (Q2) according to the outcome:</span>
-2 Q <b>X</b>   (if q1 = 1)   ·   2 Q <b>Z</b>   (if q0 = 1)
+2 <b>X</b>   (if q1 = 1)   ·   2 <b>Z</b>   (if q0 = 1)
 <span class="c">→ Q2 recovers |ψ⟩ = ψ₀|0⟩ + ψ₁|1⟩</span></pre>
 
-  <h2 id="presets"><span class="n">11</span>Presets / macros (page 2)</h2>
+  <h2 id="presets"><span class="n">11</span>Presets / macros (2nd layer)</h2>
   <p><b>Page 2</b> carries six <b>preset blocks</b> that expand a known circuit in
      <b>one key</b>, built from the same exact gates you'd type by hand (§10). The preset is a single
      <b>atomic</b> step in history — one <span class="key">↶</span> undoes the whole block. The manual forms
@@ -265,7 +271,7 @@ const REFERENCE_HTML = `
      and turn <code>≈</code> approximate. Bell/GHZ/Grover are exact. <b>W</b> is always <code>≈</code> approximate
      (its rotation angles are not multiples of π/8) — a nice demonstration of the exact↔numeric fallback.</div>
   <div class="note">To get the four Bell states, prepare the two input qubits and press <code>Bell</code>: e.g.
-     <code>2 Q SET · 1 Q X · 0 Q 1 Q p2 Bell</code> gives Ψ⁺ from |01⟩.</div>
+     <code>2 Q SET · 1 Q X · 0 Q 1 Q Bell</code> gives Ψ⁺ from |01⟩.</div>
   <div class="note"><b>On a symbolic state</b> a preset runs over its <b>concrete qubits</b>: with <code>|ψ⟩|0⟩|0⟩</code>,
      <code>1 Q 2 Q Bell</code> entangles Q1,Q2 → <code>|ψ⟩⊗(|00⟩+|11⟩)/√2</code>. It is refused only if a target qubit
      is the abstract <code>|ψ⟩</code> slot itself (presets act on concrete qubits).</div>
@@ -290,8 +296,8 @@ function chips(keys){
 // v22: a sequência de teclas EXIBIDA é DERIVADA dos steps reais (as teclas que o examples.spec aperta),
 // não de uma string escrita à mão. Elimina divergências: prep omitida ("…"), atalhos não-literais ("Bell",
 // "GHZ") e PSEUDO-teclas que não existem no app ("(I)", "(no oracle)"). Cada chip é uma tecla de verdade.
-const STEP_SIMPLE = { 'key:Q':'Q','key:CTRL':'CTRL','key:ALL':'ALL','key:SET':'SET','key:NEG':'±','key:PI':'π','key:INVSQRT2':'1/√2','key:.':'.','key:BKSP':'⌫','key:CLR':'ESC','eval':'=','page:1':'p2','fmtcycle':'fmt','chbase':'basis','angcycle':'rad/trn','viewform':'view','cmd:undo':'↶','cmd:redo':'↷','cmd:reset':'CLR','evidence':'factor' };
-const STEP_GATE = { Sdg:'S†', Tdg:'T†', CU:'C-U', SX:'√X', SY:'√Y' };   // v22: √X/√Y exatos
+const STEP_SIMPLE = { 'key:Q':'Q','key:CTRL':'CTRL','key:POW':'2^j','key:ALL':'ALL','key:SET':'SET','key:2nd':'2nd','key:NEG':'±','key:PI':'π','key:INVSQRT2':'1/√2','key:.':'.','key:BKSP':'⌫','key:CLR':'ESC','eval':'=','page:1':'p2','fmtcycle':'fmt','chbase':'basis','angcycle':'rad/trn','viewform':'view','cmd:undo':'↶','cmd:redo':'↷','cmd:reset':'CLR','evidence':'factor' };   // v26: 'key:2nd'→'2nd' (substitui o 'p2' do carrossel)
+const STEP_GATE = { Sdg:'S†', Tdg:'T†', SX:'√X', SY:'√Y' };   // v22: √X/√Y exatos; v25: CU removido (controladas via CTRL+base)
 const STEP_OP = { bloch:'Bloch', inner:'⟨φ|ψ⟩', tensor:'⊗', saveBra:'M', density:'ρ', partial:'ρ_A', schmidt:'Schmidt', vonneumann:'S(ρ)', concurrence:'C', globalPhase:'phase', norm:'‖ψ‖', corr:'⟨ZZ⟩' };
 const STEP_INPUT = { T:'|T⟩', rand:'rand', amp:'amp' };       // v22: teclas de input (pág.2)
 const STEP_PRESET = { QFTinv:'QFT†' };
@@ -327,6 +333,9 @@ function stepsToKeys(steps){
 }
 
 function resultBlock(r){
+  // v26: a EXPLICAÇÃO (label) vem PRIMEIRO — o que será feito — depois as teclas, e por fim o resultado
+  // no visor verde (antes o label ficava DENTRO do bloco verde, junto do resultado).
+  const labelHtml = `<div class="res-label">${esc(r.label)}</div>`;
   const keysHtml = `<div class="keys"><span class="block-label">keys</span><div class="steps">${chips(stepsToKeys(r.steps))}</div></div>`;
   let out;
   if (r.read === 'state'){
@@ -334,8 +343,8 @@ function resultBlock(r){
   } else {
     out = `<pre class="out" data-out="${att(r._out)}">${esc(r._out)}</pre>`;
   }
-  return `<div class="res-block">${keysHtml}`+
-    `<div class="lcd"><span class="rlabel">${esc(r.label)}</span>${out}</div></div>`;
+  return `<div class="res-block">${labelHtml}${keysHtml}`+
+    `<div class="lcd">${out}</div></div>`;
 }
 
 // ============================ CIRCUIT DIAGRAMS (inline SVG) ============================
@@ -420,7 +429,7 @@ const CIRCUITS = {
         [['mbox',0,3,'Uf']], [['box',0,'H'],['box',1,'H'],['box',2,'H']], [['m',0],['m',1],['m',2]] ] },
   E3: { n:4, labels:['|0⟩','|0⟩','|0⟩','|0⟩'], cols:[
         [['box',3,'X']], [['box',0,'H'],['box',1,'H'],['box',2,'H'],['box',3,'H']],
-        [['cx',0,3]], [['cx',2,3]], [['box',0,'H'],['box',1,'H'],['box',2,'H']], [['m',0],['m',1],['m',2]] ] },
+        [['cx',0,3]], [['cx',2,3]], [['box',0,'H'],['box',1,'H'],['box',2,'H'],['box',3,'H']], [['m',0],['m',1],['m',2]] ] },   // v26-fix: H final TAMBÉM em q3 (ancilla → |1⟩), batendo com os steps (… · 3 H)
   E4: { n:3, labels:['|0⟩','|0⟩','|0⟩'], cols:[
         [['box',0,'H'],['box',1,'H'],['box',2,'H']], [['mbox',0,2,'Oracle']], [['mbox',0,2,'Diffuser']] ] },
   E5: { n:4, labels:['|0⟩','|0⟩','|0⟩','|1⟩'], cols:[
@@ -436,20 +445,25 @@ const CIRCUITS = {
         [['box',0,'H'],['box',1,'H']],
         [['cx',1,2]], [['cx',1,4]],
         [['mbox',0,1,'QFT†']], [['m',0],['m',1]] ] },
-  E10:{ n:3, labels:['|ψ⟩','|0⟩','|0⟩'], cols:[
+  E9: { n:5, labels:['|0⟩','|0⟩','|0⟩','|0⟩','|0⟩'], cols:[   // q0–q2 counting · q3,q4 search (N=4). G = oracle·diffuser on q3,q4; q0→G⁴=I omitted
+        [['box',0,'H'],['box',1,'H'],['box',2,'H'],['box',3,'H'],['box',4,'H']],
+        [['cdot',2,3,'G']], [['cdot',1,3,'G²']],
+        [['mbox',0,2,'QFT†']], [['m',0],['m',1],['m',2]] ] },
+  E10:{ n:3, labels:['|ψ⟩','|0⟩','|0⟩'], cols:[   // v26-fix: medição-ADIADA — correções como portas CONTROLADAS (não medir+clássico como A4)
         [['box',1,'H']], [['cx',1,2]], [['cx',0,1]], [['box',0,'H']],
-        [['m',0],['m',1]], [['ccbox',[0,1],2,'Xᵐ¹Zᵐ⁰']] ] },
+        [['cx',1,2]], [['cdot',0,2,'Z']] ] },
 };
 const CIRCUIT_CAP = {
   E4: 'Repeat ⟨Oracle · Diffuser⟩ √N ≈ 2× for n=3; the card runs 1 and 2 iterations.',
   E5: 'Controlled-U^{2ʲ} write the phase; QFT† reads it into the counting register (q0–q2).',
   A4: 'Dashed lines = classical control: the measured pair (q0,q1) selects the Pauli correction on q2.',
   A5: 'enc = Alice’s encoding on q0: I / X / Z / ZX for the message 00 / 01 / 10 / 11 (here 00 and 11).',
-  A3: 'By hand: H · controlled-phase π/2ᵏ · final SWAP (bit reversal). Same as one key: ALL QFT (page 2). QFT† is the inverse.',
+  A3: 'By hand: H · controlled-phase π/2ᵏ · final SWAP (bit reversal). Same as one key: ALL 2nd QFT (2nd layer). QFT† is the inverse.',
   E6: 'Uꜰ writes f(x)=x₀⊕x₁ (invariant under x→x⊕s); the final H⊗² makes every measured y satisfy y·s = 0 (mod 2).',
   E7: 'enc = Alice’s Pauli on q0: I / X / Z / ZX for the messages 00 / 01 / 10 / 11.',
   E8: 'a = 11 → order r = 2. The controlled ×11 mod 15 on the work register is just two CNOTs (it only sends |1⟩↔|11⟩); 11² ≡ 1 so q0 controls nothing. QFT† reads r into q0,q1 → gcd(11±1,15) = {3,5}.',
-  E10:'Dashed lines = classical control; the measured pair (q0,q1) selects the Pauli correction on q2 (00→I · 01→X · 10→Z · 11→ZX). Deferring it as controlled gates gives one exact state.',
+  E9: 'G = oracle (Z on q3) · Grover diffuser, both controlled by the counting register via the generalized CTRL: q2 → G, q1 → G² (two iterations), q0 → G⁴ = I (omitted, exact). QFT† reads the phase; peaks at c = {2,6} → M = 2.',
+  E10:'Deferred measurement: instead of measuring q0,q1, the corrections are applied as <b>controlled gates</b> — controlled-X (q1→q2) and controlled-Z (q0→q2) — so q2 recovers |ψ⟩ as one exact, deterministic state.',
 };
 function circuitFig(id){
   const spec = CIRCUITS[id]; if (!spec) return '';
@@ -461,7 +475,7 @@ function circuitFig(id){
 // quantum advantage) · Circuit / key sequence + State at key points (the result blocks) · Result
 // (classical interpretation). Pedagogical order is fixed by ALGO_ORDER; states are captured from the
 // real interface exactly like the cookbook (anti-AP7: never an invented result).
-const ALGO_ORDER = ['E1','E2','E3','E4','E5','E6','E7','E8','E10'];   // v23: E9 (Quantum counting) deferred — needs a controlled-Grover keypad feature (next cycle)
+const ALGO_ORDER = ['E1','E2','E3','E4','E5','E6','E7','E8','E9','E10'];   // v24: E9 (Quantum counting) added — uses the generalized CTRL (controlled-Z + controlled-Grover)
 const algoCards = (examples) => {
   const byId = new Map(examples.filter(e=>e.part==='III').map(e=>[e.id,e]));
   return ALGO_ORDER.map(id=>byId.get(id)).filter(Boolean);
@@ -511,7 +525,7 @@ export function renderManual(examples, referenceSections = REFERENCE_HTML){
   // ---- Parte II — Cookbook (capturado da tela) ----
   body += `<section class="part"><h2 class="part-h" id="part-cookbook"><span class="part-n">Part II</span>Cookbook</h2>`;
   body += `<p class="part-lead">Worked recipes from <b>basic to advanced</b>. Each example shows the <b>key sequence</b> (from the preparation) and the <b>result exactly as it appears on screen</b> — captured from the real interface.</p>`;
-  body += `<div class="legend"><b>How to read.</b> Each recipe shows the <b>key sequence</b> (step 1 is the preparation) and the <b>result exactly as it appears on the calculator screen</b> — captured automatically from the real interface. Notation: <code>n Q</code> selects qubit n; <code>c CTRL t Q CNOT</code> = control c, target t; <code>ALL</code> = all qubits; <code>p2</code> = page 2 (swipe / page-dots / arrow keys); <code>fmt/basis/rad·turns/view</code> = views; <code>=</code> confirms an angle/eigenvalue.</div>`;
+  body += `<div class="legend"><b>How to read.</b> Each recipe shows the <b>key sequence</b> (step 1 is the preparation) and the <b>result exactly as it appears on the calculator screen</b> — captured automatically from the real interface. Notation: <code>n Q</code> selects qubit n; <code>c CTRL t Q X</code> = controlled-X (CNOT): control c, target t; <code>ALL</code> = all qubits; <code>2nd</code> = the 2nd key toggles the second layer (gate variants/presets, extended ops); <code>fmt/basis/rad·turns/view</code> = views; <code>=</code> confirms an angle/eigenvalue.</div>`;
   for (const t of TIERS){
     body += `<section><h2 id="tier-${t.key}"><span class="n">${t.n}</span>${t.label}</h2><p class="tier-intro">${t.intro}</p>`;
     for (const ex of examples.filter(e=>e.tier===t.key)){
@@ -601,6 +615,7 @@ export function renderManual(examples, referenceSections = REFERENCE_HTML){
   .circuit figcaption{margin-top:8px;font-size:12.5px;color:var(--muted);line-height:1.5}
   .results{display:flex;flex-direction:column;gap:14px}
   .res-block{display:flex;flex-direction:column;gap:8px}
+  .res-label{font-size:14px;line-height:1.5;color:var(--txt);font-weight:600}   /* v26: step explanation ABOVE the keys/result (was .rlabel inside the green LCD) */
   .keys .block-label{margin-bottom:4px}
   .steps{display:flex;flex-wrap:wrap;align-items:center;gap:4px}
   .steps code{font-family:var(--mono);font-size:13px;background:var(--key);border:1px solid var(--line);border-radius:7px;padding:3px 9px;color:var(--txt)}

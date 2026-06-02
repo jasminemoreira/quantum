@@ -25,7 +25,7 @@
     --gate:#93B4D7; --op:#8E6BA8; --mono:'JetBrains Mono','Fira Code',Consolas,monospace;
     /* LCD (tela) — verde refinado, menos neon; temático p/ alternar com o modo claro */
     --lcd-bg1:#0c1d18; --lcd-bg2:#0a1411; --lcd-border:#1d3a30; --lcd-line:#163228;
-    --lcd-text:#cdebd8; --lcd-text2:#aedcc1; --lcd-dim:#6f9c87; --lcd-accent:#74dd97; --lcd-glow:rgba(116,221,151,.12);
+    --lcd-text:#a3d9bd; --lcd-text2:#aedcc1; --lcd-dim:#6f9c87; --lcd-accent:#74dd97; --lcd-glow:rgba(116,221,151,.12);   /* v26: texto do visor no verde da esfera (#a3d9bd) — antes #cdebd8 (branco demais) */
     /* swatches Pantone: Burnished Lilac #AB97A1 · Teaberry #CE4C5C · Pale Banana #EBD89A ·
        Mandarin #E2552C · Amaranth #5D3A54 · Tickled Pink #EAB5C5 · Amethyst Orchid #8E6BA8 ·
        Caramel #C47E4F · Dutch Canal #93B4D7 · Shale Green #7E9B76 */
@@ -41,7 +41,7 @@
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--txt);
        font-family:system-ui,Segoe UI,Roboto,sans-serif;font-size:15px;}
-  #app{max-width:980px;margin:18px auto;padding:18px 18px 22px;
+  #app{max-width:636px;margin:18px auto;padding:18px 18px 22px;   /* v26: 600 (largura do teclado) + 2×18 padding → no navegador o display/faixa/teclado ficam todos em 600, coluna estreita como o app (PWA sobrescreve p/ max-width:none) */
        background:var(--card);border:1px solid var(--line);border-radius:16px;
        box-shadow:0 6px 26px rgba(0,0,0,.22)}
   h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.3px}
@@ -57,6 +57,23 @@
                 text-decoration:none;display:inline-block}
   .theme-toggle:hover{background:var(--keyhi);color:var(--txt)}
   .theme-toggle.ico{font-size:15px;padding:5px 11px;line-height:1}   /* v14: tema só-ícone (☾/☀) */
+  #aboutBtn{font-style:italic;font-weight:700}
+  /* v26: overlay About — modal centralizado, temável; fecha por backdrop / × / ESC */
+  #aboutOverlay{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;
+                background:rgba(0,0,0,.55);padding:20px;box-sizing:border-box}
+  #aboutOverlay[hidden]{display:none}
+  #aboutCard{position:relative;background:var(--panel);color:var(--txt);border:1px solid var(--line);
+             border-radius:14px;padding:26px 26px 22px;max-width:340px;width:100%;text-align:center;
+             box-shadow:0 12px 40px rgba(0,0,0,.4)}
+  #aboutCard h2{margin:0 0 2px;font-size:22px;letter-spacing:.5px;color:var(--accent2)}
+  #aboutCard p{margin:8px 0;font-size:13.5px;line-height:1.55;color:var(--muted)}
+  #aboutCard .about-tag{font-size:13px;color:var(--txt);font-weight:600;margin-top:0}
+  #aboutCard hr{border:none;border-top:1px solid var(--line);margin:16px 0}
+  #aboutCard .about-by{font-size:14.5px;color:var(--txt)}
+  #aboutCard .about-by a{color:var(--accent2);font-size:16px;font-weight:700;text-decoration:none;border-bottom:1px solid var(--line)}
+  #aboutCard .about-by a:hover{border-bottom-color:var(--accent2)}
+  #aboutCard .about-meta{font-family:var(--mono);font-size:11.5px;color:var(--muted);margin-bottom:0}
+  #aboutX{position:absolute;top:8px;right:8px;padding:3px 9px;font-size:16px}
   /* LCD-style display screen (mockup: calculadora científica) */
   .display{background:linear-gradient(180deg,var(--lcd-bg1),var(--lcd-bg2));border:1px solid var(--lcd-border);
            border-radius:12px;padding:8px 18px 10px;position:relative;height:340px;
@@ -125,25 +142,17 @@
      ficam paradas enquanto display já cresceu → app cresce momentaneamente → salto. Solução: animar HEIGHT
      real (JS captura natural antes do toggle, CSS transiciona height linearmente). Curves sincronizadas. */
   .display{transition:height .25s cubic-bezier(.4,0,.2,1)}
-  .zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view{
+  .zone-kets-prepare-factor, .zone-gates{   /* v26: .zone-input/.zone-measure-view extintos (input→kets, measure-view→operations keys2) */       /* v25: .zone-gate-variants→.zone-gates (merge SWAP/iSWAP); .zone-2-qubits removido */
     transition:height .25s cubic-bezier(.4,0,.2,1), opacity .25s cubic-bezier(.4,0,.2,1),
                padding .25s cubic-bezier(.4,0,.2,1), margin .25s cubic-bezier(.4,0,.2,1);
     overflow:hidden}
   body.display-expanded .zone-kets-prepare-factor,
-  body.display-expanded .zone-gates,
-  body.display-expanded .zone-gate-variants,
-  body.display-expanded .zone-2-qubits,
-  body.display-expanded .zone-input,
-  body.display-expanded .zone-measure-view{height:0 !important;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;pointer-events:none}     /* v22-20: ANIMA o colapso (height:0 .25s) — restaura a animação que o v22-19 perdeu */
+  body.display-expanded .zone-gates{height:0 !important;opacity:0;padding-top:0;padding-bottom:0;margin-top:0;margin-bottom:0;border-width:0;pointer-events:none}     /* v22-20: ANIMA o colapso (height:0 .25s) — restaura a animação que o v22-19 perdeu */
   /* v22-20: ao ASSENTAR a animação (~280ms, classe adicionada em JS), tira a zona do FLUXO do grid (display:none)
      → some a linha vazia + o row-gap de 7px (o "vão extra"). Combina animação suave + vão zero; o resíduo é doado
      ao display. No collapse, a classe é removida ANTES de animar a volta (zona reaparece em height:0 → anima p/ natural). */
   body.display-expanded-settled .zone-kets-prepare-factor,
-  body.display-expanded-settled .zone-gates,
-  body.display-expanded-settled .zone-gate-variants,
-  body.display-expanded-settled .zone-2-qubits,
-  body.display-expanded-settled .zone-input,
-  body.display-expanded-settled .zone-measure-view{display:none !important}
+  body.display-expanded-settled .zone-gates{display:none !important}
   /* v21-4: ao EXPANDIR, empilha o painel principal — esfera centralizada EM CIMA, estado em largura cheia EMBAIXO
      (evita o estado espremido ao lado da esfera no layout em linha). Só no modo expandido; normal segue lado a lado. */
   body.display-expanded #dispMain{flex-direction:column;align-items:center}
@@ -176,6 +185,15 @@
               margin-top:8px;border-top:1px dashed var(--lcd-border);padding-top:6px;
               min-height:27px;white-space:pre-wrap}   /* buffer/canto inf. esq. 50% maior */
   #statusLine.err{color:var(--err)}
+  /* v26: indicador de processamento — 3 pontos discretos no canto inf. direito do visor, na cor
+     de baixo contraste do tema (--lcd-dim). [hidden] some por completo; só visível em op pesada. */
+  #busyDot{position:absolute;right:14px;bottom:13px;display:flex;gap:4px;pointer-events:none;z-index:3}
+  #busyDot[hidden]{display:none}
+  #busyDot i{width:5px;height:5px;border-radius:50%;background:var(--lcd-dim);opacity:.35;
+             animation:busyPulse 1s ease-in-out infinite}
+  #busyDot i:nth-child(2){animation-delay:.15s} #busyDot i:nth-child(3){animation-delay:.3s}
+  @keyframes busyPulse{0%,80%,100%{opacity:.25;transform:scale(.8)} 40%{opacity:.95;transform:scale(1.15)}}
+  @media (prefers-reduced-motion:reduce){ #busyDot i{animation:none;opacity:.7} }
   .approx-badge{display:inline-block;background:var(--warn);color:#1a1a1a;
                 font-size:11px;font-weight:700;padding:1px 6px;border-radius:4px;margin-left:6px}
   #auxOutput{font-family:var(--mono);font-size:13.5px;margin-top:10px;color:var(--lcd-text2);
@@ -243,14 +261,16 @@
   button.kk:disabled{opacity:.32;cursor:default;filter:none}
   /* fundos PANTONE (texto de alto contraste por grupo) */
   .kk.gate{background:#93B4D7;color:#0f2a40}            /* Dutch Canal — portas 1q */
-  .kk.g2{background:#7E9B76;color:#11220e}              /* Shale Green — 2 qubits */
+  .kk.g2{background:#7E9B76;color:#fff}                 /* Shale Green — 2 qubits (v26: fonte branca) */
   .kk.op{background:#8E6BA8;color:#fff}                 /* Amethyst Orchid — operações */
   .kk.ket{background:#EAB5C5;color:#3a1730}             /* Tickled Pink — kets concretos */
   .kk.keta{background:#5D3A54;color:#EAB5C5}            /* Amaranth — kets abstratos (v4) */
-  .kk.fn{background:#C47E4F;color:#1f0e02;font-size:13px}   /* Caramel — comando/entrada */
+  .kk.fn{background:#C47E4F;color:#fff;font-size:13px}   /* Caramel — comando/entrada (v26: fonte branca) */
   .kk.fn.on{background:#E2552C;color:#fff}
+  .kk.snd{background:#EBD89A;color:#3a3110;font-size:13px;border:2.5px solid #6F4E37}  /* Pale Banana + borda MARROM (Pantone 19-1116 Coffee) mais grossa — tecla 2nd (toggle da 2ª camada) */
+  .kk.snd.on{background:#D4A017;color:#1f1a00;border-color:#6F4E37;box-shadow:0 0 0 1.5px #6F4E37 inset}   /* ouro saturado + realce marrom quando a 2ª camada está ATIVA */
   .kk.fn[data-action="cmd:undo"],.kk.fn[data-action="cmd:redo"]{font-size:21px;line-height:1}   /* v12: setas ↶↷ maiores (espec. > .kk.fn; mais legíveis que o resto do command) */
-  .kk.dg{background:#AB97A1;color:#221820;font-size:18px;font-weight:600}   /* Burnished Lilac — dígitos */
+  .kk.dg{background:#AB97A1;color:#fff;font-size:18px;font-weight:600}   /* Burnished Lilac — dígitos (v26: fonte branca) */
   .kk.k{background:#EBD89A;color:#3a3110}               /* Pale Banana — constantes π,1/√2,e,i */
   .kk.vw{background:#5D3A54;color:#EAB5C5} .kk.vw.on{outline:2px solid var(--accent)}
   .kk.sh{background:#352b40;color:#EBD89A;font-weight:700}   /* 2nd inativo */
@@ -263,27 +283,23 @@
   .keypad-wrap.mode-quantum.paged{display:flex;flex-direction:column;gap:9px;align-items:stretch;touch-action:pan-y;max-width:600px;margin:0 auto;width:100%}
   .kp-command{width:100%}
   .kp-command .kp-panel{width:auto}
-  .kp-viewport{overflow:hidden;width:100%}
+  .kp-viewport{width:100%}   /* v26: wrapper de largura cheia (era overflow:hidden p/ clipar o carrossel; sem carrossel, sem clip) */
   .kp-strip{display:flex;width:200%;transition:transform .24s ease;will-change:transform}
-  .kp-page{flex:0 0 50%;min-width:0;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;align-items:start}   /* cada página = 50% do strip; grade 4-col packed (como o PWA) */
+  .kp-page{width:100%;min-width:0;display:grid;grid-template-columns:repeat(4,1fr);gap:7px;align-items:start}   /* v26: página ÚNICA (largura cheia; era 50% do strip do carrossel) — grade 4-col packed */
   .kp-page .kp-L,.kp-page .kp-R{display:contents}                                /* promove os painéis das colunas p/ a grade da página */
   .kp-page .kp-panel{width:auto}
-  /* PÁGINA 1 (frequentes): kets|gates no topo; numeric(½) | operations(¼) | controlled(¼) embaixo */
+  /* PÁGINA 1 (frequentes): kets|gates no topo; numeric(½) | operations(¼) embaixo. v25: bloco 'controlled' removido (gramática CTRL+base) */
   .kp-page[data-page="0"] .zone-kets-prepare-factor{order:1;grid-column:span 2}
   .kp-page[data-page="0"] .zone-gates{order:2;grid-column:span 2}
   .kp-page[data-page="0"] .zone-numeric{order:3;grid-column:span 2}
-  .kp-page[data-page="0"] .zone-operations{order:4;grid-column:span 1}
-  .kp-page[data-page="0"] .zone-controlled{order:5;grid-column:span 1}
-  .kp-page[data-page="0"] .zone-operations .kp-grid,
-  .kp-page[data-page="0"] .zone-controlled .kp-grid{grid-template-columns:1fr!important}   /* tiras de 1/4 (vertical): 5 botões = 5 linhas, batem c/ o numeric ao lado */
+  .kp-page[data-page="0"] .zone-operations{order:4;grid-column:span 2}   /* v26: operations = 8 teclas em 2 colunas (½ largura, ao lado do numpad); colunas vêm de n/n2 inline */
   /* PÁGINA 2 (cauda-longa) — v22-4 (operadora): 2 COLUNAS REAIS de alturas INDEPENDENTES (override do
-     display:contents base p/ a pág.2): col ESQ = input + operations · col DIR = gate variants + 2 qubits +
+     display:contents base p/ a pág.2): col ESQ = input + operations · col DIR = gates (1q+SWAP/iSWAP) +
      presets/blocks. Cada coluna empilha seus grupos por conta própria → a página NÃO cresce além da coluna
-     mais alta (≤ pág.1; o carrossel compartilha a altura, então a pág.1 fica intocada). */
+     mais alta (≤ pág.1; o carrossel compartilha a altura, então a pág.1 fica intocada). v25: 'gate variants'→'gates', bloco '2 qubits +' removido */
   .kp-page[data-page="1"] .kp-L{display:flex;flex-direction:column;gap:7px;grid-column:1/3}
   .kp-page[data-page="1"] .kp-R{display:flex;flex-direction:column;gap:7px;grid-column:3/5}
-  .kp-page[data-page="1"] .zone-gate-variants .kp-grid{grid-template-columns:repeat(2,1fr)!important}
-  .kp-page[data-page="1"] .zone-2-qubits .kp-grid{grid-template-columns:repeat(2,1fr)!important}
+  .kp-page[data-page="1"] .zone-gates .kp-grid{grid-template-columns:repeat(2,1fr)!important}
   .kp-page[data-page="1"] .zone-density-entanglement .kp-grid,
   .kp-page[data-page="1"] .zone-measure-view .kp-grid{grid-template-columns:repeat(2,1fr)!important}   /* v22-16: 'operations' dividido em 2 blocos */
   .kp-page[data-page="1"] .zone-presets-blocks .kp-grid{grid-template-columns:repeat(3,1fr)!important}
@@ -315,7 +331,7 @@
        as larguras) — aqui o mobile só ajusta gap/fontes. No celular o max-width:600 = largura total. */
     .keypad-wrap.mode-quantum.paged{gap:8px}
     button.kk{font-size:12.5px;padding:6px 2px;min-height:40px}     /* compacto p/ caber 1 tela */
-    .kk.fn{font-size:12.5px}                                        /* COMMAND 5-col (CTRL/SET) */
+    .kk.fn, .kk.snd{font-size:12.5px}                               /* COMMAND 5-col (CTRL/SET/2nd) */
     .kk.op{font-size:12.5px}
     .mode-quantum.paged .kp-page[data-page="1"] .zone-density-entanglement .kk,
     .mode-quantum.paged .kp-page[data-page="1"] .zone-measure-view .kk{font-size:11.5px}    /* v22-16: blocos densos da pág.2 (Schmidt/S(ρ)/⟨ZZ⟩/…) — não afeta operations da pág.1 */
@@ -331,18 +347,22 @@
   /* v12/v14: PWA INSTALADO (standalone) — sem barra de título (o nome do app já está na barra do SO). v14: o appbar
      só tem o título → ocultá-lo inteiro (as ações manual/tema agora ficam ABAIXO do display, à direita, em todos os modos). */
   @media (display-mode: standalone){
-    /* v14: SEM 100dvh/flex-fill (o 100dvh do Chromium/Android vem errado após reload até um evento de geometria).
-       A altura do DISPLAY é definida por JS (fitViewport) p/ preencher a tela; o conteúdo rola dentro (disp-scroll). */
-    #app{display:flex;flex-direction:column}
-    .display{min-height:172px;height:172px;overflow:hidden}      /* altura real setada por fitViewport; 172 = piso */
+    /* v26: layout por CSS PURO (dvh + flex), sem o zoom/sizing JS do fitViewport (que encolhia a largura e deixava
+       sobra no rodapé). O #app preenche a tela (100dvh) e o DISPLAY cresce via flex:1 p/ ocupar o espaço livre
+       acima do teclado (e cresce sozinho no expand, quando zonas do teclado somem). Teclado = largura cheia, altura natural. */
+    html,body{height:100dvh;overflow:hidden}                     /* v26 FIX: trava o scroll do DOCUMENTO no PWA (o app cabe exato; nada de "puxar" pra cima/baixo) */
+    #app{display:flex;flex-direction:column;height:100dvh;box-sizing:border-box}
+    .display{flex:1 1 auto;min-height:120px;height:auto;overflow:hidden}      /* v26: flex preenche (era height fixo setado por JS); min menor p/ caber em telas curtas sem estourar */
+    #keypadArea{flex:0 0 auto;width:100%;margin:0}               /* v26 FIX: largura CHEIA. O margin:0 auto (base) num flex-coluna IMPEDE o stretch → o teclado encolhia ao conteúdo (e mais ainda no expand, quando kets/gates somem). width:100% força a largura toda. */
     #stateDisplay{line-height:3.27}                              /* v19-L20: PWA +9px entre linhas (2.7→3.27 ≈ +9px @16px) p/ \dfrac respirar */
     .appbar{display:none}                                        /* v14: appbar = só o título → oculto no PWA */
     #app > details{display:none}                                /* v12: oculta o colapsável 'Step history' no PWA (ganha espaço) */
+    .bloch-val{display:block}                                    /* v26: REEXIBE o readout abaixo da esfera no PWA (o mobile o esconde p/ poupar espaço; no standalone há altura via dvh+flex). renderBloch desconta os ~22px automaticamente (showVal lê o display computado). */
   }
   /* v14: PWA instalada em RETRATO — largura cheia + moldura arredondada (margem fina 6px), MAS altura = conteúdo
      (sem min-height: evita o vão vazio depois dos dots e o estouro além da tela). Paisagem/navegador INALTERADOS. */
   @media (display-mode: standalone) and (orientation: portrait){
-    #app{max-width:none;margin:6px;padding:17px 8px 10px}   /* v14: topo = 17px p/ igualar o vão visor→config (display mb 10 + strip-row mt 7) */
+    #app{max-width:none;margin:6px;padding:17px 8px 10px;height:calc(100dvh - 12px)}   /* v26 FIX: desconta as 2×6px de margem → app+margem = 100dvh EXATO (sem estouro/pull). v14: topo 17px iguala o vão visor→config */
   }
   /* o atributo hidden deve vencer o display dos painéis */
   .calc-line[hidden]{display:none}
@@ -407,12 +427,16 @@
       <span class="disp-arrow-bottom-tri" aria-hidden="true"></span>
     </button>
     <div id="statusLine" aria-live="polite"></div>
+    <!-- v26: indicador de processamento (canto inferior direito). Só aparece em operações PESADAS
+         (gating por custo previsto, não por tempo — ver Busy/estimateCost); ops curtas nunca o acendem. -->
+    <div id="busyDot" hidden aria-hidden="true"><i></i><i></i><i></i></div>
   </div>
 
   <div class="strip-row">
     <div id="viewStrip" class="view-strip" aria-label="views and mode"></div>
     <div class="disp-actions">
       <a href="manual.html" class="theme-toggle ico" title="open the manual / help" aria-label="manual / help">?</a>
+      <button data-action="about" id="aboutBtn" class="theme-toggle ico" title="about QuantumCalc" aria-label="about">i</button>
       <button data-action="theme" id="themeToggle" class="theme-toggle ico" title="toggle light/dark theme" aria-label="toggle light/dark theme">☾</button>
     </div>
   </div>
@@ -423,6 +447,19 @@
     <summary>Step history</summary>
     <pre id="historyOut">(empty)</pre>
   </details>
+
+  <!-- v26: About — overlay disparado pelo botão "i" (data-action=about). Crédito de autoria + síntese do projeto. -->
+  <div id="aboutOverlay" hidden data-action="aboutClose" role="dialog" aria-modal="true" aria-label="about QuantumCalc">
+    <div id="aboutCard" role="document" data-action="aboutNop">
+      <button id="aboutX" data-action="aboutClose" class="theme-toggle ico" title="close" aria-label="close">×</button>
+      <h2>QuantumCalc</h2>
+      <p class="about-tag">Educational quantum-state calculator</p>
+      <p>Algebraic manipulation of multi-qubit states with <b>exact</b> arithmetic.</p>
+      <hr>
+      <p class="about-by">Created and designed by<br><a href="https://www.linkedin.com/in/jasminemoreira2013/" target="_blank" rel="noopener noreferrer">Jasmine Moreira</a></p>
+      <p class="about-meta">© 2026 · v0.1</p>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1963,8 +2000,10 @@ const Parser = (() => {
   let selection = 'ALL';   // 'ALL' | int (qubit selecionado, p/ display)
   let expr = '';           // buffer de EXPRESSÃO de ângulo (π, 1/√2, operadores)
   let kets = [];           // v3: ket-string em digitação (estado-produto) — buffer EXCLUSIVO
+  let pow = null;          // v24: expoente j pendente (porta/preset aplicada 2ʲ vezes); null = sem potência
+  const POW_MAX = 10;      // v24: cap 2ʲ ≤ 1024 (protege a UI single-thread; QPE real usa j pequeno)
 
-  function reset(){ num = ''; ops = []; allFlag = false; expr = ''; kets = []; }
+  function reset(){ num = ''; ops = []; allFlag = false; expr = ''; kets = []; pow = null; }
   const targetsOf = () => ops.filter(o => o.role === 'q').map(o => o.n);
   const controlsOf = () => ops.filter(o => o.role === 'ctrl').map(o => o.n);
   const ok  = (command) => ({ command });
@@ -1985,6 +2024,9 @@ const Parser = (() => {
   }
   function q(){ if (kets.length) return err(KET_MISMATCH); if (num === '') return err('type an index before Q'); const n = parseInt(num,10); ops.push({role:'q', n}); selection = n; num = ''; return {}; }
   function ctrl(){ if (kets.length) return err(KET_MISMATCH); if (num === '') return err('type an index before CTRL'); ops.push({role:'ctrl', n:parseInt(num,10)}); num = ''; return {}; }
+  // v24: token POW operandos-first — j (dígito pendente) vira expoente; o operador seguinte é aplicado 2ʲ vezes.
+  // Ordem-insensível (campo escalar, fora de ops[]); POW repetido → último vence; cap j ≤ POW_MAX.
+  function setPow(){ if (kets.length) return err(KET_MISMATCH); if (num === '') return err('type exponent before 2^j (e.g. 3 2^j)'); const j = parseInt(num,10); if (j > POW_MAX) return err(`exponent too large (max j=${POW_MAX})`); pow = j; num = ''; return {}; }
   function all(){ if (kets.length) return err(KET_MISMATCH); reset(); allFlag = true; selection = 'ALL'; return {}; }
   function clear(){ reset(); selection = 'ALL'; return {}; }
   function bksp(){
@@ -1992,6 +2034,7 @@ const Parser = (() => {
     else if (num !== '') num = num.slice(0,-1);
     else if (kets.length) kets.pop();
     else if (ops.length){ const last = ops.pop(); if (last.role==='q'){ const t=targetsOf(); selection = t.length?t[t.length-1]:'ALL'; } }
+    else if (pow !== null) pow = null;   // v24: desfaz a potência pendente antes do ALL
     else if (allFlag) allFlag = false;
     return {};
   }
@@ -2009,22 +2052,25 @@ const Parser = (() => {
     const m = Gate.meta(name); if (!m) return err('unknown gate: ' + name);
     let tg = targetsOf(), ct = controlsOf();
     if (allFlag){
+      if (ct.length) return err('ALL and CTRL are mutually exclusive');                 // v24: A4 — exclusivos
       if (m.targets !== 1 || m.controls !== 0) return err(`ALL accepts only 1-qubit gates (not ${name})`);
-      reset(); return ok({ kind:'applyAll', gate:name, params });
+      const power = pow; reset(); return ok({ kind:'applyAll', gate:name, params, power });
     }
     if (num !== ''){ tg = tg.concat(parseInt(num,10)); }     // número final solto → alvo
     if (tg.length === 0 && ct.length === 0 && m.targets === 1 && m.controls === 0){
-      if (selection === 'ALL'){ reset(); return ok({ kind:'applyAll', gate:name, params }); }
+      if (selection === 'ALL'){ const power = pow; reset(); return ok({ kind:'applyAll', gate:name, params, power }); }
       tg = [selection];                                       // usa a seleção ativa
     }
-    if (tg.length !== m.targets || ct.length !== m.controls){
+    // v24: aridade de ALVOS estrita; CONTROLES só limite SUPERIOR relaxado (CTRL generalizado → controles extras
+    // viram MCX/MCZ via applyN). Erro só quando faltam alvos/controles ou sobram alvos — controle extra é aceito.
+    if (tg.length !== m.targets || ct.length < m.controls){
       const ex = `${m.controls} control(s) + ${m.targets} target(s)`;
       const hint = m.controls > 0 ? ` (e.g.: ${'c CTRL '.repeat(m.controls)}${'t Q '.repeat(m.targets)}${name})`
                                   : (m.targets > 1 ? ` (e.g.: ${'t Q '.repeat(m.targets)}${name})` : ` (e.g.: n Q ${name} or ALL ${name})`);
       return err(`${name}: expected ${ex}; got ${ct.length}+${tg.length}${hint}`);
     }
-    reset();
-    return ok({ kind:'apply', gate:name, targets:tg, controls:ct, params });
+    const power = pow; reset();
+    return ok({ kind:'apply', gate:name, targets:tg, controls:ct, params, power });
   }
 
   // v9: dispara um PRESET/macro. Alvos via Q (range) ou ALL; CTRL não se aplica.
@@ -2032,15 +2078,18 @@ const Parser = (() => {
   // ficam no M11 execute (que conhece n). Aqui só coletamos a seleção.
   function preset(name){
     if (kets.length) return err(KET_MISMATCH);
-    if (controlsOf().length) return err('presets use Q (targets), not CTRL');
+    const ct = controlsOf();                                  // v24: CTRL → preset controlado (controle injetado em cada op)
     let tg = targetsOf();
     if (num !== ''){ tg = tg.concat(parseInt(num,10)); }
     // v21-25: indicador ALL (default, sem alvos pendentes) JÁ vale como "todos" — como as portas de 1 qubit já fazem.
     // Antes exigia re-apertar a tecla ALL (allFlag); agora basta o estado default ALL (Bell/QFT/GHZ/Grover/W direto).
-    if (allFlag || (selection === 'ALL' && tg.length === 0)){ reset(); selection='ALL'; return ok({ kind:'preset', name, all:true }); }
+    if (allFlag || (selection === 'ALL' && tg.length === 0 && ct.length === 0)){
+      if (ct.length) return err('ALL and CTRL are mutually exclusive');   // (inalcançável c/ a guarda acima, mas explícito p/ allFlag)
+      const power = pow; reset(); selection='ALL'; return ok({ kind:'preset', name, all:true, controls:[], power });
+    }
     if (tg.length === 0) return err(`${name}: select the qubits — ALL ${name} or "i Q j Q ${name}"`);
-    reset(); selection='ALL';
-    return ok({ kind:'preset', name, qsel:tg });
+    const power = pow; reset(); selection='ALL';
+    return ok({ kind:'preset', name, qsel:tg, controls:ct, power });
   }
 
   function bufferText(){
@@ -2051,11 +2100,12 @@ const Parser = (() => {
     if (ct.length) parts.push('ctrl ' + ct.map(n=>'Q'+n).join(','));
     if (tg.length) parts.push('target ' + tg.map(n=>'Q'+n).join(','));
     if (num !== '') parts.push('num ' + num);
+    if (pow !== null) parts.push('pow 2^' + pow);            // v24: expoente pendente (operador aplicado 2ʲ vezes)
     return parts.length ? parts.join('  ·  ') : '—';
   }
 
   return {
-    digit, feedMath, q, ctrl, all, set, clear, bksp, applyGate, preset, reset, bufferText, ket,
+    digit, feedMath, q, ctrl, setPow, all, set, clear, bksp, applyGate, preset, reset, bufferText, ket,
     getExprRaw: () => expr,
     clearExpr: () => { expr = ''; },
     getSelection: () => selection,
@@ -2072,7 +2122,7 @@ const Parser = (() => {
       return hadSpecific;
     },
     // v4: operandos pendentes no buffer (alvos+controles), SEM resetar — usado p/ detectar alvo abstrato antes de aplicar
-    peekOperands: () => ({ targets: targetsOf().concat(num !== '' ? [parseInt(num,10)] : []), controls: controlsOf(), allFlag, selection }),
+    peekOperands: () => ({ targets: targetsOf().concat(num !== '' ? [parseInt(num,10)] : []), controls: controlsOf(), allFlag, selection, power: pow }),
     // v3: qubit recém-selecionado por "n Q" (nada mais pendente) — usado p/ evidenciar via tecla de ket
     selectedQubit: () => (ops.length === 1 && ops[0].role === 'q' && num === '' && !allFlag && !kets.length && expr === '') ? ops[0].n : null,
   };
@@ -2723,9 +2773,11 @@ const Bloch = (() => {
     const dpr = opts.dpr || 1, W = opts.size || canvas.width, H = opts.size || canvas.height;   // v12: W/H LÓGICOS; bitmap = W×dpr (nítido em high-DPI). Desktop dpr=1 → idêntico.
     if (g.setTransform) g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 22;
+    const mixed = v.r < 0.999;   // v26: qubit reduzido/misto = EMARANHADO (num estado global puro). Aciona o "modo emaranhado" visual.
     g.clearRect(0,0,W,H);
-    // monocromático (segue o LCD): esfera/equador
-    g.lineWidth = 1; g.strokeStyle = C.sphere; g.globalAlpha = .5;
+    // monocromático (segue o LCD): esfera/equador. v26: no modo emaranhado a esfera EXTERNA fica a 50% de
+    // transparência (recua — ela não é o estado do qubit; o estado é a esfera interna de raio |r|).
+    g.lineWidth = 1.2; g.strokeStyle = C.sphere; g.globalAlpha = mixed ? .5 : .7;
     g.beginPath(); g.arc(cx, cy, R, 0, 2*Math.PI); g.stroke();                  // esfera
     g.beginPath(); g.ellipse(cx, cy, R, R*Math.sin(EL), 0, 0, 2*Math.PI); g.stroke(); // equador
     g.globalAlpha = 1;
@@ -2769,10 +2821,23 @@ const Bloch = (() => {
       g.globalAlpha = prevAlpha; g.lineCap = prevCap;
     }
     // vetor de estado: tom forte (puro) / médio (reduzido/misto) — sem mudar de matiz
+    // v26: MODO EMARANHADO — esfera INTERNA concêntrica (centro na origem) de raio |r|, a "esfera de pureza"
+    // onde a ponta do vetor pousa. |r|=1 (puro) coincide com a casca; |r|→0 (máx. emaranhado/Bell) encolhe ao
+    // centro. Contorno + equador inclinado (mesmo EL) p/ ler como esfera 3D; cor do vetor reduzido. Desenhada
+    // ANTES do vetor (o vetor pousa na superfície dela). Ref: a esfera externa fica a 50% (recuada).
+    if (mixed && v.r > 0.001){
+      const rin = R * v.r, prevA = g.globalAlpha;
+      g.strokeStyle = C.vecMixed; g.fillStyle = C.vecMixed; g.lineWidth = 1.3;
+      g.globalAlpha = 0.10; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume tênue
+      g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.stroke();                                // contorno (= |r|)
+      g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.sin(EL), 0, 0, 2*Math.PI); g.stroke();      // equador → leitura de esfera
+      g.globalAlpha = prevA;
+    }
+    // vetor de estado: tom forte (puro) / médio (reduzido/misto) — sem mudar de matiz
     const [vx,vy] = proj(v.x, v.y, v.z, cx, cy, R);
-    g.strokeStyle = v.r < 0.999 ? C.vecMixed : C.vec; g.lineWidth = 2.5;
+    g.strokeStyle = mixed ? C.vecMixed : C.vec; g.lineWidth = 2.5;
     g.beginPath(); g.moveTo(cx,cy); g.lineTo(vx,vy); g.stroke();
-    g.fillStyle = g.strokeStyle; g.beginPath(); g.arc(vx, vy, 4, 0, 2*Math.PI); g.fill();
+    g.fillStyle = mixed ? C.vecMixed : C.vec; g.beginPath(); g.arc(vx, vy, 4, 0, 2*Math.PI); g.fill();
     // (o readout |r|/estado migrou p/ abaixo da esfera — Render.blochReadout)
   }
   return { render };
@@ -2794,53 +2859,38 @@ const Keymap = (() => {
   // 4º elemento opcional = span de coluna (default 2; controles da 1ª linha = 1).
   const SP = ['','',''];   // espaçador invisível
   // ---- v14: bloco de COMANDO (FIXO, fora do carrossel) — M ocupa o slot que o '2nd' liberou (acessível nas 2 páginas) ----
-  const Q_COMMAND = { label:'command', n:5, keys:[
-      ['key:ALL','ALL','fn'],['key:CTRL','CTRL','fn'],['key:Q','Q','fn'],['key:SET','SET','fn'],['op:saveBra','M','op'],
-      ['key:CLR','ESC','fn'],['key:BKSP','⌫','fn'],['cmd:undo','↶','fn'],['cmd:redo','↷','fn'],['cmd:reset','CLR','fn'] ] };   // v19 final: ESC (cancela entry, cf. tecla Esc física) + CLR tradicional (= reset state). Data-actions inalterados; renomeação só de label.
-  // ---- zona NUMÉRICA — só na PÁGINA 1 (a cauda-longa = página 2 não tem dígitos) ----
+  const Q_COMMAND = { label:'command', n:5, keys:[                              // v26: n:6→5; M e ⌫ migram p/ o numpad, tecla 2nd entra no fim da linha 2; ALL mantido
+      ['key:CTRL','CTRL','fn'],['key:Q','Q','fn'],['key:SET','SET','fn'],['key:POW','2^j','fn'],['key:2nd','2nd','snd'],
+      ['key:ALL','ALL','fn'],['key:CLR','ESC','fn'],['cmd:undo','↶','fn'],['cmd:redo','↷','fn'],['cmd:reset','CLR','fn'] ] };   // v26: ordem CTRL Q SET 2^j 2nd / ALL ESC ↶ ↷ CLR. 2nd = toggle (trava) da 2ª camada (classe 'snd'). POW=2ʲ; ESC cancela entry · CLR reset state.
+  // ---- zona NUMÉRICA (pág.1) — v26: faxina (.,±,π,1/√2 removidos: sem função p/ índices inteiros) + M e ⌫ migrados do comando ----
   const Q_NUMERIC = { label:'numeric', n:3, keys:[
       ['key:7','7','dg'],['key:8','8','dg'],['key:9','9','dg'],
       ['key:4','4','dg'],['key:5','5','dg'],['key:6','6','dg'],
       ['key:1','1','dg'],['key:2','2','dg'],['key:3','3','dg'],
-      ['key:0','0','dg'],['key:.','.','dg'],['key:NEG','±','dg'],
-      ['key:PI','π','k'],['key:INVSQRT2','1/√2','k'],SP ] };   // v14: M saiu p/ o comando; spacer mantém π e 1/√2 nas colunas
+      ['key:0','0','dg'],['op:saveBra','M','op'],['key:BKSP','⌫','fn'] ] };   // v26: 0 · M · ⌫
   // ---- coluna ESQUERDA — paleta de portas/ops. PRIMÁRIO (frequentes) ----
   const Q_LEFT_1 = [
-    { label:'gates', n:3, keys:[
+    { label:'gates', n:3, keys:[                                            // v25: P/U promovidos; v26: Bell promovido ao primário (12 teclas, 4 linhas; SWAP foi p/ a 2ª camada junto do iSWAP)
       ['gate:H','H','gate'],['gate:X','X','gate'],['gate:Y','Y','gate'],
       ['gate:Z','Z','gate'],['gate:S','S','gate'],['gate:T','T','gate'],
-      ['gate:Rx','Rx','gate'],['gate:Ry','Ry','gate'],['gate:Rz','Rz','gate'] ] },
-    { label:'kets · prepare / factor', n:3, keys:[
+      ['gate:Rx','Rx','gate'],['gate:Ry','Ry','gate'],['gate:Rz','Rz','gate'],
+      ['gate:P','P(φ)','gate'],['gate:U','U(θφλ)','gate'],['preset:Bell','Bell','g2'] ],
+      n2:3, keys2:[                                                          // v26: 2ª camada (2nd) — variantes + SWAP/iSWAP (2q juntos) + presets restantes
+      ['gate:Sdg','S†','gate'],['gate:Tdg','T†','gate'],['gate:SX','√X','gate'],
+      ['gate:SY','√Y','gate'],['gate:SWAP','SWAP','g2'],['gate:iSWAP','iSWAP','g2'],
+      ['preset:QFT','QFT','g2'],['preset:QFTinv','QFT†','g2'],['preset:GHZ','GHZ','g2'],
+      ['preset:Grover','Grover','g2'],['preset:W','W','g2'] ] },
+    { label:'kets · prepare / factor', n:3, keys:[                          // v26: 4ª linha = teclas de INPUT (|T⟩/rand/amp) migradas da pág.2 — são preparação de estado (cor de ket)
       ['ket:0','|0⟩','ket'],['ket:1','|1⟩','ket'],['ket:+','|+⟩','ket'],
       ['ket:-','|−⟩','ket'],['ket:i','|i⟩','ket'],['ket:-i','|−i⟩','ket'],
-      ['ket:ψ','|ψ⟩','keta'],['ket:φ','|φ⟩','keta'],['ket:χ','|χ⟩','keta'] ] },
-    { label:'controlled', n:5, keys:[
-      ['gate:CNOT','CNOT','g2'],['gate:CZ','CZ','g2'],['gate:CP','CP(λ)','g2'],['gate:CRz','CRz','g2'],['gate:CU','C-U','g2'] ] },
-    { label:'operations', n:5, keys:[                                       // v12: ⟨φ|ψ⟩ e ⊗ sobem ao primário; ‖ψ‖ e factor descem ao 2nd
-      ['op:prob','prob','op'],['op:measure','measure','op'],['op:bloch','Bloch','op'],['op:inner','⟨φ|ψ⟩','op'],['op:tensor','⊗','op'] ] },
-  ];
-  // ---- coluna ESQUERDA — camada 2nd (cauda longa, raras) ----
-  // v22-4 (operadora): pág.2 em 2 COLUNAS reais (alturas independentes).
-  // col ESQUERDA = input + operations · col DIREITA = gate variants + 2 qubits + presets/blocks.
-  const Q2_COL_L = [
-    { label:'input', n:3, keys:[                                     // v22: composição de estado de 1 qubit (FRESCO, como SET)
-      ['input:T','|T⟩','ket'],['input:rand','rand','ket'],['input:amp','amp','ket'] ] },   // v22-5: input = COR DE KET (rosa) — são preparação de estado, não operação. |T⟩ EXATO (H·T); rand=Haar ≈; amp=α,β diretas ≈
-    // v22-16/17: 'operations' (9 teclas) SPLIT em 2 blocos; v22-17 ORDEM = input → measure&view → density&entanglement
-    // (os dois de cima — input + measure&view — COLAPSAM ao expandir o display; density&entanglement permanece embaixo).
-    { label:'measure & view', n:2, keys:[                                    // correlação, norma, fase global, vista fatorada
-      ['op:corr','⟨ZZ⟩','op'],['op:norm','‖ψ‖','op'],['op:globalPhase','phase','op'],['evidence','factor','op'] ] },   // ⟨ZZ⟩ = correlação por paridade (ALL → ⟨Z⊗…⟩; n Q → ⟨Z_n⟩; i Q j Q → ⟨Z_i Z_j⟩)
-    { label:'density & entanglement', n:2, keys:[                            // família da matriz densidade + medidas de emaranhamento
-      ['op:density','ρ','op'],['op:partial','ρ_A','op'],['op:schmidt','Schmidt','op'],['op:vonneumann','S(ρ)','op'],['op:concurrence','C','op'] ] },
-  ];
-  const Q2_COL_R = [
-    { label:'gate variants', n:4, keys:[                                    // v12: removido o botão I (identidade — não muda o estado); melhora o layout do 2nd no PWA. A porta I permanece no catálogo do motor.
-      ['gate:Sdg','S†','gate'],['gate:Tdg','T†','gate'],['gate:P','P(φ)','gate'],['gate:U','U(θφλ)','gate'],
-      ['gate:SX','√X','gate'],['gate:SY','√Y','gate'] ] },   // v22: √X/√Y EXATOS em ℤ[ζ₁₆] (SX²=X, SY²=Y)
-    { label:'2 qubits +', n:4, keys:[                                       // v12: removido o SP (espaço em branco no 2nd mobile); 4 teclas → 2 linhas (alinha com gate variants)
-      ['gate:SWAP','SWAP','g2'],['gate:iSWAP','iSWAP','g2'],['gate:CCX','CCX','g2'],['gate:CSWAP','CSWAP','g2'] ] },
-    { label:'presets / blocks', n:3, keys:[                          // v9: macros (ALL preset | i Q j Q preset)
-      ['preset:QFT','QFT','g2'],['preset:QFTinv','QFT†','g2'],['preset:Bell','Bell','g2'],
-      ['preset:GHZ','GHZ','g2'],['preset:Grover','Grover','g2'],['preset:W','W','g2'] ] },
+      ['ket:ψ','|ψ⟩','keta'],['ket:φ','|φ⟩','keta'],['ket:χ','|χ⟩','keta'],
+      ['input:T','|T⟩','ket'],['input:rand','rand','ket'],['input:amp','amp','ket'] ] },   // v22: |T⟩ EXATO (H·T); rand=Haar ≈; amp=α,β diretas ≈
+    { label:'operations', n:2, keys:[                                       // v26: 8 teclas (2 colunas; meia largura ao lado do numpad) — ‖ψ‖/⟨ZZ⟩/factor promovidos da 2ª camada
+      ['op:prob','prob','op'],['op:measure','measure','op'],['op:bloch','Bloch','op'],['op:inner','⟨φ|ψ⟩','op'],
+      ['op:tensor','⊗','op'],['op:norm','‖ψ‖','op'],['op:corr','⟨ZZ⟩','op'],['evidence','factor','op'] ],
+      n2:2, keys2:[                                                          // 2ª camada (6 + 2 spacers = 8 células → MESMA altura do primário, sem pulo da borda)
+      ['op:globalPhase','phase','op'],['op:density','ρ','op'],['op:partial','ρ_A','op'],
+      ['op:schmidt','Schmidt','op'],['op:vonneumann','S(ρ)','op'],['op:concurrence','C','op'],SP,SP ] },
   ];
   const Q_STRIP = [['chbase','basis','vw'],['fmtcycle','fmt','vw'],['angcycle','rad/trn','vw'],['viewform','view','vw']];   // v7: 'bars' removido; v13: 'mode'/calc toggle removido; v14: '∠'→'rad/trn' (compacto); 'form'→'view' (desambigua de 'fmt'; view = factored/expanded/matrix)
   // ---- teclado de ENTRADA inline (ângulo/λ) — v13: NÃO é mais um modo livre; renderizado só durante angleEntry/lambdaEntry. Avaliador Calc.evaluate mantido. ----
@@ -2875,9 +2925,9 @@ const Keymap = (() => {
   function layout(mode, page){
     if (mode === 'amp') return { strip:C_STRIP, cols:{ L:[], R:C_AMP } };             // v22-6: pad científico p/ entrada de amplitude complexa
     if (mode === 'calc') return { strip:C_STRIP, cols:{ L:C_LEFT, R:C_RIGHT } };   // entrada inline de ângulo/λ — 2 colunas, SEM paginação
-    // v14: modo quântico = carrossel de 2 páginas + bloco de comando fixo.
-    // pág.1 = paleta frequente (Q_LEFT_1) + numérico; pág.2 = cauda-longa (Q_LEFT_2) full-width, sem numérico.
-    return { strip:Q_STRIP, command:Q_COMMAND, pages:[ { L:Q_LEFT_1, R:Q_NUMERIC }, { L:Q2_COL_L, R:Q2_COL_R } ] };
+    // v26: modo quântico = PÁGINA ÚNICA + comando fixo + tecla 2nd (toggle) p/ a 2ª camada dos blocos (substitui o carrossel do v14).
+    // pages[] mantido como array de 1 (compat com renderKeypad/testes); a cauda-longa virou keys2 de gates/operations.
+    return { strip:Q_STRIP, command:Q_COMMAND, pages:[ { L:Q_LEFT_1, R:Q_NUMERIC } ] };
   }
   return { MODES, layout };
 })();
@@ -2939,6 +2989,7 @@ const UI = (() => {
   function syncQBasis(){ const n = History.current().n; if (qbasis.length !== n) qbasis = Array(n).fill('comp'); }   // reconcilia comprimento (undo/redo, tensor)
   let mode = 'quantum', calcBuf = '', calcResult = '';   // v2: modo + buffer da calc
   let page = 0;             // v14: página ativa do carrossel (0 = frequentes | 1 = cauda-longa) — SUBSTITUI 'shifted'; fonte da verdade do transform
+  let secondLayer = false;  // v26: 2nd ativo (trava) → blocos mostram keys2 (2ª camada); substituirá o carrossel (grupo C)
   let suppressClick = false;   // v14: true logo após um swipe confirmado → o click subsequente (no botão) é descartado
   let clickDownX = 0, clickDownY = 0;   // v21-33: posição do último pointerdown — o click handler descarta clicks que vieram de um ARRASTO (release longe do down), de forma INDEPENDENTE DE TEMPO (o suppressClick por janela de 80ms era uma corrida no device real)
   let blochOn = false;   // v4-ui: esfera de Bloch embutida no LCD (à direita), evolui com o estado/seleção
@@ -2978,7 +3029,7 @@ const UI = (() => {
   function captureExpansionGeometry(){
     const kp = $('keypad'); if (!kp) return;
     const body = document.body;
-    const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
+    const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates');
     if (!zones.length) return;
     // Disable transitions durante a medição (sem flash visível)
     const origTrans = [];
@@ -3067,7 +3118,7 @@ const UI = (() => {
       // v19-L9 + L16: medição REAL via flip-flop (transitions off) + EXPLICIT HEIGHT nos zones antes
       // da classe (CSS transiciona height linearmente).
       if (kp){
-        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
+        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates');
         const dispTrans = disp ? disp.style.transition : '';
         const zonesTrans = [];
         zones.forEach((z, i) => { zonesTrans[i] = z.style.transition; z.style.transition = 'none'; });
@@ -3130,7 +3181,7 @@ const UI = (() => {
         _preExpandDispH = '';
         playBlochSlide(blochFirst, 'xy');         // v21-6: collapse = diagonal (centro-topo→direita-centro) — elimina o "pulo para baixo"
         // Limpa inline heights após a animação para o layout retomar naturalmente
-        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates, .zone-gate-variants, .zone-2-qubits, .zone-input, .zone-measure-view');
+        const zones = document.querySelectorAll('.zone-kets-prepare-factor, .zone-gates');
         setTimeout(() => { zones.forEach(z => { z.style.height = ''; }); }, 270);
         applyExpand();
         setTimeout(() => renderBloch(), 300);   // finaliza o tamanho exato após o display assentar
@@ -3176,11 +3227,12 @@ const UI = (() => {
       : cmd.spec.kets ? `SET ${cmd.spec.kets.map(k => '|' + k.replace('-','−') + '⟩').join('')}`
       : `SET ${cmd.spec.count} qubit(s)`;
     if (cmd.kind === 'prepare') return cmd.label || 'prepare';
-    if (cmd.kind === 'applyAll') return `ALL ${cmd.gate}`;
+    const pw = cmd.power != null ? '^' + (1 << cmd.power) : '';                     // v24: sufixo de potência 2ʲ
+    if (cmd.kind === 'applyAll') return `ALL ${cmd.gate}${pw}`;
     const ps = cmd.paramLabels || (cmd.params || []).map(x => (+x).toFixed(3));   // ângulo simbólico (π/4) quando disponível
     const p = ps.length ? `(${ps.join(',')})` : '';
     const c = cmd.controls.length ? cmd.controls.map(q => '•Q'+q).join('') + ' ' : '';
-    return `${cmd.gate}${p} ${c}${cmd.targets.map(q => 'Q'+q).join(',')}`.trim();
+    return `${cmd.gate}${p}${pw} ${c}${cmd.targets.map(q => 'Q'+q).join(',')}`.trim();
   }
 
   // --- executa um Command declarativo ---
@@ -3199,13 +3251,21 @@ const UI = (() => {
       History.init(st, labelOf(cmd), cmd);
     } else if (cmd.kind === 'apply'){
       const cur = History.current();
-      const ns = cur.sym ? SymEngine.apply(cur, { gate:cmd.gate, targets:cmd.targets, controls:cmd.controls, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
-                         : Engine.apply(cur, cmd.gate, { targets:cmd.targets, controls:cmd.controls, params:cmd.params });
+      const reps = cmd.power == null ? 1 : (1 << cmd.power);   // v24: aplica 2ʲ vezes (1 entrada atômica)
+      let ns = cur;
+      // v24: caminho concreto via applyN (valida só range+duplicatas) p/ aceitar controles EXTRAS (CTRL generalizado);
+      // a aridade de alvos já foi validada no Parser. Sem power, reps=1 → comportamento idêntico ao anterior.
+      for (let r = 0; r < reps; r++) ns = ns.sym
+        ? SymEngine.apply(ns, { gate:cmd.gate, targets:cmd.targets, controls:cmd.controls, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
+        : Engine.applyN(ns, cmd.gate, { targets:cmd.targets, controls:cmd.controls, params:cmd.params });
       History.push(ns, labelOf(cmd), cmd);
     } else if (cmd.kind === 'applyAll'){
       const cur = History.current();
-      const ns = cur.sym ? SymEngine.apply(cur, { kind:'applyAll', gate:cmd.gate, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
-                         : Engine.applyAll(cur, cmd.gate, cmd.params);
+      const reps = cmd.power == null ? 1 : (1 << cmd.power);   // v24
+      let ns = cur;
+      for (let r = 0; r < reps; r++) ns = ns.sym
+        ? SymEngine.apply(ns, { kind:'applyAll', gate:cmd.gate, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
+        : Engine.applyAll(ns, cmd.gate, cmd.params);
       History.push(ns, labelOf(cmd), cmd);
     } else if (cmd.kind === 'preset'){                                   // v9: macro/preset (bloco atômico)
       const cur = History.current();
@@ -3224,13 +3284,24 @@ const UI = (() => {
       const need = Presets.MIN_QUBITS[cmd.name];
       if (cmd.name === 'Bell' && qubits.length !== 2) throw new Error('Bell requires exactly 2 qubits (e.g. 0 Q 1 Q Bell)');
       if (qubits.length < need) throw new Error(`${cmd.name} requires ≥${need} qubit(s)`);
+      // v24: preset CONTROLADO — injeta os controles pendentes em CADA op primitiva. Válido pois
+      // controlled(∏Gᵢ)=∏controlled(Gᵢ) quando o controle ∉ alvos do preset (mesmo controle, fora do range).
+      const ctrls = cmd.controls || [];
+      for (const c of ctrls){
+        if (c < 0 || c >= n) throw new Error(`control Q${c} out of range (n=${n})`);
+        if (qubits.includes(c)) throw new Error(`control Q${c} overlaps the preset target range`);   // M3 guard
+        if (cur.sym && cur.layout[c] === 'a') throw new Error(`control Q${c} is the abstract |ψ⟩ — controls act on concrete qubits only`);
+      }
       const { ops } = Presets.expand(cmd.name, qubits);
+      const reps = cmd.power == null ? 1 : (1 << cmd.power);              // v24: preset aplicado 2ʲ vezes (1 passo atômico)
       let ns = cur;
-      for (const o of ops) ns = cur.sym                                  // dobra as primitivas (incl. MCZ no caminho concreto)
-        ? SymEngine.apply(ns, { gate:o.gate, targets:o.targets || [], controls:o.controls || [], params:o.params || [] }, SymRules)
-        : Engine.applyN(ns, o.gate, o);
+      for (let r = 0; r < reps; r++) for (const o of ops){               // dobra as primitivas (incl. MCZ no caminho concreto)
+        const inj = { gate:o.gate, targets:o.targets || [], controls:[...(o.controls || []), ...ctrls], params:o.params || [] };   // v24: controles injetados
+        ns = cur.sym ? SymEngine.apply(ns, inj, SymRules) : Engine.applyN(ns, o.gate, inj);
+      }
       const tag = qubits.length > 1 ? `q${qubits[0]}..q${qubits[qubits.length-1]}` : `q${qubits[0]}`;
-      History.push(ns, `${cmd.name === 'QFTinv' ? 'QFT†' : cmd.name} ${tag}`, cmd);
+      const cpfx = ctrls.length ? 'c-' : '', psfx = cmd.power != null ? '^' + reps : '';   // v24: c-Grover^8 …
+      History.push(ns, `${cpfx}${cmd.name === 'QFTinv' ? 'QFT†' : cmd.name}${psfx} ${tag}`, cmd);
     }
     clearError();
     $('auxOutput').textContent = '';   // resultado de operação anterior fica obsoleto ao mudar o estado
@@ -3848,8 +3919,9 @@ const UI = (() => {
     const C = (a) => Algebra.toComplex(a).re;          // Bloch.render / Render.blochReadout esperam números
     const v = { x:C(b.x), y:C(b.y), z:C(b.z), r:b.r };
     const light = document.documentElement.dataset.theme === 'light';
-    const pal = light ? { sphere:'#7faf95', axis:'#aecbbb', label:'#4f7d63', vec:'#1f7a4e', vecMixed:'#5aa07e', text:'#22513a' }
-                      : { sphere:'#2c6e57', axis:'#1f4a3a', label:'#6f9c87', vec:'#74dd97', vecMixed:'#3f8f6a', text:'#bfe9cf' };
+    // v26: esfera/eixos com contraste ~ o do texto (escuro no claro, claro no escuro) — antes ficava mais clara que a fonte no claro e mais escura no escuro.
+    const pal = light ? { sphere:'#5b9077', axis:'#7faf95', label:'#22513a', vec:'#1f7a4e', vecMixed:'#4f9070', text:'#22513a' }   // v26: claro = verde MÉDIO (o escuro #2e5d45 ficou pesado demais)
+                      : { sphere:'#a3d9bd', axis:'#6fae8e', label:'#a3d9bd', vec:'#74dd97', vecMixed:'#4f9f78', text:'#cfeedd' };
     // v12: esfera DPR-aware — bitmap = css×dpr (nítido). Desktop dpr=1.
     // v19-L29 (operadora): tamanho proporcional à altura útil — `.disp-body` menos chrome do Q0 label (~19px) e .bloch-val (~22px se visível).
     // Considera labels |0⟩/|1⟩ FORA da esfera (cabem no R+22 de margem do canvas). Piso 110 (ainda legível), tetos 160 mobile / 280 desktop.
@@ -3943,17 +4015,20 @@ const UI = (() => {
   function switchPage(target){ page = Math.max(0, Math.min(1, target | 0)); applyPageView(); }   // clampa 0..1
 
   function buildPanel(grp){
+    const second = secondLayer && grp.keys2;                                 // v26: 2nd ativo E o bloco tem 2ª camada → mostra keys2 (no MESMO lugar)
+    const keys = second ? grp.keys2 : grp.keys;
+    const ncol = second ? (grp.n2 || grp.n) : grp.n;
     const slug = (grp.label || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');   // p/ reordenar/escopar blocos
     const panel = document.createElement('div'); panel.className = 'kp-panel' + (slug ? ' zone-' + slug : '');
     if (grp.label){ const lab = document.createElement('div'); lab.className = 'kp-label'; lab.textContent = grp.label; panel.appendChild(lab); }
     const grid = document.createElement('div'); grid.className = 'kp-grid';
-    grid.style.gridTemplateColumns = 'repeat(' + grp.n + ',1fr)';
-    for (const [k, label, cls] of grp.keys){
+    grid.style.gridTemplateColumns = 'repeat(' + ncol + ',1fr)';
+    for (const [k, label, cls] of keys){
       const b = document.createElement('button');
       b.className = 'kk' + (cls ? ' ' + cls : '') + (k ? '' : ' spacer');
       b.textContent = label;
       if (!k){ b.disabled = true; }
-      else { b.dataset.action = k; if (k === 'op:prob' && showProb) b.classList.add('on'); }   // v7: prob é toggle
+      else { b.dataset.action = k; if (k === 'op:prob' && showProb) b.classList.add('on'); if (k === 'key:2nd' && secondLayer) b.classList.add('on'); }   // v7: prob é toggle · v26: 2nd aceso quando ativo
       grid.appendChild(b);
     }
     panel.appendChild(grid);
@@ -3975,37 +4050,21 @@ const UI = (() => {
       vstrip.appendChild(b);
     }
     const pad = $('keypad'); pad.textContent = '';
-    pad.className = 'keypad-wrap mode-quantum paged';
-    // -- bloco de comando FIXO + viewport com strip de 2 páginas + page-dots --
+    pad.className = 'keypad-wrap mode-quantum paged' + (secondLayer ? ' kp-2nd' : '');   // v26: kp-2nd ativa os overrides de layout da 2ª camada
+    // -- v26: bloco de comando FIXO + PÁGINA ÚNICA (sem carrossel/dots; a tecla 2nd alterna a 2ª camada in-place) --
     const cmd = document.createElement('div'); cmd.className = 'kp-command';
     cmd.appendChild(buildPanel(lay.command));
     pad.appendChild(cmd);
-    const viewport = document.createElement('div'); viewport.className = 'kp-viewport'; viewport.id = 'viewport';
-    const track = document.createElement('div'); track.className = 'kp-strip'; track.id = 'pageStrip';
-    lay.pages.forEach((pg, idx) => {
-      const pageEl = document.createElement('div'); pageEl.className = 'kp-page'; pageEl.dataset.page = idx;
-      if (pg.R){                                                   // página com 2 colunas (pág.1: paleta|numérico · pág.2: input+ops | variants+2q+presets)
-        const colL = document.createElement('div'); colL.className = 'kp-col kp-L';
-        for (const grp of pg.L) colL.appendChild(buildPanel(grp));
-        const colR = document.createElement('div'); colR.className = 'kp-col kp-R';
-        const rGroups = Array.isArray(pg.R) ? pg.R : [pg.R];       // v22-4: R pode ser 1 grupo (pág.1) ou vários (pág.2)
-        for (const grp of rGroups) colR.appendChild(buildPanel(grp));
-        pageEl.appendChild(colL); pageEl.appendChild(colR);
-      } else {                                                     // página full-width (painéis diretos) — não usada atualmente
-        for (const grp of pg.L) pageEl.appendChild(buildPanel(grp));
-      }
-      track.appendChild(pageEl);
-    });
-    viewport.appendChild(track); pad.appendChild(viewport);
-    const dots = document.createElement('div'); dots.className = 'kp-dots';
-    lay.pages.forEach((_, idx) => {
-      const d = document.createElement('button'); d.className = 'kp-dot';
-      d.dataset.action = 'page:' + idx; d.dataset.page = idx;
-      d.setAttribute('aria-label', 'keypad page ' + (idx + 1));
-      dots.appendChild(d);
-    });
-    pad.appendChild(dots);
-    applyPageView();   // transform + dot ativo + inert da página oculta (INV-3/INV-4)
+    const pg = lay.pages[0];
+    const viewport = document.createElement('div'); viewport.className = 'kp-viewport';   // v26: BLOCO de largura cheia (SEM id #viewport → teclas roteiam por click normal, sem swipe); o grid .kp-page preenche o bloco
+    const pageEl = document.createElement('div'); pageEl.className = 'kp-page'; pageEl.dataset.page = 0;
+    const colL = document.createElement('div'); colL.className = 'kp-col kp-L';
+    for (const grp of pg.L) colL.appendChild(buildPanel(grp));
+    const colR = document.createElement('div'); colR.className = 'kp-col kp-R';
+    const rGroups = Array.isArray(pg.R) ? pg.R : [pg.R];
+    for (const grp of rGroups) colR.appendChild(buildPanel(grp));
+    pageEl.appendChild(colL); pageEl.appendChild(colR);
+    viewport.appendChild(pageEl); pad.appendChild(viewport);
   }
   // v15: abre/fecha a GAVETA de ângulo/λ (#angleSheet, IRMÃ de #keypad em #keypadArea). Existe no DOM só enquanto
   // aberta (+ durante o slide-out) → fechada = removida ⇒ sem colisão de seletor com o comando (⌫/ESC). Teclado atrás
@@ -4068,7 +4127,60 @@ const UI = (() => {
   }
 
   // --- roteamento central de ações (teclado, bloch) ---
+  // v26: INDICADOR DE PROCESSAMENTO (canto inf. dir.). O cálculo é SÍNCRONO (BigInt em ℤ[ζ₁₆], sem Worker):
+  // ele trava a thread, então (a) "mostrar→calcular→esconder" direto NÃO pinta o spinner (sem repaint entre
+  // o show e o cálculo bloqueante) e (b) um debounce por TIMER não funciona (o timer só dispara DEPOIS que o
+  // cálculo síncrono já terminou). Solução: GATING POR CUSTO PREVISTO — estimo o custo ANTES de aplicar; ops
+  // baratas rodam síncronas e o indicador NUNCA aparece (zero pisca-pisca); só as pesadas cedem 1 quadro p/
+  // pintar o indicador e então calculam. Limiar conservador (na dúvida, NÃO mostra). Calibrar no device.
+  const Busy = (() => {
+    const el = () => $('busyDot');
+    return { show(){ const b = el(); if (b) b.hidden = false; }, hide(){ const b = el(); if (b) b.hidden = true; } };
+  })();
+  const BUSY_THRESHOLD = 5000;                         // unidades ~ "atualizações de amplitude" (≈ ops de BigInt)
+  const FLAT_GATES = new Set(['X','Y','Z','S','T','P','Rz','Sdg','Tdg','SWAP','iSWAP']);   // permutação/diagonal: NÃO expandem o nº de termos
+  function estimateCost(action){
+    let cur; try { cur = History.current(); } catch(_){ return 0; }
+    if (!cur) return 0;
+    const n = cur.n || 1;
+    const dim = 1 << n;                                                       // 2^n = dimensão cheia
+    const terms = cur.amps ? cur.amps.size : (cur.terms ? cur.terms.length : 1);   // nº de termos não-nulos (estado esparso)
+    const i = action.indexOf(':');
+    const kind = i < 0 ? action : action.slice(0, i);
+    const arg  = i < 0 ? '' : action.slice(i + 1);
+    let po = {}; try { po = Parser.peekOperands() || {}; } catch(_){}
+    const reps = po.power ? (1 << po.power) : 1;                              // v24: 2^j repetições multiplicam o custo
+    if (kind === 'gate'){
+      const isAll = po.allFlag || po.selection === 'ALL';
+      const expanding = !FLAT_GATES.has(arg);                                 // H/Rx/Ry/U/√X/√Y criam superposição → enchem o vetor
+      if (isAll) return reps * n * (expanding ? dim : terms);                 // aplica a cada qubit; expansão → ~n·2^n
+      return reps * (expanding ? Math.min(dim, terms * 2) : terms);          // alvo específico → ~O(termos)
+    }
+    if (kind === 'preset'){
+      const w = (arg === 'QFT' || arg === 'QFTinv') ? n * n : 2 * n;         // QFT ~ n² primitivas; demais ~ n
+      return reps * w * dim;
+    }
+    if (kind === 'op'){
+      if (['density','partial','schmidt','vonneumann','concurrence'].includes(arg)) return dim * dim;   // constroem matrizes ~ 2^n × 2^n
+      if (arg === 'measure' || arg === 'corr') return terms * n;
+      return terms;                                                          // prob/norm/⟨φ|ψ⟩/⊗/factor → leves
+    }
+    return 0;                                                                // SET (O(1)), navegação, seleção, tema, fmt — sempre leves
+  }
+  let busyPending = false;
   function routeAction(action){
+    if (busyPending) return;                                                 // ignora novos toques enquanto a op pesada está em voo (evita dupla aplicação)
+    if (estimateCost(action) < BUSY_THRESHOLD){ routeActionImpl(action); return; }   // caminho rápido: idêntico ao de antes
+    busyPending = true; Busy.show();
+    // double-rAF garante 1 PAINT do indicador antes do cálculo bloqueante; o routeActionImpl (cálculo + refresh)
+    // roda no tick adiado, então o estado renderizado já é o novo. finally garante esconder mesmo em erro.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      try { routeActionImpl(action); }
+      catch(e){ try { showError(e.message); } catch(_){} }
+      finally { Busy.hide(); busyPending = false; }
+    }));
+  }
+  function routeActionImpl(action){
     if (lambdaEntry){                                  // v4: durante entrada de λ: calc/=/⌫ ; CLR/mode = deixar simbólico (nó)
       if (action === 'eval'){ doLambda(false); }
       else if (action.startsWith('quick:')){ calcBuf = action.slice(6); calcResult = ''; refresh(); }   // v22: atalho de ângulo SUBSTITUI o buffer (não insere no meio → evita '2π/8')
@@ -4098,6 +4210,9 @@ const UI = (() => {
     if (action.startsWith('dispPane:')){ switchDisplayPane(+action.slice(9)); return; }   // v16/v19: setas laterais → estado/detalhe (v19 F3a substitui dots)
     if (action === 'dispExpand:toggle'){ toggleExpand(); return; }                          // v19 (F3b): seta inferior → expandir/restaurar
     if (action === 'theme'){ toggleTheme(); return; }                        // v4-ui: alterna claro/escuro
+    if (action === 'about'){ const o = $('aboutOverlay'); if (o) o.hidden = false; return; }            // v26: abre o About
+    if (action === 'aboutClose'){ const o = $('aboutOverlay'); if (o) o.hidden = true; return; }         // v26: fecha (backdrop / × )
+    if (action === 'aboutNop'){ return; }                                    // v26: clique DENTRO do card não fecha (a delegação por closest pegaria o backdrop)
     const i = action.indexOf(':'); const kind = i < 0 ? action : action.slice(0, i); const arg = i < 0 ? '' : action.slice(i+1);
     const symMode = History.current().sym;
     try {
@@ -4145,6 +4260,8 @@ const UI = (() => {
     else if (MATHKEY[k] !== undefined) { const r = Parser.feedMath(MATHKEY[k]); if (r && r.error) showError(r.error); }
     else if (k === 'Q') { const r = Parser.q(); if (r.error) showError(r.error); }
     else if (k === 'CTRL') { const r = Parser.ctrl(); if (r.error) showError(r.error); }
+    else if (k === 'POW') { const r = Parser.setPow(); if (r.error) showError(r.error); }
+    else if (k === '2nd') { secondLayer = !secondLayer; renderKeypad(); return; }   // v26: toggle (trava) da 2ª camada — re-render escolhe keys2; UI puro (não toca o buffer)
     else if (k === 'ALL') { const r = Parser.all(); if (r && r.error) showError(r.error); }
     else if (k === 'SET') { const r = Parser.set(); if (r.error){ showError(r.error); } else { try { execute(r.command); } catch(e){ showError(e.message); } } }
     else if (k === 'CLR') { Parser.clear(); clearError(); $('auxOutput').textContent = ''; switchDisplayPane(0); }   // v21-31: ESC também DISPENSA a mensagem do detalhe (ex.: "Result φ⊗ψ…") e volta ao painel do estado. (prob, sendo toggle, re-renderiza no refresh; só mensagens informativas são fechadas)
@@ -4159,6 +4276,9 @@ const UI = (() => {
   // escala o #app inteiro via zoom (preserva as proporções fixas; só reduz, nunca aumenta → quando cabe, fica 1).
   // O viewport do carrossel já tem altura = página mais alta, então o zoom é estável entre páginas.
   function fitViewport(){
+    // v26: no PWA (standalone) o layout é por CSS PURO (100dvh + display flex:1) — o sizing/zoom JS daqui
+    // encolhia a largura e deixava sobra no rodapé. Mantido só p/ navegador/mobile-web (sem 100dvh confiável).
+    if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches){ const a=$('app'); if (a) a.style.zoom='1'; return; }
     if (_expanded) return;                                  // v19 (F3b): desplay expandido NÃO é resetado pelo fitViewport (ele rodava no resize triggered pela animação e revertia o disp.style.height)
     const app = $('app'); if (!app) return;
     app.style.zoom = '1';                                   // default desktop/navegador largo
@@ -4206,12 +4326,17 @@ const UI = (() => {
     // são ignoradas por muitos motores Android). Feature-detect (iOS não tem Vibration API → no-op). Passive:
     // só lê/dispara, não interfere nos handlers de swipe/drag. Toque numa tecla = elemento com data-action.
     document.addEventListener('pointerdown', (e) => {
-      clickDownX = e.clientX; clickDownY = e.clientY;   // v21-33: âncora p/ o guard de arrasto no click (todo pointerdown, mesmo fora de tecla)
-      if (!navigator.vibrate) return;
+      // v26: háptico é a PRIMEIRA ação do toque — dispara o motor ANTES de qualquer leitura/trabalho de JS
+      // neste evento, p/ que o tick seja sentido no instante do contato (não atrás do re-render do routeAction,
+      // que só roda no click/pointerup). Toque numa tecla = elemento com data-action. iOS sem Vibration API → no-op.
       const el = e.target.closest('[data-action]');
-      if (el && !el.disabled) navigator.vibrate(70);
+      if (navigator.vibrate && el && !el.disabled) navigator.vibrate(70);
+      clickDownX = e.clientX; clickDownY = e.clientY;   // v21-33: âncora p/ o guard de arrasto no click (todo pointerdown, mesmo fora de tecla)
     }, { passive: true });
     // v19 (F3a): substitui initDisplayTap — as setas laterais usam delegação global de data-action (dispPane:0/1).
+    document.addEventListener('keydown', (e) => {   // v26: ESC fecha o About (teclado físico no navegador/desktop)
+      if (e.key === 'Escape'){ const o = $('aboutOverlay'); if (o && !o.hidden){ o.hidden = true; e.preventDefault(); } }
+    });
     initDisplayOverflowObserver();   // v19 (F3b): observador idempotente p/ a affordance de expandir
     // v14: swipe/drag do carrossel — Pointer Events UNIFICAM toque (PWA) e mouse (desktop). Listeners no
     // #keypad (estável; renderKeypad recria os filhos). INV-1: tap (<AXIS_LOCK) nunca é interceptado;

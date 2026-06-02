@@ -29,11 +29,11 @@ const allQuantumLabels = (lay) => lay.command.keys.map(k=>k[1])
   .concat(lay.strip.map(s=>s[1]));
 
 // ---- contrato do page-model ----
-test('v14-1 quantum: layout(mode,page) = {strip, command, pages[2]} (sem cols)', () => {
+test('v14-1/v26 quantum: layout = {strip, command, pages[1]} — PÁGINA ÚNICA (carrossel eliminado)', () => {
   const lay = Keymap.layout('quantum', 0);
   assert.ok(lay.strip && lay.command && Array.isArray(lay.pages), 'tem strip/command/pages');
-  assert.equal(lay.pages.length, 2, '2 páginas');
-  assert.ok(!lay.cols, 'quantum não usa mais cols');
+  assert.equal(lay.pages.length, 1, 'v26: 1 página (sem carrossel)');
+  assert.ok(!lay.cols, 'quantum não usa cols');
 });
 test('v14-2 calc = pad de ângulo ENXUTO (grade única em cols.R; coluna de funções removida)', () => {
   const calc = Keymap.layout('calc');
@@ -52,48 +52,55 @@ test('v14-3 page é só a página ATIVA do carrossel: a estrutura retornada é a
   assert.equal(JSON.stringify(Keymap.layout('quantum',0)), JSON.stringify(Keymap.layout('quantum',1)));
 });
 
-// ---- bloco de COMANDO fixo: M no slot do '2nd' ----
-test("v14-4 comando fixo tem M (op:saveBra) e NÃO tem a tecla '2nd'/shift", () => {
+// ---- bloco de COMANDO fixo: v26 = M migrou p/ numpad, tecla 2nd entrou ----
+test("v14-4/v26 comando fixo tem a tecla 2nd e NÃO tem M (M foi p/ o numpad)", () => {
   const cmd = Keymap.layout('quantum',0).command.keys.map(k=>k[0]);
-  assert.ok(cmd.includes('op:saveBra'), 'M no comando');
-  assert.ok(!cmd.includes('shift'), "sem tecla 'shift'/'2nd'");
+  assert.ok(cmd.includes('key:2nd'), 'v26: tecla 2nd no comando');
+  assert.ok(!cmd.includes('op:saveBra'), 'v26: M saiu do comando (foi p/ o numpad)');
+  assert.ok(!cmd.includes('shift'), "sem tecla legada 'shift'");
 });
-test('v14-5 numérico (pág1.R) perdeu o M e mantém os dígitos', () => {
+test('v14-5/v26 numérico mantém dígitos; v26: ganhou M e ⌫, perdeu π/1√2/./±', () => {
   const num = Keymap.layout('quantum',0).pages[0].R;
   const acts = num.keys.map(k=>k[0]);
-  assert.ok(acts.includes('key:7') && acts.includes('key:PI') && acts.includes('key:INVSQRT2'));
-  assert.ok(!acts.includes('op:saveBra'), 'M saiu do numérico');
+  assert.ok(acts.includes('key:7') && acts.includes('key:0'), 'dígitos no numpad');
+  assert.ok(acts.includes('op:saveBra') && acts.includes('key:BKSP'), 'v26: M e ⌫ migraram p/ o numpad');
+  assert.ok(!acts.includes('key:PI') && !acts.includes('key:INVSQRT2') && !acts.includes('key:NEG') && !acts.includes('key:.'), 'v26: faxina (π/1√2/±/. removidos)');
 });
 
-// ---- página 2 = cauda longa em 2 COLUNAS (v22-6), SEM dígitos ----
-test('v14-6 página 2 = 2 colunas (L=input+operations · R=variants+2q+presets), ZERO dígitos', () => {
-  const p1 = Keymap.layout('quantum',1).pages[1];
-  assert.ok(Array.isArray(p1.R), 'pág2 agora tem coluna direita (array de grupos)');
-  const acts = pageActs(p1);
-  assert.ok(acts.includes('gate:SWAP') && acts.includes('op:schmidt') && acts.includes('preset:QFT'));
-  assert.ok(acts.includes('input:T') && acts.includes('input:rand') && acts.includes('input:amp'), 'grupo input na pág2');
-  assert.ok(!acts.some(a => /^key:[0-9.]$/.test(a)), 'nenhum dígito na pág2');
+// ---- v26: a cauda longa virou a 2ª camada (keys2) de gates/operations (in-place, via 2nd) ----
+test('v14-6/v26 keys2: gates tem variantes+presets; operations tem ops estendidas; SWAP no primário', () => {
+  const p0 = Keymap.layout('quantum',0).pages[0];
+  const gates = p0.L.find(g => g.label === 'gates');
+  const ops = p0.L.find(g => g.label === 'operations');
+  const g2 = gates.keys2.map(k=>k[0]);
+  assert.ok(g2.includes('gate:Sdg') && g2.includes('gate:SX') && g2.includes('gate:iSWAP') && g2.includes('gate:SWAP') && g2.includes('preset:QFT'), 'gates keys2 = variantes + SWAP/iSWAP + presets');
+  assert.ok(gates.keys.map(k=>k[0]).includes('preset:Bell'), 'v26: Bell promovido ao primário do bloco gates');
+  const o2 = ops.keys2.map(k=>k[0]), o1 = ops.keys.map(k=>k[0]);
+  assert.ok(o2.includes('op:schmidt') && o2.includes('op:concurrence') && o2.includes('op:density'), 'operations keys2 = densidade/emaranhamento');
+  assert.ok(o1.includes('op:norm') && o1.includes('op:corr') && o1.includes('evidence'), 'v26: ‖ψ‖/⟨ZZ⟩/factor promovidos ao primário');
+  const p0acts = pageActs(p0);
+  assert.ok(p0acts.includes('input:T') && p0acts.includes('input:rand') && p0acts.includes('input:amp'), 'v26: input no bloco kets');
+  assert.ok(!p0.L.flatMap(g=>(g.keys2||[])).some(k=>/^key:[0-9]$/.test(k[0])), 'sem dígitos na 2ª camada');
 });
-test('v14-7 página 1 = frequentes (gates/kets/controlled/operations + numérico)', () => {
+test('v14-7 página 1 = frequentes (gates 1q/kets/operations + numérico)', () => {
   const p0 = pageActs(Keymap.layout('quantum',0).pages[0]);
-  assert.ok(p0.includes('gate:H') && p0.includes('ket:0') && p0.includes('gate:CNOT'));
+  assert.ok(p0.includes('gate:H') && p0.includes('ket:0') && p0.includes('gate:X'));   // v25: CNOT removido; controladas via CTRL X
   assert.ok(p0.includes('op:prob') && p0.includes('op:inner') && p0.includes('op:tensor'));
   assert.ok(p0.includes('key:7'), 'numérico na pág1');
 });
 
-// ---- remoção do '2nd' / shift em TODO o teclado quântico ----
-test("v14-8 nenhuma ação 'shift' e nenhum label '2nd' no teclado quântico", () => {
+// ---- v26: a tecla 2nd VOLTA (toggle); a ação legada 'shift' segue inexistente ----
+test("v14-8/v26 sem ação legada 'shift'; a tecla 2nd existe (key:2nd)", () => {
   const lay = Keymap.layout('quantum',0);
-  assert.ok(!allQuantumActs(lay).includes('shift'), "sem ação 'shift'");
-  assert.ok(!allQuantumLabels(lay).includes('2nd'), "sem label '2nd'");
+  assert.ok(!allQuantumActs(lay).includes('shift'), "sem ação legada 'shift'");
+  assert.ok(allQuantumActs(lay).includes('key:2nd'), "v26: tecla 2nd (key:2nd) presente");
 });
 
-// ---- M está SÓ no comando fixo (visível nas 2 páginas), não nas páginas ----
-test('v14-9 M (op:saveBra) só no comando fixo, não nas páginas', () => {
+// ---- v26: M está no numpad (pág0.R), não no comando nem na pág2 ----
+test('v14-9/v26 M (op:saveBra) no numpad da pág0, não no comando', () => {
   const lay = Keymap.layout('quantum',0);
-  assert.ok(lay.command.keys.some(k=>k[0]==='op:saveBra'));
-  assert.ok(!pageActs(lay.pages[0]).includes('op:saveBra'));
-  assert.ok(!pageActs(lay.pages[1]).includes('op:saveBra'));
+  assert.ok(!lay.command.keys.some(k=>k[0]==='op:saveBra'), 'M saiu do comando');
+  assert.ok(pageActs(lay.pages[0]).includes('op:saveBra'), 'v26: M no numpad da pág0 (página única)');
 });
 
 // ---- relabels do strip (desambiguação) ----

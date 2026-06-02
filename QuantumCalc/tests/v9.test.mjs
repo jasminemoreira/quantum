@@ -146,24 +146,25 @@ test('v9-13 edges: QFT 1 qubit = só H; difusor 1 qubit (Z sem controle)', () =>
 });
 
 // ---------- Parser.preset (gramática) ----------
-test('v9-14 Parser.preset: ALL → {all:true}', () => {
+test('v9-14 Parser.preset: ALL → {all:true} (v24: +controls/power)', () => {
   Parser.clear(); Parser.all();
   const r = Parser.preset('QFT');
-  assert.deepEqual(r.command, { kind:'preset', name:'QFT', all:true });
+  assert.deepEqual(r.command, { kind:'preset', name:'QFT', all:true, controls:[], power:null });
 });
 
 test('v9-15 Parser.preset: dois Q → {qsel:[i,j]} (M11 resolve range [min..max])', () => {
   Parser.clear(); Parser.digit('0'); Parser.q(); Parser.digit('3'); Parser.q();
   const r = Parser.preset('QFT');
-  assert.deepEqual(r.command, { kind:'preset', name:'QFT', qsel:[0,3] });
+  assert.deepEqual(r.command, { kind:'preset', name:'QFT', qsel:[0,3], controls:[], power:null });
 });
 
-test('v9-16 Parser.preset: default ALL → {all:true} (v21-25); CTRL → erro', () => {
+test('v9-16 Parser.preset: default ALL → {all:true} (v21-25); CTRL sem alvos → erro (v24)', () => {
   Parser.clear();   // estado default: selection='ALL', allFlag=false
   // v21-25: o indicador ALL default JÁ vale como "todos" (como as portas) — não exige re-apertar ALL
-  assert.deepEqual(Parser.preset('GHZ').command, { kind:'preset', name:'GHZ', all:true });
+  assert.deepEqual(Parser.preset('GHZ').command, { kind:'preset', name:'GHZ', all:true, controls:[], power:null });
+  // v24: CTRL agora É aceito em preset (controle generalizado), mas exige alvos explícitos — sem Q → erro "select the qubits"
   Parser.clear(); Parser.digit('0'); Parser.ctrl();
-  assert.ok(Parser.preset('Bell').error, 'CTRL não se aplica a preset');
+  assert.ok(Parser.preset('Bell').error, 'CTRL sem alvos → preset exige Q explícito');
   Parser.clear();
 });
 
