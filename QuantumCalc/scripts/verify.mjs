@@ -4,8 +4,10 @@
 //
 // Usage:  node scripts/verify.mjs  [path-to-quantum_calc.html]
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 const HTML = process.argv[2]
-  || 'U:/home/jasmine/Doutorado/quantum/QuantumCalc/quantum_calc.html';
+  || join(dirname(fileURLToPath(import.meta.url)), '..', 'quantum_calc.html');
 
 function loadQC(){
   const html = readFileSync(HTML, 'utf8');
