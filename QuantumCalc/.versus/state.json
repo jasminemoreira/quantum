@@ -3420,6 +3420,13 @@
       "category": "requirement",
       "content": "P7 AVALIAÇÃO v26 (operadora): ATENDE — \"muito perfeita!!!\" (validado ao vivo no PWA em todas as etapas). Ciclo 27/v26 entregue: TECLADO ÚNICO + tecla 2nd (toggle trava; carrossel de 2 páginas eliminado); blocos com 2ª camada (keys2): gates 1q+Bell primário / S†T†√X√Y+SWAP/iSWAP+presets na 2nd; operations 8 primárias + densidade/emaranhamento na 2nd (altura constante); input no bloco kets; numpad faxinado +M/⌫; comando reordenado (CTRL Q SET 2^j 2nd / ALL ESC ↶↷ CLR); 2nd com cor Pale Banana + borda marrom Pantone Coffee; fontes brancas (ocre/verde/numérico); Bloch com contraste por tema; visor escuro no verde #a3d9bd. MANUAL revisado: explicação ANTES das teclas/resultado, Part I reescrita p/ v26, Q-omissão (`0 H`) em cards+referência, circuitos E3/E10 corrigidos. PWA: largura cheia + altura FIXA (CSS 100dvh+flex, sem o zoom JS). Motor INTOCADO. Suíte 100% verde: 397 Node + 151 Playwright. Deployado live qcalc-v26-13. Lições em specs/technical/49-v26-lessons.md. DESCARTADOS (decisão da operadora): seleção-múltipla/broadcast (`0 Q 1 Q 2 Q H`) e `0123 X` — a Q-omissão `0 H 1 H 2 H` já cobre, mais curto e inequívoco; motor preservado.",
       "timestamp": "2026-06-02T13:52:18.760Z"
+    },
+    {
+      "id": "b27e0496-27e5-4631-9ecc-fdf709a10951",
+      "phase": 7,
+      "category": "requirement",
+      "content": "CLUSTER dogfooding v27 (2026-06-04, LIVE qcalc-v26-27, deploy-ssh; motor de exatidão tocado SÓ no espectro — ver abaixo). Mudanças:\n\n(A) MOTOR — espectro/autovalores EXATOS no anel (correção do furo achado por Jasmine: Prop 2(ii) do artigo afirmava λ exatos, mas eigForEntropy calculava em float salvo ρ diagonal). Agora eigForEntropy 2×2 computa tr, det, disc=tr²−4det como elementos REAIS do anel e λ±=(tr±√disc)/2; ringSqrt(disc) propõe candidato pelo float e DECIDE por re-quadrado exato em BigInt (eqAmp, zero tolerância); se √disc sai de ℤ[ζ₁₆] → fallback numérico + flag approx HONESTO. vonNeumann/schmidt2 expõem surds exatos (valsStr/lambdaStr/coeffStr); exactEig deixou de superestimar. UI (S(ρ)/Schmidt) mostra λ exato. recognizeReal exportado. Sweep 400 estados Clifford+T: 100% fecham no anel. Commit 5c90530. Scripts de reprodução do artigo rank_exact.mjs (separabilidade/rank por zero-test BigInt, eq.7) e eig_check.mjs (espectro 1-qubit exato mesmo ρ não-diagonal) CRIADOS (faltavam no repo; o artigo revisado os cita). Commit bfe9391. Ver [[paper-spectrum-float-gap]].\n\n(B) UI — fonte do corpo do display a 80% (--state-fs 25→20px desktop / 16→12.8px mobile; .state-half escala junto via calc). Tentou-se 60% (pequeno demais). Teste V5-2 atualizado (85→68px).\n\n(C) UI — readout do ket abaixo da esfera: compacto (letter-spacing −.3px, line-height 1.25, padding-bottom 4px) + renderBloch MEDE a altura real (offsetHeight) em vez de reservar 22px fixos (não corta a 2ª linha). No PWA o readout só aparece se EXPANDIDO ou se o estado é MIXED (classe .bloch-val.mixed setada em renderBloch) — evita esfera minúscula em estados aproximados puros de ket longo.\n\n(D) UI — ESFERA DE BLOCH ROTACIONÁVEL COM O DEDO (pedido da operadora). Bloch.proj parametrizado por az/el (default = vista dos livros AZ_DEF/EL_DEF, exportados); drag: horizontal→azimute (livre), vertical→elevação (clamp ±1.45 rad ≈ ±83°, simétrico — EL_MIN negativo libera ver por baixo; antes 0.05 travava o swipe-pra-cima em ~10°). touch-action:none + setPointerCapture + stopPropagation no #blochCanvas (drag gira, não pagina). Câmera (_blochAZ/_blochEL) PERSISTE entre estados E entre qubits (sem pulo ao ciclar). DOUBLE-TAP reseta a vista; TAP simples segue ciclando qubit INSTANTÂNEO (sem latência), e o double-tap desfaz o ciclo perdido do 1º tap (net-zero qubit). redrawBloch() re-desenha leve (params cacheados em _lastBloch, throttle rAF) sem re-medir DOM. View-only (motor de exatidão intocado por D). Teste novo v27 (drag rotaciona via toDataURL; double-tap reseta). Suíte: 397 Node + 135 ui.spec verdes. Manual a atualizar (esta tarefa).",
+      "timestamp": "2026-06-04T17:03:41.076Z"
     }
   ],
   "exitCriteria": [
@@ -3697,13 +3704,13 @@
     }
   ],
   "loopCounter": {
-    "pattern": "cd /home/jasmine/doutorado/quantum/quantumcalc && ",
-    "count": 1,
-    "firstSeen": "2026-06-02T14:18:00.877Z",
-    "lastSeen": "2026-06-02T14:18:00.877Z"
+    "pattern": "cd /home/jasmine/doutorado/quantum/quantumcalc/tes",
+    "count": 2,
+    "firstSeen": "2026-06-03T11:13:45.349Z",
+    "lastSeen": "2026-06-04T17:05:03.944Z"
   },
   "createdAt": "2026-05-21T15:58:53.706Z",
-  "updatedAt": "2026-06-02T14:18:00.877Z",
+  "updatedAt": "2026-06-04T17:05:03.953Z",
   "history": [
     {
       "from": 0,
@@ -6201,5 +6208,5 @@
       ]
     }
   ],
-  "lastPhaseStateCheck": "2026-06-01T20:01:53.907Z"
+  "lastPhaseStateCheck": "2026-06-04T17:03:06.974Z"
 }

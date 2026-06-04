@@ -163,13 +163,14 @@
   /* legenda mínima: rótulo do qubit no canto sup. direito (ao lado da esfera) + valor abaixo */
   .bloch-wrap{position:relative;display:flex}
   #blochLabel{position:absolute;top:2px;right:6px;font-family:var(--mono);font-size:13px;color:var(--lcd-accent)}
-  .bloch-val{font-family:var(--mono);font-size:12px;color:var(--lcd-text2);text-align:center;max-width:232px;word-break:break-word;line-height:1.4}
-  #blochCanvas{background:transparent;display:block;transition:width .28s ease,height .28s ease}   /* v21-2: zoom suave da esfera ao expandir/retrair o display (1º desenho suprimido via JS) */
+  .bloch-val{font-family:var(--mono);font-size:12px;letter-spacing:-.3px;color:var(--lcd-text2);text-align:center;max-width:232px;word-break:break-word;line-height:1.25;padding-bottom:4px}   /* v27: compacto (letter-spacing<0, line-height 1.4→1.25) + padding-bottom p/ a tinta da última linha (⟩,√,/4}) não cortar; altura real medida no renderBloch */
+  #blochCanvas{background:transparent;display:block;transition:width .28s ease,height .28s ease;touch-action:none;cursor:grab}   /* v21-2: zoom suave ao expandir/retrair (1º desenho suprimido via JS). v27: touch-action:none → o drag gira a esfera (não rola/pagina). */
+  #blochCanvas.grabbing{cursor:grabbing}
   @media (prefers-reduced-motion: reduce){ #blochCanvas{transition:none} }
   /* v20 (M4) — anel ◎ pulsante no CENTRO da esfera, indicando "tap para ciclar qubit". Pointer-events none: o canvas recebe o tap. */
   #blochTapRing{position:absolute;left:50%;top:50%;width:12px;height:12px;margin:-6px 0 0 -6px;border:1px solid var(--lcd-accent);border-radius:50%;pointer-events:none;opacity:.25;animation:blochRingPulse 2s ease-in-out infinite}
   @keyframes blochRingPulse{0%,100%{opacity:.25;transform:scale(1)}50%{opacity:.45;transform:scale(1.15)}}
-  #stateDisplay{font-family:var(--mono);--state-fs:25px;font-size:var(--state-fs);line-height:3.4;color:var(--lcd-text);
+  #stateDisplay{font-family:var(--mono);--state-fs:20px;font-size:var(--state-fs);line-height:3.4;color:var(--lcd-text);  /* v27: corpo do display a 80% (25→20px); .state-half escala junto via calc */
                 word-break:break-word;text-shadow:0 0 6px var(--lcd-glow);touch-action:manipulation;transition:font-size .18s ease;
                 user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}   /* line-height alto (unitless, escala c/ a fonte). v21-18: --state-fs + touch-action:manipulation. v21-19: user-select/touch-callout none → tap não seleciona texto nem abre menu do sistema (discar/traduzir) */
   #stateDisplay.state-half{font-size:calc(var(--state-fs) * .7)}   /* v21-18: tap no estado alterna fonte (v21-30: 50%→70%, mais legível) — cabe estados longos sem rolar */
@@ -314,7 +315,7 @@
   @media(max-width:600px){
     /* display ~metade + fontes menores (line-height generoso p/ as frações \dfrac do KaTeX) — ambos os modos */
     .display{height:172px;padding:7px 12px 8px;overflow:hidden}     /* mobile: piso 172; fitViewport ajusta dinâmico */
-    #stateDisplay{--state-fs:16px;line-height:2.7}     /* v19-L19: 2.2→2.7 — frações \dfrac do KaTeX se tocavam no PWA normal; v21-18: define a var (font-size:var herdado da base) p/ o toggle .state-half valer no mobile */
+    #stateDisplay{--state-fs:12.8px;line-height:2.7}     /* v19-L19: 2.2→2.7 — frações \dfrac do KaTeX se tocavam no PWA normal; v21-18: define a var (font-size:var herdado da base) p/ o toggle .state-half valer no mobile; v27: mobile a 80% (16→12.8px) */
     /* v12: esfera de Bloch no mobile/PWA — renderBloch DPR-aware (nítida) menor; |0⟩/|1⟩ FORA da esfera (extremos do eixo Z, via zOutside) */
     .bloch-val{display:none}                                 /* remove só o VALOR abaixo da esfera (ganha espaço) */
     #blochLabel{top:auto;bottom:2px;right:6px}               /* identificação Qn mais p/ BAIXO (canto inf. direito) — libera o topo p/ o |0⟩ externo */
@@ -357,7 +358,8 @@
     #stateDisplay{line-height:3.27}                              /* v19-L20: PWA +9px entre linhas (2.7→3.27 ≈ +9px @16px) p/ \dfrac respirar */
     .appbar{display:none}                                        /* v14: appbar = só o título → oculto no PWA */
     #app > details{display:none}                                /* v12: oculta o colapsável 'Step history' no PWA (ganha espaço) */
-    .bloch-val{display:block}                                    /* v26: REEXIBE o readout abaixo da esfera no PWA (o mobile o esconde p/ poupar espaço; no standalone há altura via dvh+flex). renderBloch desconta os ~22px automaticamente (showVal lê o display computado). */
+    .bloch-val{display:none}                                     /* v27: PWA — oculto por PADRÃO. Estado aproximado PURO gera ket de 2 linhas que encolheria a esfera; só vale a pena mostrar quando há espaço (expandido) ou quando o readout é curto (mixed). */
+    body.display-expanded .bloch-val, .bloch-val.mixed{display:block}   /* mostra o readout SÓ se o display está EXPANDIDO ou se o estado é MIXED (readout curto "mixed · |r|=…", setado por renderBloch). showVal lê este display computado. */
   }
   /* v14: PWA instalada em RETRATO — largura cheia + moldura arredondada (margem fina 6px), MAS altura = conteúdo
      (sem min-height: evita o vão vazio depois dos dots e o estouro além da tela). Paisagem/navegador INALTERADOS. */
@@ -2787,17 +2789,19 @@ const Calc = (() => {
    Projeção pseudo-3D (azimute/elevação fixos). Usa coords de Ops.blochVector.
    ===================================================================== */
 const Bloch = (() => {
-  const AZ = 0.6 + Math.PI + 20*Math.PI/180, EL = 0.42;   // v16: azimute +180° (convenção dos livros) +20° anti-horário (ajuste pedido)
-  function proj(x, y, z, cx, cy, R){
+  const AZ_DEF = 0.6 + Math.PI + 20*Math.PI/180, EL_DEF = 0.42;   // v16: vista padrão — azimute +180° (convenção dos livros) +20° anti-horário. v27: agora é só o DEFAULT (a vista é rotacionável por drag; opts.az/opts.el sobrescrevem).
+  function proj(x, y, z, cx, cy, R, az, el){
+    az = (az == null ? AZ_DEF : az); el = (el == null ? EL_DEF : el);
     y = -y;                                                // v16: rebate o eixo y (eixo e vetor seguem juntos) → convenção dos livros didáticos
-    const X = cx + R * (x*Math.cos(AZ) + y*Math.sin(AZ));
-    const Y = cy - R * (z*Math.cos(EL) - (-x*Math.sin(AZ) + y*Math.cos(AZ))*Math.sin(EL));
+    const X = cx + R * (x*Math.cos(az) + y*Math.sin(az));
+    const Y = cy - R * (z*Math.cos(el) - (-x*Math.sin(az) + y*Math.cos(az))*Math.sin(el));
     return [X, Y];
   }
   // C = paleta (segue o tema): { sphere, axis, label, vec, vecMixed, text }. Default = verde do LCD escuro.
   function render(canvas, v, C, opts){
     C = C || { sphere:'#2c6e57', axis:'#1f4a3a', label:'#6f9c87', vec:'#74dd97', vecMixed:'#3f8f6a', text:'#bfe9cf' };
     opts = opts || {};
+    const az = (opts.az != null ? opts.az : AZ_DEF), el = (opts.el != null ? opts.el : EL_DEF);   // v27: vista rotacionável (drag → câmera)
     const g = canvas.getContext('2d');
     const dpr = opts.dpr || 1, W = opts.size || canvas.width, H = opts.size || canvas.height;   // v12: W/H LÓGICOS; bitmap = W×dpr (nítido em high-DPI). Desktop dpr=1 → idêntico.
     if (g.setTransform) g.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -2808,18 +2812,18 @@ const Bloch = (() => {
     // transparência (recua — ela não é o estado do qubit; o estado é a esfera interna de raio |r|).
     g.lineWidth = 1.2; g.strokeStyle = C.sphere; g.globalAlpha = mixed ? .5 : .7;
     g.beginPath(); g.arc(cx, cy, R, 0, 2*Math.PI); g.stroke();                  // esfera
-    g.beginPath(); g.ellipse(cx, cy, R, R*Math.sin(EL), 0, 0, 2*Math.PI); g.stroke(); // equador
+    g.beginPath(); g.ellipse(cx, cy, R, R*Math.abs(Math.sin(el)), 0, 0, 2*Math.PI); g.stroke(); // equador (foreshortening = |sin(el)|)
     g.globalAlpha = 1;
     // eixos + rótulos
     // v12: no mobile/PWA, |0⟩/|1⟩ saem da esfera p/ os extremos do eixo Z. v19-L29 (operadora): gap proporcional ao tamanho da esfera (~5%) — funciona em qualquer plataforma, sem hack iOS.
     const zext = opts.zOutside ? Math.max(4, Math.round((opts.size || 232) * 0.05)) : 0;
     const axis = (x,y,z,lab,ext,labDy) => {   // labDy = nudge vertical do rótulo x/y (px)
-      const [ax,ay] = proj(x,y,z,cx,cy,R);
+      const [ax,ay] = proj(x,y,z,cx,cy,R,az,el);
       g.strokeStyle = C.axis; g.beginPath(); g.moveTo(cx,cy); g.lineTo(ax,ay); g.stroke();   // linha do eixo até a borda
       g.fillStyle = C.label;
       if (ext){                                            // rótulo FORA da esfera, centrado no extremo do eixo, um pouco menor
         g.font = '10px monospace';
-        const [lx,ly] = proj(x,y,z,cx,cy,R+ext);
+        const [lx,ly] = proj(x,y,z,cx,cy,R+ext,az,el);
         g.textAlign = 'center'; g.textBaseline = (z > 0 ? 'bottom' : 'top');
         g.fillText(lab, lx, ly); g.textAlign = 'start'; g.textBaseline = 'alphabetic';
       } else {                                            // v16: rótulo x/y no lado EXTERNO da ponta (ponta à esquerda → label à esquerda; simétrico)
@@ -2838,8 +2842,8 @@ const Bloch = (() => {
     if (opts.probBar !== false){
       const P0 = (1 + v.z) / 2;
       const zTop = P0, zBot = P0 - 1;
-      const [tx, ty] = proj(0, 0, zTop, cx, cy, R);
-      const [bx, by] = proj(0, 0, zBot, cx, cy, R);
+      const [tx, ty] = proj(0, 0, zTop, cx, cy, R, az, el);
+      const [bx, by] = proj(0, 0, zBot, cx, cy, R, az, el);
       const probBarColor = v.r < 0.999 ? C.vecMixed : C.vec;
       const probBarWidth = Math.max(6, Math.round(R * 0.08));                    // proporcional ao raio — v20 P6 operadora: 2× a largura original (R*0.04 → R*0.08, piso 3 → 6) (lição P2 Mechanical)
       const prevAlpha = g.globalAlpha, prevCap = g.lineCap;
@@ -2859,17 +2863,17 @@ const Bloch = (() => {
       g.strokeStyle = C.vecMixed; g.fillStyle = C.vecMixed; g.lineWidth = 1.3;
       g.globalAlpha = 0.10; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume tênue
       g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.stroke();                                // contorno (= |r|)
-      g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.sin(EL), 0, 0, 2*Math.PI); g.stroke();      // equador → leitura de esfera
+      g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.abs(Math.sin(el)), 0, 0, 2*Math.PI); g.stroke();      // equador → leitura de esfera
       g.globalAlpha = prevA;
     }
     // vetor de estado: tom forte (puro) / médio (reduzido/misto) — sem mudar de matiz
-    const [vx,vy] = proj(v.x, v.y, v.z, cx, cy, R);
+    const [vx,vy] = proj(v.x, v.y, v.z, cx, cy, R, az, el);
     g.strokeStyle = mixed ? C.vecMixed : C.vec; g.lineWidth = 2.5;
     g.beginPath(); g.moveTo(cx,cy); g.lineTo(vx,vy); g.stroke();
     g.fillStyle = mixed ? C.vecMixed : C.vec; g.beginPath(); g.arc(vx, vy, 4, 0, 2*Math.PI); g.fill();
     // (o readout |r|/estado migrou p/ abaixo da esfera — Render.blochReadout)
   }
-  return { render };
+  return { render, AZ_DEF, EL_DEF };
 })();
 
 /* =====================================================================
@@ -3050,6 +3054,10 @@ const UI = (() => {
   let displayPane = 0;   // 0=principal, 1=detalhe
   // v19 (F3b): estado UI do modo expandido — _expanded = toggle manual (operadora); _overflowing = derivado do ResizeObserver.
   let _expanded = false, _overflowing = false;
+  // v27: CÂMERA da esfera de Bloch — vista rotacionável por drag. PERSISTE entre estados E entre qubits (sem
+  // pulo ao trocar de qubit). Double-tap reseta p/ a vista padrão dos livros. _lastBloch cacheia os params do
+  // último render p/ o drag re-desenhar (redrawBloch) sem re-medir o DOM.
+  let _blochAZ = Bloch.AZ_DEF, _blochEL = Bloch.EL_DEF, _lastBloch = null;
   let _preExpandDispH = '';   // v19-L11 (operadora): salva disp.style.height pré-expand (no PWA o fitViewport setou dinâmico, ex.: '400px'); ao colapsar, restaura — senão volta ao CSS estático 172px (menor que o original)
   // v19-L18 (operadora): PRÉ-CALCULAR no load (e re-calcular no resize) p/ evitar precisão diferente
   // em cada toggle — alturas naturais e freed do keypad em sub-pixel via getBoundingClientRect.
@@ -3961,10 +3969,15 @@ const UI = (() => {
     const body = document.querySelector('.disp-body');
     const bodyH = body ? body.clientHeight : (mobile ? 172 : 340);
     const blochVal = document.querySelector('#blochInline .bloch-val');
+    // v27: marca .mixed (|r|<1) ANTES de ler o display computado — no PWA o CSS mostra o readout só se EXPANDIDO
+    // ou MIXED (senão estado aproximado puro = ket de 2 linhas encolheria a esfera). E escreve o readout ANTES
+    // de dimensionar o canvas p/ MEDIR sua altura real (offsetHeight); a reserva fixa de 22px cortava a 2ª linha.
+    const mixed = !(v.r >= 0.999);
+    if (blochVal){ blochVal.classList.toggle('mixed', mixed); blochVal.textContent = Render.blochReadout(v, phaseFmt); }
     const showVal = blochVal && getComputedStyle(blochVal).display !== 'none';
     // v20-6 (operadora P6): Q label é absolute-positioned, NÃO toma flow → não precisa subtrair. .bloch-val toma flow só no desktop.
     // floor 110→90 (evita shrink quando bodyH<sizeMax); cap mobile 220 mantido.
-    const labelChrome = (showVal ? 22 : 0);
+    const labelChrome = (showVal ? (blochVal.offsetHeight + 3 + 8) : 0);   // altura real (inclui padding-bottom) + gap(3) do #blochInline + respiro(8) p/ não cortar a 2ª linha
     const sizeMax = bodyH - labelChrome - 4;                            // 4px de respiro
     const css = Math.max(90, Math.min(sizeMax, mobile ? 220 : 280));
     const cv = $('blochCanvas'), dpr = Math.min(window.devicePixelRatio || 1, 3), px = Math.round(css * dpr);
@@ -3974,35 +3987,88 @@ const UI = (() => {
     if (!_blochSized){ cv.style.transition = 'none'; cv.style.width = css + 'px'; cv.style.height = css + 'px'; void cv.offsetWidth; cv.style.transition = ''; _blochSized = true; }
     else { cv.style.width = css + 'px'; cv.style.height = css + 'px'; }
     if (cv.width !== px){ cv.width = px; cv.height = px; }
-    Bloch.render(cv, v, pal, { dpr, size: css, zOutside: true });   // v12+v19-L28: labels |0⟩/|1⟩ FORA da esfera em TODO modo (zext varia por plataforma dentro do render)
-    $('blochValue').textContent = Render.blochReadout(v, phaseFmt);   // estado de 1 qubit no fmt (oculto no mobile via CSS .bloch-val)
+    Bloch.render(cv, v, pal, { dpr, size: css, zOutside: true, az:_blochAZ, el:_blochEL });   // v12+v19-L28: labels |0⟩/|1⟩ FORA da esfera. v27: az/el = câmera rotacionável.
+    _lastBloch = { v, pal, css, dpr };   // v27: cacheia p/ o drag re-desenhar (redrawBloch) sem re-medir o DOM
+    // (readout já escrito acima, antes do dimensionamento, p/ medir sua altura real)
     // v20 (M4): ring affordance visível ⇔ ≥2 qubits cicláveis. Caso contrário tap é no-op → ring esconde p/ não mentir.
     const ring = $('blochTapRing');
     if (ring){ ring.hidden = (_blochSeparableQubits(s).length < 2); }
   }
-  // v20 (M4) — instala UMA vez o listener de tap no canvas da Bloch: tap próximo do CENTRO (raio = max(R/2, 44px) HIG)
-  // cicla LOCAL entre qubits separáveis. NÃO chama Parser.set*() — view-only. dx+dy<10 distingue tap de swipe (v16 axis-lock).
+  // v27: re-desenha SÓ a esfera (sem re-medir o DOM) com os ângulos de câmera atuais — usado pelo drag de rotação.
+  function redrawBloch(){
+    if (!_lastBloch) return;
+    const cv = $('blochCanvas'); if (!cv) return;
+    Bloch.render(cv, _lastBloch.v, _lastBloch.pal, { dpr:_lastBloch.dpr, size:_lastBloch.css, zOutside:true, az:_blochAZ, el:_blochEL });
+  }
+  // v20 (M4) + v27 — listener ÚNICO do canvas da Bloch:
+  //   • DRAG (arrasto além de 8px): rotaciona a CÂMERA — horizontal→azimute, vertical→elevação (clamp p/ não virar).
+  //     setPointerCapture + touch-action:none (CSS) ⇒ não rola/pagina o display. Re-desenho leve via redrawBloch (rAF).
+  //   • DOUBLE-TAP: reseta a vista p/ a convenção dos livros (AZ_DEF/EL_DEF).
+  //   • TAP simples: cicla o qubit inspecionado (só com ≥2 separáveis). NÃO muda o estado — view-only.
+  //   A câmera PERSISTE entre estados e entre qubits (sem pulo ao ciclar).
   (function installBlochTapCycle(){
     const cv = $('blochCanvas'); if (!cv) return;
-    let downX=0, downY=0, downT=0;
-    cv.addEventListener('pointerdown', (e) => { downX=e.clientX; downY=e.clientY; downT=performance.now(); });
-    cv.addEventListener('pointerup', (e) => {
-      const dx = Math.abs(e.clientX - downX), dy = Math.abs(e.clientY - downY);
-      if (dx + dy >= 10) return;                                       // movimento horizontal/vertical = swipe, deixa o handler do .disp-body tratar
-      if (performance.now() - downT > 700) return;                     // long-press não conta como tap
-      const s = History.current(); if (!s) return;
-      const sep = _blochSeparableQubits(s); if (sep.length < 2) return;
-      const r = cv.getBoundingClientRect();
-      const cx = r.left + r.width/2, cy = r.top + r.height/2;
-      const R = Math.min(r.width, r.height)/2 - 22;                    // mesmo R que Bloch.render usa (descontando margem dos labels externos)
-      const tapRadius = Math.max(R/2, 44);                             // HIG: 44px mínimo no mobile; cresce no desktop
-      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
-      if (dist > tapRadius) return;
+    const DRAG_THRESH = 8, AZ_PER_PX = 0.011, EL_PER_PX = 0.011, EL_MIN = -1.45, EL_MAX = 1.45, DOUBLE_MS = 280;   // v27: range ~simétrico ±83° (evita degeneração no polo ±90°). EL_MIN negativo libera o swipe-pra-cima (edge-on → ver por baixo); antes 0.05 travava perto do default 0.42 (~10° só pra cima).
+    let downX=0, downY=0, downT=0, lastX=0, lastY=0, dragging=false, rafPending=false, lastTapT=0, lastTapCycled=false;
+    const sepCycle = (dir) => {   // move a seleção entre qubits separáveis (dir=+1 avança, −1 desfaz); refresh re-renderiza
+      const s = History.current(); if (!s) return false;
+      const sep = _blochSeparableQubits(s); if (sep.length < 2) return false;
       const curr = (Parser.getSelection() === 'ALL') ? sep[0] : Parser.getSelection();
       const i = sep.indexOf(curr);
-      Parser.setSelection(sep[(i + 1) % sep.length]);                   // v21-22: tap MOVE a seleção (acoplado) → Bloch+prob+indicador seguem; wrap
-      if (navigator.vibrate) navigator.vibrate(70);                     // v21-17: tick háptico no tap-cycle (só quando clicável: ≥2 separáveis + dentro do raio)
-      refresh();                                                        // v21-22: atualiza esfera + prob + indicador (sem loop: renderBloch não seta seleção)
+      Parser.setSelection(sep[(i + dir + sep.length) % sep.length]);
+      refresh();
+      return true;
+    };
+
+    cv.addEventListener('pointerdown', (e) => {
+      downX=lastX=e.clientX; downY=lastY=e.clientY; downT=performance.now(); dragging=false;
+    });
+    cv.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' && e.buttons === 0) return;        // mouse em hover (sem botão) não arrasta
+      if (!dragging){
+        if (Math.abs(e.clientX-downX) + Math.abs(e.clientY-downY) < DRAG_THRESH) return;
+        dragging = true; cv.classList.add('grabbing');
+        try { cv.setPointerCapture(e.pointerId); } catch(_){}
+      }
+      e.preventDefault(); e.stopPropagation();                         // não deixa o display paginar/expandir
+      const dx = e.clientX-lastX, dy = e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+      _blochAZ += dx * AZ_PER_PX;                                      // horizontal → azimute (livre, dá a volta)
+      _blochEL = Math.max(EL_MIN, Math.min(EL_MAX, _blochEL + dy * EL_PER_PX));   // vertical → elevação (clamp: não vira a esfera)
+      if (!rafPending){ rafPending = true; requestAnimationFrame(() => { rafPending=false; redrawBloch(); }); }
+    }, { passive:false });
+    const endDrag = (e) => {
+      if (!dragging) return;
+      dragging = false; cv.classList.remove('grabbing');
+      try { cv.releasePointerCapture(e.pointerId); } catch(_){}
+      e.stopPropagation();
+    };
+    cv.addEventListener('pointercancel', endDrag);
+    cv.addEventListener('pointerup', (e) => {
+      if (dragging){ endDrag(e); return; }                            // foi rotação → não conta como tap
+      const dx = Math.abs(e.clientX - downX), dy = Math.abs(e.clientY - downY);
+      if (dx + dy >= 10) return;                                       // micro-swipe → ignora
+      if (performance.now() - downT > 700) return;                     // long-press não conta como tap
+      const now = performance.now(), isDouble = (now - lastTapT < DOUBLE_MS);
+      lastTapT = now;
+      if (isDouble){                                                   // DOUBLE-TAP → reseta a CÂMERA (vista padrão dos livros)
+        _blochAZ = Bloch.AZ_DEF; _blochEL = Bloch.EL_DEF;
+        if (navigator.vibrate) navigator.vibrate([35,40,35]);          // háptico distinto do tap simples
+        // desfaz o ciclo "perdido" do 1º tap deste double (net-zero no qubit) — refresh já re-renderiza c/ a vista resetada;
+        // se o 1º tap não ciclou, só re-desenha a esfera com os ângulos resetados.
+        if (lastTapCycled && sepCycle(-1)){ /* refresh feito dentro de sepCycle */ } else { redrawBloch(); }
+        lastTapCycled = false;
+        return;
+      }
+      // SINGLE-TAP → cicla o qubit inspecionado NA HORA (só c/ ≥2 separáveis, dentro do raio central). View-only.
+      const r = cv.getBoundingClientRect();
+      const cx = r.left + r.width/2, cy = r.top + r.height/2;
+      const R = Math.min(r.width, r.height)/2 - 22;
+      const tapRadius = Math.max(R/2, 44);                             // HIG: 44px mínimo no mobile; cresce no desktop
+      if (Math.hypot(e.clientX - cx, e.clientY - cy) > tapRadius){ lastTapCycled = false; return; }
+      if (sepCycle(+1)){                                               // v21-22: tap MOVE a seleção (acoplado) → Bloch+prob+indicador seguem; wrap
+        lastTapCycled = true;
+        if (navigator.vibrate) navigator.vibrate(70);                  // v21-17: tick háptico no tap-cycle (só quando clicável)
+      } else lastTapCycled = false;
     });
   })();
 

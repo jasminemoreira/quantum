@@ -492,9 +492,9 @@ test('V5-1 buffer (#statusLine) ~50% maior: font-size === 18.75px', async ({ pag
   expect(fs).toBe('18.75px');
 });
 
-test('V5-2 #stateDisplay line-height 3.4 (×25px = 85px) p/ frações \\dfrac não colidirem', async ({ page }) => {
+test('V5-2 #stateDisplay line-height 3.4 (×20px = 68px) p/ frações \\dfrac não colidirem', async ({ page }) => {
   const lh = await page.locator('#stateDisplay').evaluate(el => getComputedStyle(el).lineHeight);
-  expect(lh).toBe('85px');   // 3.4 unitless × font-size 25px
+  expect(lh).toBe('68px');   // 3.4 unitless × font-size 20px (v27: corpo do display a 80% — era 25px→85px)
 });
 
 test('V5-3 Bloch SEM legenda redundante: sem caption "esfera de Bloch", sem ✕ (.bloch-x)', async ({ page }) => {
@@ -1108,6 +1108,29 @@ test('v21-4 háptico no tap-cycle da esfera de Bloch (só quando clicável)', as
   const box = await page.locator('#blochCanvas').boundingBox();
   await page.mouse.click(box.x + box.width/2, box.y + box.height/2);   // tap no centro → cicla → vibra
   expect(await page.evaluate(() => window.__vib)).toContain(70);
+});
+
+test('v27 drag rotaciona a esfera de Bloch; double-tap reseta a vista', async ({ page }) => {
+  await act(page, 'gate:H');                                   // |+⟩ — 1 qubit (tap simples = no-op → double-tap reseta limpo)
+  await act(page, 'op:bloch');
+  await expect(page.locator('#blochCanvas')).toBeVisible();
+  await page.waitForTimeout(360);                              // assenta o zoom (.28s) antes de medir/desenhar
+  const snap = () => page.locator('#blochCanvas').evaluate(c => c.toDataURL());
+  const before = await snap();
+  const box = await page.locator('#blochCanvas').boundingBox();
+  const cx = box.x + box.width/2, cy = box.y + box.height/2;
+  await page.mouse.move(cx, cy); await page.mouse.down();      // arrasto horizontal → gira o azimute
+  for (let i = 1; i <= 12; i++) await page.mouse.move(cx + i*6, cy);
+  await page.mouse.up();
+  expect(await snap()).not.toBe(before);                       // a vista mudou (rotacionou)
+  // double-tap sincronizado (garante < janela do double) → reseta p/ a vista padrão
+  await page.locator('#blochCanvas').evaluate((c) => {
+    const r = c.getBoundingClientRect(), x = r.left + r.width/2, y = r.top + r.height/2;
+    const ev = (t) => c.dispatchEvent(new PointerEvent(t, { clientX:x, clientY:y, bubbles:true, pointerId:1 }));
+    ev('pointerdown'); ev('pointerup'); ev('pointerdown'); ev('pointerup');
+  });
+  await page.waitForTimeout(50);
+  expect(await snap()).toBe(before);                           // double-tap voltou à vista padrão
 });
 
 test('v21-5 tap no estado alterna fonte 50% (toggle .state-half)', async ({ page }) => {
