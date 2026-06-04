@@ -950,7 +950,7 @@ const Algebra = (() => {
     Zeta16, zpow16, Z_ZERO, Z_ONE, Z_I, Z_OMEGA, Z_SQRT2,
     exact, numeric, fromInt, ZERO, ONE, IMAG,
     ADD, MUL, CONJ, NEG, scaleInt, scaleInvSqrt2, reduceExact,
-    isZeroAmp, eqAmp, toComplex, norm2, recognize, matchSurd, matchNestedSurd, format,
+    isZeroAmp, eqAmp, toComplex, norm2, recognize, recognizeReal, matchSurd, matchNestedSurd, format,
     angleExact, angleIndex16, bgcd, bpow2, fracStr, bigSqrt, surdToStr:realToStr, sqrtRatStr,
     sqrtSurdStr, degree4ToStr, normVal, normStr, setAngleMode, getAngleMode, turnsFrac,
     exactReIm, fromNumber, SUB, DIV, POW, _Zeta16:Zeta16,
@@ -1516,17 +1516,41 @@ const Ops = (() => {
 
   // ---- autovalores de ρ Hermitiana ----
   function ampMatToComplex(M){ return M.map(row => row.map(a => A.toComplex(a))); }
+  /* raiz quadrada EXATA de um Amp real ≥0 DENTRO do anel ℤ[ζ₁₆][1/√2].
+     O float só PROPÕE o candidato (recognizeReal); a DECISÃO é o re-quadrado em BigInt
+     (eqAmp, sem tolerância). null ⇒ disc não é quadrado perfeito no anel
+     (√disc sai de ℤ[ζ₁₆], ex. 2^(−1/4)) ⇒ o chamador cai no numérico e sinaliza approx. */
+  function ringSqrt(disc){
+    if (!disc.ex || A.isZeroAmp(disc)) return disc.ex ? A.ZERO : null;
+    const c = A.toComplex(disc);
+    if (c.re < 0 || Math.abs(c.im) > 1e-9) return null;          // precisa ser real ≥ 0
+    const cand = A.recognizeReal(Math.sqrt(c.re));               // chute exato a √disc (via float)
+    if (cand && cand.ex && A.eqAmp(A.MUL(cand, cand), disc))     // re-quadrado == disc EXATO (BigInt)
+      return A.reduceExact(cand);
+    return null;
+  }
   function eigForEntropy(rhoAmps){
     const n = rhoAmps.length;
     if (n === 2){                                        // 2×2 Hermitiana: det = ρ00ρ11 − |ρ01|²
-      const C = ampMatToComplex(rhoAmps);
+      const r00 = rhoAmps[0][0], r01 = rhoAmps[0][1], r11 = rhoAmps[1][1];
+      if (r00.ex && r01.ex && r11.ex){                  // Prop 2(ii): λ=(tr±√(tr²−4det))/2 EXATO no anel
+        const tr   = A.ADD(r00, r11);
+        const det  = A.ADD(A.MUL(r00, r11), A.NEG(A.MUL(r01, A.CONJ(r01)))); // ρ00ρ11 − |ρ01|²
+        const disc = A.ADD(A.MUL(tr, tr), A.NEG(A.scaleInt(det, 4)));        // tr² − 4·det (real, exato)
+        const d = ringSqrt(disc);
+        if (d){
+          const lamP = A.reduceExact(A.scaleInvSqrt2(A.ADD(tr, d), 2));      // (tr+d)/2
+          const lamM = A.reduceExact(A.scaleInvSqrt2(A.SUB(tr, d), 2));      // (tr−d)/2
+          return { vals:[A.toComplex(lamP).re, A.toComplex(lamM).re], amps:[lamP, lamM], exact:true };
+        }
+      }
+      const C = ampMatToComplex(rhoAmps);               // fallback: disc deixa o anel → numérico honesto
       const tr = C[0][0].re + C[1][1].re;
       const det = C[0][0].re*C[1][1].re - (C[0][1].re*C[0][1].re + C[0][1].im*C[0][1].im);
-      const disc = Math.max(0, tr*tr - 4*det);
-      const s = Math.sqrt(disc);
-      return { vals:[(tr+s)/2,(tr-s)/2], exact:true };
+      const s = Math.sqrt(Math.max(0, tr*tr - 4*det));
+      return { vals:[(tr+s)/2,(tr-s)/2], amps:null, exact:false };
     }
-    return { vals: eigHermitianNumeric(rhoAmps), exact:false };
+    return { vals: eigHermitianNumeric(rhoAmps), amps:null, exact:false };
   }
   // Jacobi p/ Hermitiana via embedding real simétrico 2n×2n
   function eigHermitianNumeric(M){
@@ -1560,21 +1584,26 @@ const Ops = (() => {
   // ---- entropia de von Neumann do subsistema ----
   function vonNeumann(s, keepQubits){
     const { rho, keep } = reducedDM(s, keepQubits);
-    const { vals, exact } = eigForEntropy(rho);
+    const { vals, amps, exact } = eigForEntropy(rho);
     let S = 0; for (const l of vals){ if (l > 1e-12) S -= l * Math.log2(l); }
-    const exactEig = exact && keep.length <= 2;
-    return { S, vals, keep, exactEig, approx: !exactEig };
+    const exactEig = exact && keep.length <= 2;          // honesto: só quando a raiz fechou no anel
+    const valsStr = (exactEig && amps) ? amps.map(a => A.format(a, 'rect').text) : null;  // surds exatos
+    return { S, vals, valsStr, keep, exactEig, approx: !exactEig };
   }
 
   // ---- decomposição de Schmidt (2 qubits, partição q0|q1) ----
   function schmidt2(s){
     if (s.n !== 2) throw new Error('Schmidt: implemented for 2 qubits (Q0|Q1 partition)');
     const { rho } = reducedDM(s, [0]);
-    const { vals } = eigForEntropy(rho);                 // λ = autovalores de ρ_A
+    const { vals, amps, exact } = eigForEntropy(rho);    // λ = autovalores de ρ_A
     const lam = vals.map(v => Math.max(0, v));
     const coeffs = lam.map(Math.sqrt);
     const rank = lam.filter(v => v > 1e-9).length;
-    return { lambdas:lam, coeffs, rank, entangled: rank > 1 };
+    const lambdaStr = (exact && amps) ? amps.map(a => A.format(a, 'rect').text) : null;   // λ exatos (surd)
+    const coeffStr  = (exact && amps)                                                     // σ=√λ exato se ∈ anel
+      ? amps.map(a => { const r = ringSqrt(a); return r ? A.format(r, 'rect').text : null; })
+      : null;
+    return { lambdas:lam, coeffs, rank, entangled: rank > 1, lambdaStr, coeffStr };
   }
 
   // valor esperado ⟨ψ|O|ψ⟩ de um Pauli O ∈ {X,Y,Z} num qubit (exato em ℤ[ω])
@@ -3627,14 +3656,17 @@ const UI = (() => {
       }
       else if (op === 'schmidt'){
         const sc = Ops.schmidt2(s);
-        out(`Schmidt decomposition (Q0 | Q1):\n  λ = [${sc.lambdas.map(x=>+x.toFixed(6)).join(', ')}]\n  coef = [${sc.coeffs.map(x=>+x.toFixed(6)).join(', ')}]\n  Schmidt rank = ${sc.rank}  → ${sc.entangled ? 'ENTANGLED' : 'separable'}`);
+        const lamD = sc.lambdaStr ? sc.lambdaStr.join(', ') : sc.lambdas.map(x=>+x.toFixed(6)).join(', ');
+        const coefD = (sc.coeffStr && sc.coeffStr.every(Boolean)) ? sc.coeffStr.join(', ') : sc.coeffs.map(x=>+x.toFixed(6)).join(', ');
+        out(`Schmidt decomposition (Q0 | Q1):\n  λ = [${lamD}]\n  coef = [${coefD}]\n  Schmidt rank = ${sc.rank}  → ${sc.entangled ? 'ENTANGLED' : 'separable'}`);
       }
       else if (op === 'vonneumann'){
         const keep = Parser.peekOperands().targets.slice();   // v22-8: subsistema A via operandos (0 Q S(ρ)), sem prompt nativo
         if (!keep.length){ showError('select the qubit(s) of subsystem A first, e.g. 0 Q S(ρ)'); return; }
         if (keep.some(q => q < 0 || q >= s.n)){ showError('selected qubit is out of the state'); return; }
         const v = Ops.vonNeumann(s, keep);
-        out(`von Neumann entropy S(ρ_A), A = Q${v.keep.join(',Q')}:\n  S = ${(+v.S.toFixed(6))} bits${v.exactEig ? '  (exact eigenvalues)' : '  (numeric eigenvalues)'}\n  eigenvalues λ = [${v.vals.map(x=>+x.toFixed(6)).join(', ')}]`);
+        const lamD = v.valsStr ? v.valsStr.join(', ') : v.vals.map(x=>+x.toFixed(6)).join(', ');
+        out(`von Neumann entropy S(ρ_A), A = Q${v.keep.join(',Q')}:\n  S = ${(+v.S.toFixed(6))} bits${v.exactEig ? '  (exact eigenvalues)' : '  (numeric eigenvalues)'}\n  eigenvalues λ = [${lamD}]`);
         Parser.clear();
       }
       clearError();
