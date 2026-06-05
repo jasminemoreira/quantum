@@ -543,7 +543,7 @@ test('v6-UI P(π/8)|+⟩ exato: exp mostra e^{iπ/8}, SEM badge ≈', async ({ p
   expect(d).not.toMatch(/0\.\d{3}/);                                           // sem decimal
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);          // monômio → exato
 });
-test('v6-UI rect surdo aninhado √(4+2√2); kickback rect exato e exp ≈', async ({ page }) => {
+test('v6-UI rect surdo aninhado √(4+2√2); kickback exato — exp sem forma fechada = "exact decimal" (não ≈)', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
   await act(page,'key:0'); await act(page,'key:Q'); await pPi8(page);          // P(π/8)|+⟩
   await act(page,'fmtcycle');                                                  // exp → a+bi (rect)
@@ -553,7 +553,10 @@ test('v6-UI rect surdo aninhado √(4+2√2); kickback rect exato e exp ≈', as
   expect(await dirac(page)).toContain('√(2+√2)');                              // kickback rect exato
   await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);          // rect do kickback é EXATO
   await act(page,'fmtcycle'); await act(page,'fmtcycle');                      // rect → polar → exp
-  await expect(page.locator('#approxBadge')).toHaveClass(/show/);              // exp do kickback → ≈ (ζ₃₂=π/16)
+  // v26: as amplitudes são EXATAS em ℤ[ζ₁₆] (ex===true, rect fechado). A forma exp não fecha a fase
+  // (π/16 ∉ múltiplos de π/8) e cai em decimal — mas isso é "exato sem forma fechada", NÃO inexatidão.
+  await expect(page.locator('#approxBadge')).not.toHaveClass(/show/);          // NÃO acende alerta (corrige o falso-positivo antigo)
+  await expect(page.locator('#selection')).toContainText('exact decimal');     // item discreto na status line
 });
 test('v6-UI screenshot do kickback em rect (radical aninhado)', async ({ page }) => {
   await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:H');
@@ -1332,4 +1335,28 @@ test('v26 about: × fecha; clique no card NÃO fecha; backdrop fecha', async ({ 
   await act(page,'about');
   await page.locator('#aboutOverlay').click({ position:{ x:5, y:5 } });   // backdrop (canto, fora do card)
   await expect(page.locator('#aboutOverlay')).toBeHidden();
+});
+
+// v26 — desambiguação exatidão vs. forma fechada (contrato "exato ≠ forma fechada"):
+//   inexato genuíno (valor fora de ℤ[ζ₁₆]) → badge "≈ approximate" (alerta, como antes)
+//   exato mas sem forma fechada neste modo → SEM alerta; item discreto "exact decimal" na linha de status
+const badgeShown = (p) => p.locator('#approxBadge').evaluate(e => e.classList.contains('show'));
+const selText = (p) => p.locator('#selection').textContent();
+test('v26 badge: estado exato em forma fechada (|+>) — sem badge, sem "exact decimal"', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'gate:H');                                   // (1/√2)|0⟩+(1/√2)|1⟩ — exato, forma fechada
+  expect(await badgeShown(page)).toBe(false);
+  expect(await selText(page)).not.toContain('exact decimal');
+});
+test('v26: H T H T H é EXATO sem forma fechada → "exact decimal" na status line, SEM alerta', async ({ page }) => {
+  await page.goto(URL);
+  for (const g of ['gate:H','gate:T','gate:H','gate:T','gate:H']) await act(page,g);
+  expect(await badgeShown(page)).toBe(false);                 // NÃO é alerta — o motor não perdeu exatidão
+  expect(await selText(page)).toContain('exact decimal');     // item discreto, mesmo estilo dos outros (· separador)
+});
+test('v26 badge: estado exato no anel (Bell) — sem badge, sem "exact decimal"', async ({ page }) => {
+  await page.goto(URL);
+  for (const a of ['key:2','key:Q','key:SET','key:0','key:Q','gate:H','key:0','key:CTRL','key:1','key:Q','gate:X']) await act(page,a);
+  expect(await badgeShown(page)).toBe(false);
+  expect(await selText(page)).not.toContain('exact decimal');
 });

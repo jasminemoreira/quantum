@@ -3704,13 +3704,13 @@
     }
   ],
   "loopCounter": {
-    "pattern": "cd /home/jasmine/doutorado/quantum/quantumcalc/tes",
-    "count": 2,
-    "firstSeen": "2026-06-03T11:13:45.349Z",
-    "lastSeen": "2026-06-04T17:05:03.944Z"
+    "pattern": "node --test tests/*.test.mjs 2>&1 | grep -e \"tests",
+    "count": 1,
+    "firstSeen": "2026-06-05T17:55:17.731Z",
+    "lastSeen": "2026-06-05T17:55:17.731Z"
   },
   "createdAt": "2026-05-21T15:58:53.706Z",
-  "updatedAt": "2026-06-04T17:05:03.953Z",
+  "updatedAt": "2026-06-05T17:55:17.731Z",
   "history": [
     {
       "from": 0,

@@ -3814,7 +3814,21 @@ const UI = (() => {
       ? (evidenceBit !== null ? 'evid |' + Render.SYM[qbasis[evidenceQ]][evidenceBit] + '⟩Q' + evidenceQ : 'evid Q' + evidenceQ)
       : (viewForm === 'factor' ? 'factored' : 'expanded');
     const vspan = document.createElement('span'); vspan.className = 'base'; vspan.textContent = vlabel; sel.appendChild(vspan);   // forma/evidência ativa
-    if (badge) badge.classList.toggle('show', !!approxFlag);
+    // v26: DESAMBIGUA exatidão vs. forma fechada. "approxFlag" (de terms()/matrixTex) é o flag de FORMATO —
+    // true tanto quando o valor saiu do anel (aproximado) quanto quando é EXATO mas não tem forma fechada
+    // neste modo (ex.: H T H T H → decimal). Fonte da verdade = amp.ex (false ⇒ deixou ℤ[ζ₁₆]).
+    // Inexatidão genuína → badge "≈ approximate" (alerta, como antes). Exato-sem-forma-fechada NÃO é alerta:
+    // vira um item DISCRETO na linha de status (mesma fonte/separador dos outros), "exact decimal".
+    const inexact = s.amplitudes().some(e => {
+      if (e.amp.ex) return false;                                   // computado exato no anel
+      const r = Algebra.recognize(e.amp.re, e.amp.im);              // numérico: o VALOR recai em ℤ[ζ₁₆]? (ex.: amp 1,1 → 1/√2 sim; 2/√5, e^{iπ/16} não)
+      return !(r && r.ex);                                          // não-reconhecido → genuinamente aproximado
+    });
+    if (!inexact && approxFlag){
+      sel.appendChild(document.createTextNode(' · '));
+      const dsp = document.createElement('span'); dsp.className = 'base'; dsp.textContent = 'exact decimal'; sel.appendChild(dsp);
+    }
+    if (badge) badge.classList.toggle('show', inexact);
     if (!status.classList.contains('err')){
       const ex = Parser.getExprRaw();
       status.textContent = 'buffer: ' + Parser.bufferText() + (ex ? `   |   angle: ${ex}` : '');   // v22-9: "[numeric amplitude ≈]" removido — redundante com o badge ≈ do topo
