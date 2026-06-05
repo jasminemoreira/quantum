@@ -44,6 +44,11 @@
   #app{max-width:636px;margin:18px auto;padding:18px 18px 22px;   /* v26: 600 (largura do teclado) + 2×18 padding → no navegador o display/faixa/teclado ficam todos em 600, coluna estreita como o app (PWA sobrescreve p/ max-width:none) */
        background:var(--card);border:1px solid var(--line);border-radius:16px;
        box-shadow:0 6px 26px rgba(0,0,0,.22)}
+  /* v26: bloqueia seleção de texto e o callout do navegador no CHROME (rótulos/teclas) — no celular o swipe
+     às vezes selecionava um label (ex.: COMMAND) e fazia emergir a barra de busca/menu. O CONTEÚDO do visor
+     (estado, readouts, About) continua selecionável p/ permitir copiar. */
+  #app{ -webkit-user-select:none; -moz-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  #stateDisplay, .disp-scroll, #auxOutput, #blochValue, #aboutCard{ -webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default; }
   h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.3px}
   .sub{color:var(--muted);font-size:12px;margin-bottom:10px}
   .appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px}
