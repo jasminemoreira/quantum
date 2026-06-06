@@ -2859,16 +2859,19 @@ const Bloch = (() => {
       g.globalAlpha = prevAlpha; g.lineCap = prevCap;
     }
     // vetor de estado: tom forte (puro) / médio (reduzido/misto) — sem mudar de matiz
-    // v26: MODO EMARANHADO — esfera INTERNA concêntrica (centro na origem) de raio |r|, a "esfera de pureza"
-    // onde a ponta do vetor pousa. |r|=1 (puro) coincide com a casca; |r|→0 (máx. emaranhado/Bell) encolhe ao
-    // centro. Contorno + equador inclinado (mesmo EL) p/ ler como esfera 3D; cor do vetor reduzido. Desenhada
-    // ANTES do vetor (o vetor pousa na superfície dela). Ref: a esfera externa fica a 50% (recuada).
-    if (mixed && v.r > 0.001){
-      const rin = R * v.r, prevA = g.globalAlpha;
-      g.strokeStyle = C.vecMixed; g.fillStyle = C.vecMixed; g.lineWidth = 1.3;
-      g.globalAlpha = 0.10; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume tênue
-      g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.stroke();                                // contorno (= |r|)
-      g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.abs(Math.sin(el)), 0, 0, 2*Math.PI); g.stroke();      // equador → leitura de esfera
+    // v26: ESFERA DE PUREZA ("shade") — bolha translúcida de raio |r|, SEMPRE desenhada (puro inclusive).
+    // Puro (|r|=1) → preenche a esfera toda (mesmo shade volumétrico; a casca externa já serve de contorno,
+    // então não redesenha contorno/equador, que coincidiriam). Misto/emaranhado (|r|<1) → bolha INTERNA
+    // concêntrica + contorno/equador inclinado (a esfera de pureza onde a ponta pousa, |r|→0 = centro).
+    // Cor forte (puro) / média (misto). Desenhada ANTES do vetor (que pousa na superfície dela).
+    if (v.r > 0.001){
+      const rin = R * v.r, prevA = g.globalAlpha, shadeC = mixed ? C.vecMixed : C.vec;
+      g.fillStyle = shadeC; g.strokeStyle = shadeC; g.lineWidth = 1.3;
+      g.globalAlpha = 0.12; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume (shade)
+      if (mixed){                                                                                                       // casco interno só no misto (no puro coincidiria com a esfera externa)
+        g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.stroke();                             // contorno (= |r|)
+        g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.abs(Math.sin(el)), 0, 0, 2*Math.PI); g.stroke();   // equador → leitura de esfera
+      }
       g.globalAlpha = prevA;
     }
     // vetor de estado: tom forte (puro) / médio (reduzido/misto) — sem mudar de matiz
