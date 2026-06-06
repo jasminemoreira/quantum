@@ -48,7 +48,11 @@
      às vezes selecionava um label (ex.: COMMAND) e fazia emergir a barra de busca/menu. O CONTEÚDO do visor
      (estado, readouts, About) continua selecionável p/ permitir copiar. */
   #app{ -webkit-user-select:none; -moz-user-select:none; user-select:none; -webkit-touch-callout:none; }
-  #stateDisplay, .disp-scroll, #auxOutput, #blochValue, #aboutCard{ -webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default; }
+  /* v26-33: a cópia do conteúdo do visor (estado, readouts do 2º display, About) só faz sentido no DESKTOP;
+     no TOUCH o swipe selecionava o texto sem querer. Re-habilita seleção SÓ em ponteiro fino (mouse). */
+  @media (hover: hover) and (pointer: fine){
+    #stateDisplay, .disp-scroll, #auxOutput, #blochValue, #aboutCard{ -webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default; }
+  }
   h1{font-size:18px;margin:0;font-weight:600;letter-spacing:.3px}
   .sub{color:var(--muted);font-size:12px;margin-bottom:10px}
   .appbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 8px}
