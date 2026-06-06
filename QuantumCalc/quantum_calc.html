@@ -2867,7 +2867,7 @@ const Bloch = (() => {
     if (v.r > 0.001){
       const rin = R * v.r, prevA = g.globalAlpha, shadeC = mixed ? C.vecMixed : C.vec;
       g.fillStyle = shadeC; g.strokeStyle = shadeC; g.lineWidth = 1.3;
-      g.globalAlpha = 0.12; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume (shade)
+      g.globalAlpha = 0.08; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.fill();                                  // volume (shade) — claro (v26-32)
       if (mixed){                                                                                                       // casco interno só no misto (no puro coincidiria com a esfera externa)
         g.globalAlpha = 0.55; g.beginPath(); g.arc(cx, cy, rin, 0, 2*Math.PI); g.stroke();                             // contorno (= |r|)
         g.globalAlpha = 0.32; g.beginPath(); g.ellipse(cx, cy, rin, rin*Math.abs(Math.sin(el)), 0, 0, 2*Math.PI); g.stroke();   // equador → leitura de esfera
