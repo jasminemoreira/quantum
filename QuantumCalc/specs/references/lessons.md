@@ -11,6 +11,7 @@ registro persistente que alimenta o próximo ciclo.
 | 26 | v25 | `48-v25-lessons.md` | Gramática unificada CTRL+base |
 | 27 | v26 | `49-v26-lessons.md` | Teclado único + 2nd; CSS dvh+flex no PWA |
 | 28 | v28 | `51-v28-lessons.md` | Ângulo simbólico em P/Rz; símbolo fresco por gate |
+| 29 | v29 | `53-v29-lessons.md` | PLAY no manual: app real em iframe via postMessage |
 
 ## Ciclo 28 — destaques para levar adiante
 
@@ -19,3 +20,11 @@ registro persistente que alimenta o próximo ciclo.
 - Delta aditivo + whitelist + asserção no motor = zero regressão no caminho exato.
 - Mudança de formato atrás de condição que hoje nunca ocorre = risco zero no display existente.
 - Human-AV pega erros semânticos que a suíte automática não pega.
+
+## Ciclo 29 — destaques para levar adiante
+
+- Demo/replay deve passar pela MESMA rota do toque e ser comparada com a captura real.
+- file:// = iframe cross-origin → postMessage; trocar só o #hash não recarrega um iframe.
+- `fn.toString()` injetado leva comentários → em inglês.
+- Golden da saída exibida ANTES de refatorar.
+- `fixed` deslocado no celular → medir scrollWidth e achar quem alarga o documento.

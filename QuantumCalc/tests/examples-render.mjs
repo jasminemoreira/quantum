@@ -289,8 +289,9 @@ const REFERENCE_HTML = `
 `;
 
 function chips(keys){
+  // v29: data-g = índice do grupo (chip) — o PLAY acende o chip do grupo em execução (clone na barra).
   return keys.split('·').map(s => s.trim()).filter(Boolean)
-    .map(s => `<code>${esc(s)}</code>`).join('<span class="arrow">›</span>');
+    .map((s,g) => `<code data-g="${g}">${esc(s)}</code>`).join('<span class="arrow">›</span>');
 }
 
 // v22: a sequência de teclas EXIBIDA é DERIVADA dos steps reais (as teclas que o examples.spec aperta),
@@ -315,11 +316,17 @@ function tokLabel(t){
   if (k === 'calc') return STEP_CALC[v] || v;
   return v;
 }
-function stepsToKeys(steps){
-  const groups = []; let cur = [], calcRun = '';
+// v29 (M-01 play-data): stepsToGroups = a partição em grupos (1 grupo = 1 chip = 1 mudança de visor) +
+// o mapa passo→chip usado pelo PLAY (stepGroup[i] = índice do chip que contém steps[i]). Todo passo
+// pertence a exatamente um grupo: 'page:0' (sem chip) pertence ao grupo SEGUINTE; tokens 'calc:' se
+// fundem no chip da porta paramétrica. stepsToKeys = groups.join(' · ') — byte-idêntico ao anterior
+// (golden tests/fixtures/v29-keys-golden.json).
+export function stepsToGroups(steps){
+  const groups = [], stepGroup = []; let cur = [], calcRun = '';
   const flush = () => { if (calcRun){ cur.push(calcRun); calcRun = ''; } };
   const TERM = new Set(['key:SET','eval','fmtcycle','chbase','angcycle','viewform','cmd:undo','cmd:redo','cmd:reset']);
   for (let i=0;i<steps.length;i++){ const t = steps[i];
+    stepGroup.push(groups.length);                            // o grupo em construção (ainda não empurrado)
     if (t === 'page:0') continue;                             // volta à pág.1 = implícita, não vira chip
     if (t.startsWith('calc:')){ calcRun += tokLabel(t); continue; }   // entrada de ângulo: junta "π/4" num token
     flush(); cur.push(tokLabel(t));
@@ -329,21 +336,28 @@ function stepsToKeys(steps){
     if (term){ groups.push(cur.join(' ')); cur = []; }
   }
   flush(); if (cur.length) groups.push(cur.join(' '));
-  return groups.join(' · ');
+  const last = Math.max(0, groups.length - 1);               // 'page:0' final sem grupo seguinte → último chip
+  return { groups, stepGroup: stepGroup.map(g => Math.min(g, last)) };
 }
+export function stepsToKeys(steps){ return stepsToGroups(steps).groups.join(' · '); }
 
 function resultBlock(r){
   // v26: a EXPLICAÇÃO (label) vem PRIMEIRO — o que será feito — depois as teclas, e por fim o resultado
   // no visor verde (antes o label ficava DENTRO do bloco verde, junto do resultado).
   const labelHtml = `<div class="res-label">${esc(r.label)}</div>`;
-  const keysHtml = `<div class="keys"><span class="block-label">keys</span><div class="steps">${chips(stepsToKeys(r.steps))}</div></div>`;
+  // v29: botão ▶ (PLAY) na linha do rótulo "keys"; os steps reais + o mapa passo→chip vão em atributos
+  // do bloco (JSON escapado por att) — mesma fonte que gera os chips (sem string paralela).
+  const { groups, stepGroup } = stepsToGroups(r.steps);
+  const play = r.steps.length ? `<button type="button" class="play" aria-label="Play this example" title="Play this example on the calculator">▶</button>` : '';
+  const keysHtml = `<div class="keys"><div class="keys-head"><span class="block-label">keys</span>${play}</div><div class="steps">${chips(groups.join(' · '))}</div></div>`;
+  const dataAttrs = r.steps.length ? ` data-steps="${att(JSON.stringify(r.steps))}" data-step-group="${att(JSON.stringify(stepGroup))}"` : '';
   let out;
   if (r.read === 'state'){
     out = `<span class="ket" data-dirac="${att(r._plain)}" data-tex="${att(r._tex)}">${esc(r._plain)}</span>`;
   } else {
     out = `<pre class="out" data-out="${att(r._out)}">${esc(r._out)}</pre>`;
   }
-  return `<div class="res-block">${labelHtml}${keysHtml}`+
+  return `<div class="res-block"${dataAttrs}>${labelHtml}${keysHtml}`+
     `<div class="lcd">${out}</div></div>`;
 }
 
@@ -495,6 +509,98 @@ function renderAlgorithms(examples){
   return s;
 }
 
+// ============================ PLAY (v29, M-02 play-overlay) ============================
+// Função JS REAL (não string): o renderManual injeta `(${manualPlay.toString()})()` no manual — sem
+// escape manual de crases/${} (I-02). Regra: este corpo NÃO usa template literals nem a sequência
+// de fechamento de script. Protocolo/estados: specs/technical/architecture.md V(3).
+// Estados: idle → loading → playing → done|stopped. Cada play RECRIA o iframe (trocar só o #hash do src
+// seria navegação de fragmento, sem recarga) — estado limpo garantido e nenhuma mensagem do documento
+// anterior pode chegar (o filtro é e.source === iframe corrente + runId corrente).
+// Hook de teste: window.qcPlayMs (número) substitui o ritmo da demo (não exposto na UI).
+function manualPlay(){
+  var ov = null, sheet, bar, chipsBox, tg, xbtn, note, frame = null;
+  var state = 'idle', runId = 0, block = null, opener = null, noteTimer = null, swipeY = null;
+  function el(tag, cls, attrs){ var e = document.createElement(tag); if (cls) e.className = cls;
+    for (var k in (attrs || {})) e.setAttribute(k, attrs[k]); return e; }
+  function build(){
+    if (ov) return;
+    ov = el('div', 'play-ov', { hidden: '' });
+    sheet = el('div', 'play-sheet', { role: 'dialog', 'aria-modal': 'true', 'aria-label': 'Example playback' });
+    bar = el('div', 'play-bar');
+    chipsBox = el('div', 'play-chips steps');
+    tg = el('button', 'play-tg', { type: 'button' });
+    xbtn = el('button', 'play-x', { type: 'button', 'aria-label': 'Close', title: 'Close' }); xbtn.textContent = '×';
+    bar.appendChild(chipsBox); bar.appendChild(tg); bar.appendChild(xbtn);
+    note = el('div', 'play-note', { hidden: '' });
+    note.innerHTML = 'Still loading… <a href="quantum_calc.html" target="_blank" rel="noopener">open in the calculator</a>';
+    sheet.appendChild(bar); sheet.appendChild(note);
+    ov.appendChild(sheet); document.body.appendChild(ov);
+    tg.addEventListener('click', function(){ if (state === 'playing') send({ type: 'qc-stop', runId: runId }); else if (state !== 'loading') load(); });
+    xbtn.addEventListener('click', close);
+    ov.addEventListener('click', function(e){ if (e.target === ov) close(); });            // backdrop
+    bar.addEventListener('pointerdown', function(e){ swipeY = e.clientY; });                 // swipe-down on the BAR only (UX-04)
+    bar.addEventListener('pointerup', function(e){ if (swipeY !== null && e.clientY - swipeY > 60) close(); swipeY = null; });
+    bar.addEventListener('pointercancel', function(){ swipeY = null; });
+  }
+  function setState(s){
+    state = s; ov.setAttribute('data-state', s);
+    tg.textContent = s === 'playing' ? '■' : '↻';
+    tg.setAttribute('aria-label', s === 'playing' ? 'Stop' : 'Replay');
+    tg.title = s === 'playing' ? 'Stop' : 'Replay';
+    tg.disabled = s === 'loading';
+  }
+  function lit(g){
+    var cs = chipsBox.querySelectorAll('code[data-g]');
+    for (var i = 0; i < cs.length; i++){
+      var on = String(g) === cs[i].getAttribute('data-g');
+      cs[i].classList.toggle('lit', on);
+      if (on && cs[i].scrollIntoView) cs[i].scrollIntoView({ block: 'nearest', inline: 'center' });
+    }
+  }
+  function send(msg){ if (frame && frame.contentWindow) frame.contentWindow.postMessage(msg, '*'); }
+  function dropFrame(){ if (frame){ frame.remove(); frame = null; } }
+  function load(){
+    runId++; dropFrame(); lit(-1); setState('loading');
+    note.hidden = true; clearTimeout(noteTimer);
+    noteTimer = setTimeout(function(){ if (state === 'loading') note.hidden = false; }, 5000);   // RES-03: hint only, never cancels
+    frame = el('iframe', 'play-frame', { title: 'Quantum Calculator', src: 'quantum_calc.html#qc-run=' + runId });
+    sheet.appendChild(frame);
+  }
+  function open(blockEl, btn){
+    build(); block = blockEl; opener = btn;
+    var src = blockEl.querySelector('.steps');
+    chipsBox.innerHTML = src ? src.innerHTML : '';
+    ov.hidden = false; document.documentElement.classList.add('play-open');                  // lock page scroll (UX-06)
+    load(); xbtn.focus({ preventScroll: true });                                            // ■/↻ is disabled while loading
+  }
+  function close(){
+    if (!ov || ov.hidden) return;
+    if (state === 'playing') send({ type: 'qc-stop', runId: runId });
+    clearTimeout(noteTimer); dropFrame(); state = 'idle';
+    ov.hidden = true; document.documentElement.classList.remove('play-open');
+    if (opener) opener.focus({ preventScroll: true });                                      // focus back on the ▶ (UX-03)
+  }
+  window.addEventListener('message', function(e){
+    if (!frame || e.source !== frame.contentWindow) return;
+    var d = e.data; if (!d || typeof d !== 'object' || d.runId !== runId) return;
+    if (d.type === 'qc-ready' && state === 'loading'){
+      note.hidden = true; clearTimeout(noteTimer); setState('playing');
+      var msg = { type: 'qc-play', runId: runId,
+        steps: JSON.parse(block.getAttribute('data-steps') || '[]'),
+        stepGroup: JSON.parse(block.getAttribute('data-step-group') || '[]') };
+      if (typeof window.qcPlayMs === 'number') msg.ms = window.qcPlayMs;
+      send(msg);
+    } else if (d.type === 'qc-step' && state === 'playing'){ lit(d.g); }
+    else if (d.type === 'qc-done' && state === 'playing'){ lit(-1); setState(d.stopped ? 'stopped' : 'done'); }
+  });
+  document.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('button.play');
+    if (!b) return;
+    var blk = b.closest('.res-block'); if (blk && blk.getAttribute('data-steps')) open(blk, b);
+  });
+  document.addEventListener('keydown', function(e){ if (e.key === 'Escape' && ov && !ov.hidden) close(); });
+}
+
 // renderManual(examples, referenceSections?) — emite o doc consolidado (Parte I referência + Parte II
 // cookbook). referenceSections é opcional: por padrão usa a referência embutida (REFERENCE_HTML); a
 // assinatura aceita um override (ex.: testes) mantendo a referência estática como fonte canônica.
@@ -621,10 +727,31 @@ export function renderManual(examples, referenceSections = REFERENCE_HTML){
   .steps code{font-family:var(--mono);font-size:13px;background:var(--key);border:1px solid var(--line);border-radius:7px;padding:3px 9px;color:var(--txt)}
   .arrow{color:var(--muted);font-weight:700;margin:0 1px}
   .lcd{background:linear-gradient(180deg,var(--lcd-bg),var(--lcd-bg2));border:1px solid var(--lcd-border);border-radius:10px;padding:12px 16px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;box-shadow:inset 0 1px 3px rgba(22,58,38,.06)}
+  .lcd{max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}   /* v29-3: long equations scroll INSIDE the box instead of widening the page (fixed buttons drifted + sideways drag) */
   .rlabel{flex:0 0 auto;min-width:160px;font-family:var(--mono);font-size:12px;color:var(--lcd-text2)}
   .ket{color:var(--lcd-text);font-size:18px}
   pre.out{margin:0;font-family:var(--mono);font-size:13px;color:var(--lcd-text);background:transparent;border:0;padding:0;white-space:pre-wrap;line-height:1.5}
-  footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}`;
+  footer{margin-top:48px;border-top:1px solid var(--line);padding-top:16px;color:var(--muted);font-size:13px}
+  /* v29: PLAY — per-block ▶ button + overlay with the real app (iframe) and a control bar outside it */
+  .keys-head{display:flex;align-items:center;gap:8px;margin-bottom:4px} .keys-head .block-label{margin:0}
+  button.play{font:600 11px/1 var(--mono);color:#fff;background:var(--accent2);border:0;border-radius:999px;width:24px;height:24px;padding:0 0 0 2px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.18)}
+  button.play:hover{filter:brightness(1.1)} button.play:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+  html.play-open,html.play-open body{overflow:hidden}
+  .play-ov{position:fixed;inset:0;z-index:100;background:rgba(20,16,24,.55);display:flex;align-items:center;justify-content:center}
+  .play-ov[hidden]{display:none}
+  .play-sheet{width:min(420px,100vw);height:min(900px,100dvh);background:var(--card);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 10px 40px rgba(0,0,0,.35)}
+  .play-bar{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line);touch-action:none}
+  .play-chips{flex:1 1 auto;min-width:0;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding:2px 0}
+  .play-chips::-webkit-scrollbar{display:none}
+  .play-chips code{white-space:nowrap;transition:background .15s,color .15s,border-color .15s}
+  .play-chips code.lit{background:var(--accent2);border-color:var(--accent2);color:#fff}
+  .play-tg,.play-x{flex:0 0 auto;width:34px;height:34px;border-radius:9px;border:1px solid var(--line);background:var(--panel2);color:var(--accent);font-size:16px;cursor:pointer}
+  .play-tg:disabled{opacity:.45;cursor:default}
+  .play-x{font-size:22px;line-height:1;color:var(--muted)}
+  .play-note{flex:0 0 auto;font-size:12.5px;padding:6px 12px;color:var(--muted);background:var(--panel)}
+  .play-note[hidden]{display:none}
+  .play-frame{flex:1 1 auto;width:100%;border:0;display:block;background:var(--bg)}
+  @media(max-width:600px){ .play-sheet{width:100vw;height:100dvh;border-radius:0} }`;
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -659,6 +786,7 @@ ${body}
     catch(e){ el.textContent = el.getAttribute('data-dirac'); }
   });
 </script>
+<script>(${manualPlay.toString()})();</script>
 </body>
 </html>`;
 }

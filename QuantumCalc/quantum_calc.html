@@ -397,6 +397,12 @@
   .toprow button{font-size:12px;background:var(--panel2);color:var(--txt);
        border:1px solid var(--line);border-radius:6px;padding:6px 10px;cursor:pointer}
   .toprow button:hover{background:var(--keyhi)}
+  /* v29: PLAY do manual (app embutido num iframe) — tecla "afunda" + anel de destaque; toques bloqueados
+     durante a demo; o "?" (abriria o manual DENTRO da sobreposição) some no modo embutido. */
+  [data-action].demo-hit{transform:translateY(2px) scale(.96);filter:brightness(1.18);
+       box-shadow:0 0 0 3px #e0281e, 0 0 14px 3px rgba(224,40,30,.6)!important;   /* v29-2: vermelho (amarelo sumia sobre as teclas claras) */transition:transform .08s, box-shadow .08s;position:relative;z-index:2}
+  body.demo-active #app{pointer-events:none}
+  body.qc-embedded a[href="manual.html"]{display:none}
 </style>
 </head>
 <body>
@@ -4644,6 +4650,61 @@ const UI = (() => {
     // v20-7 (operadora P6): PWA Android — ao voltar de outro app o display encolhe (visibilitychange dispara mas pageshow não em standalone).
     document.addEventListener('visibilitychange', () => { if (!document.hidden) scheduleFit(); });   // resume: salva, não medição única
     window.addEventListener('focus', scheduleFit);
+    initDemo();
+  }
+
+  // v29 (M-04 demo-runner) — PLAY do manual. Ativo SÓ quando o app está embutido num iframe
+  // (window.parent !== window): sem pai, nada disto roda e o app é exatamente o de antes.
+  // Protocolo (specs/technical/architecture.md V(3)): manual→app qc-play{runId,steps,stepGroup,ms?} /
+  // qc-stop{runId}; app→manual qc-ready{runId} / qc-step{runId,i,g} / qc-done{runId,stopped,error?}.
+  // Cada passo é disparado pela MESMA rota de um toque (routeAction) — fidelidade 92/92 verificada no PoC.
+  // Ordem por tecla: espera o app ficar ocioso (busyPending) → destaca → espera → routeAction (o teclado
+  // re-renderiza e o destaque some sozinho; timeout remove nos casos sem re-render) → qc-step → ritmo.
+  const DEMO_KEY_MS = 700, DEMO_HILITE_MS = 400, DEMO_GROUP_MS = 1200;  // v29-2: METADE da velocidade (human-AV da operadora: 350/200/600 rápido demais)
+  let demoRun = null;                                                   // { runId, cancelled }
+  function initDemo(){
+    if (window.parent === window) return;
+    const m = /^#qc-run=(\d+)$/.exec(location.hash || '');
+    const runId = m ? parseInt(m[1], 10) : null;
+    document.body.classList.add('qc-embedded');                         // oculta o "?" (manual aninhado)
+    const post = (msg) => { try { window.parent.postMessage(msg, '*'); } catch(_){} };
+    // teclado físico bloqueado durante a demo (pointer-events não cobre keydown) — captura no window
+    window.addEventListener('keydown', (e) => { if (demoRun){ e.stopImmediatePropagation(); e.preventDefault(); } }, true);
+    window.addEventListener('message', (e) => {
+      if (e.source !== window.parent) return;
+      const d = e.data; if (!d || typeof d !== 'object' || d.runId !== runId) return;
+      if (d.type === 'qc-play' && !demoRun && Array.isArray(d.steps)) runDemo(d, post);
+      else if (d.type === 'qc-stop' && demoRun) demoRun.cancelled = true;
+    });
+    if (runId !== null) post({ type:'qc-ready', runId });
+  }
+  async function runDemo(d, post){
+    const run = demoRun = { runId: d.runId, cancelled: false };
+    const fast = typeof d.ms === 'number';
+    const KEY = fast ? d.ms : DEMO_KEY_MS, HIL = fast ? d.ms : DEMO_HILITE_MS, GRP = fast ? d.ms : DEMO_GROUP_MS;
+    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+    const idle = async () => { while (busyPending && !run.cancelled) await sleep(30); };
+    const stepGroup = Array.isArray(d.stepGroup) ? d.stepGroup : [];
+    document.body.classList.add('demo-active');
+    let error;
+    try {
+      for (let i = 0; i < d.steps.length; i++){
+        await idle(); if (run.cancelled) break;
+        const step = String(d.steps[i]);
+        const el = [...document.querySelectorAll('[data-action]')].find(x => x.dataset.action === step);
+        if (el){ el.classList.add('demo-hit'); setTimeout(() => el.classList.remove('demo-hit'), HIL + 250); }
+        await sleep(HIL); if (run.cancelled) break;
+        routeAction(step);
+        post({ type:'qc-step', runId: run.runId, i, g: stepGroup[i] });
+        const nextGroup = i + 1 < d.steps.length && stepGroup[i + 1] !== stepGroup[i];
+        await sleep(KEY + (nextGroup ? GRP : 0));
+      }
+      await idle();
+    } catch(e){ error = String(e && e.message || e); }
+    document.querySelectorAll('.demo-hit').forEach(x => x.classList.remove('demo-hit'));
+    document.body.classList.remove('demo-active');                     // fim: teclado volta a ser interativo
+    demoRun = null;
+    post({ type:'qc-done', runId: run.runId, stopped: run.cancelled, ...(error ? { error } : {}) });
   }
 
   return { init, refresh };
