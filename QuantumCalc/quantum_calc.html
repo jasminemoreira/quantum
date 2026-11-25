@@ -1656,11 +1656,16 @@ const SymExpr = (() => {
   const phaseName = (d) => PH + d.coefN + '/' + d.coefD + '/' + (d.hasPi?1:0) + '/' + d.sym;
   function phaseLabel(coefN, coefD, hasPi, sym){
     const neg = coefN < 0; let n = Math.abs(coefN), dd = coefD, g = gcdN(n, dd); n/=g; dd/=g;
-    const coefStr = dd === 1 ? (n === 1 ? '' : String(n)) : '(' + n + '/' + dd + ')';
     // v7: em turns, fase simbólica SEM π → e^{2πi·…}; guard: se já tem π (ex.: 2πθ), não duplica
     const turns = (A.getAngleMode && A.getAngleMode() === 'turns' && !hasPi);
-    const prefix = turns ? (coefStr === '' ? '2π' : '2π·' + coefStr) : (coefStr + (hasPi ? 'π' : ''));
-    return 'e^{' + (neg ? '-' : '') + prefix + 'i' + sym + '}';
+    const num = n === 1 ? '' : String(n);
+    const prefix = turns ? (num === '' ? '2π' : '2π·' + num) : (num + (hasPi ? 'π' : ''));
+    // v28: denom≠1 (meio-ângulo do Rz: e^{∓iθ/2}) → emite o denominador APÓS o símbolo. O toKatex
+    // já renderiza isso inline pequeno (e^{-i\theta/2}) sem empilhar \dfrac no expoente, SEM tocar
+    // no toKatex (a regra n/d exige DÍGITO antes de '/', e aqui vem o símbolo). GUARD coefD≠1: os
+    // parsers do λ usam coefD:1 → coefD≠1 só nasce do Rz novo → nenhum display existente muda.
+    const denom = dd === 1 ? '' : '/' + dd;
+    return 'e^{' + (neg ? '-' : '') + prefix + 'i' + sym + denom + '}';
   }
   const isPhase = (name) => typeof name === 'string' && name.startsWith(PH);
   function phaseRender(name, power){
@@ -2024,7 +2029,41 @@ const SymEngine = (() => {
     }
     return applyOne(sym, op, rules).fold();     // v17: idem após cada porta (clímax do teleporte)
   }
-  return { apply, gateLabel, paramSig };
+
+  // v28 — ÂNGULO SIMBÓLICO em porta de fase DIAGONAL (P/Rz) sobre estado CONCRETO. Espelha o
+  // caminho abstrato de applyOne (coef × phaseAtom), mas sobre slots CONCRETOS onde controles+alvo
+  // casam, multiplicando o coeficiente por um átomo de fase e^{iφ} (φ = ângulo simbólico livre).
+  //   P  : diag(1, e^{iφ}) → só |1⟩ ganha a fase.
+  //   Rz : diag(e^{−iφ/2}, e^{+iφ/2}) → AMBOS os ramos (denom dobrado p/ o meio-ângulo).
+  // desc = { coefN, coefD, hasPi, sym } (descritor de phaseAtom, reusado dos parsers do λ).
+  // GUARDA C1: SÓ portas diagonais — asserção defensiva (a whitelist da FSM já barra, isto é a 2ª linha).
+  // NÃO toca applyOne/applyN/apply — delta 100% aditivo; o caminho numérico ℤ[ζ₁₆] segue intacto.
+  function applyDiagPhaseSym(sym, { gate, target, controls = [], desc }){
+    if (gate !== 'P' && gate !== 'Rz') throw new Error(`applyDiagPhaseSym: gate ${gate} is not a diagonal phase gate (P/Rz only)`);
+    for (const q of [target, ...controls]) if (q < 0 || q >= sym.n) throw new Error(`qubit Q${q} out of range (n=${sym.n})`);
+    if (sym.layout[target] === 'a' || controls.some(c => sym.layout[c] === 'a'))
+      throw new Error('symbolic diagonal phase acts on concrete qubits only');
+    const isRz = gate === 'Rz';
+    const phP   = SymExpr.phaseAtom(desc);                                              // P: e^{iφ} no |1⟩
+    const phRz0 = isRz ? SymExpr.phaseAtom({ ...desc, coefN: -desc.coefN, coefD: desc.coefD * 2 }) : null;  // Rz |0⟩: e^{−iφ/2}
+    const phRz1 = isRz ? SymExpr.phaseAtom({ ...desc, coefD: desc.coefD * 2 }) : null;                      // Rz |1⟩: e^{+iφ/2}
+    const out = [];
+    for (const t of sym.terms){
+      let ctrlOK = true;
+      for (const c of controls) if (t.slots[c] !== '1'){ ctrlOK = false; break; }
+      if (!ctrlOK){ out.push(t); continue; }                              // controle falha → termo intacto
+      if (isRz){
+        const ph = t.slots[target] === '1' ? phRz1 : phRz0;              // ambos os ramos recebem fase
+        out.push({ coef: SymExpr.mul(t.coef, ph), slots: t.slots.slice() });
+      } else if (t.slots[target] === '1'){                                // P: só |1⟩ recebe e^{iφ}
+        out.push({ coef: SymExpr.mul(t.coef, phP), slots: t.slots.slice() });
+      } else {
+        out.push(t);
+      }
+    }
+    return new SymState(sym.layout, SymState._combine(out), sym.selection);
+  }
+  return { apply, applyDiagPhaseSym, gateLabel, paramSig };
 })();
 
 /* =====================================================================
@@ -3308,6 +3347,11 @@ const UI = (() => {
         ? SymEngine.apply(ns, { gate:cmd.gate, targets:cmd.targets, controls:cmd.controls, params:cmd.params, paramLabels:cmd.paramLabels }, SymRules)
         : Engine.applyN(ns, cmd.gate, { targets:cmd.targets, controls:cmd.controls, params:cmd.params });
       History.push(ns, labelOf(cmd), cmd);
+    } else if (cmd.kind === 'applyDiagSym'){                              // v28: ângulo SIMBÓLICO em porta diagonal (P/Rz) sobre estado concreto
+      const cur = History.current();
+      const base = cur.sym ? cur : SymState.fromConcrete(cur);           // promove concreto→simbólico (layout 'c'); reusa o caminho v13
+      const ns = SymEngine.applyDiagPhaseSym(base, { gate:cmd.gate, target:cmd.targets[0], controls:cmd.controls, desc:cmd.desc });
+      History.push(ns, labelOf(cmd), cmd);
     } else if (cmd.kind === 'applyAll'){
       const cur = History.current();
       const reps = cmd.power == null ? 1 : (1 << cmd.power);   // v24
@@ -3437,6 +3481,17 @@ const UI = (() => {
     qbasis = ['comp']; Parser.clear();
     applySheet(false); renderKeypad(); refresh();   // gaveta desce + reconstrói o teclado (auto-return)
   }
+  // v28b: aloca o PRÓXIMO símbolo de ângulo livre AINDA NÃO usado no estado atual (θ, θ₂, θ₃…). Gates
+  // simbólicos independentes NÃO devem compartilhar 'θ' por acidente — reusar um nome AFIRMA igualdade
+  // (math-before-didactics: a alegação mais forte; o default honesto é INDEPENDÊNCIA). Deriva dos símbolos
+  // já presentes (symbolIds) → reset automático no SET, robusto a undo/redo. Digitar um símbolo explícito
+  // (θ/φ/t) ainda casa de propósito (reuso deliberado). Esquema θ→θ₂→θ₃ dribla o strip de ₀/₁ do symbolIds.
+  const _SUBD = '₀₁₂₃₄₅₆₇₈₉';
+  const subscriptOf = (n) => String(n).split('').map(d => _SUBD[+d]).join('');
+  function freshPhaseSym(state){
+    const used = (state && state.sym && state.symbolIds) ? state.symbolIds() : new Set();
+    for (let k = 1; ; k++){ const name = k === 1 ? 'θ' : 'θ' + subscriptOf(k); if (!used.has(name)) return name; }
+  }
   // v4: entrada inline do AUTOVALOR λ ao aplicar uma porta a um ket abstrato.
   // O teclado vira o da calc; '=' confirma λ (número/fase exata via Calc, ou símbolo livre se o
   // buffer for um único identificador); CLR/Esc = "deixar simbólico" (nó não-avaliado U|ψ⟩).
@@ -3449,7 +3504,7 @@ const UI = (() => {
     // SEMPRE abre a entrada de λ — o usuário pode digitar um novo ângulo a cada aplicação (mesmo que já
     // exista regra). '=' aplica o padrão e^{iθ}; CLR deixa o nó. (Antes: regra existente reaplicava em
     // silêncio, impedindo digitar um novo ângulo na 2ª vez — pedido da usuária / consistência.)
-    lambdaEntry = { cmd, label, gate:name };
+    lambdaEntry = { cmd, label, gate:name, defaultSym: freshPhaseSym(cur) };   // v28b: símbolo fresco (θ, θ₂…)
     calcBuf = ''; calcResult = ''; clearError(); applySheet(true); refresh();   // v15: gaveta sobe
   }
   // v4: a entrada inline é o ÂNGULO DE FASE φ; o autovalor é λ = e^{iφ} (unitário, |λ|=1).
@@ -3482,7 +3537,7 @@ const UI = (() => {
     if (!asNode){                                         // declara a regra U|ψ⟩=λ, com λ = e^{iφ}
       const buf = calcBuf.trim();
       let lam;
-      if (!buf){ lam = SymExpr.phaseAtom({ coefN:1, coefD:1, hasPi:false, sym:'θ' }); }   // '=' vazio → λ = e^{iθ} (fase simbólica — padrão elegante; θ p/ não colidir com o ket |φ⟩)
+      if (!buf){ lam = SymExpr.phaseAtom({ coefN:1, coefD:1, hasPi:false, sym: ent.defaultSym || 'θ' }); }   // v28b: '=' vazio → λ = e^{iθ_k} (símbolo FRESCO, não reusa θ por acidente)
       else {
         const symA = parsePhaseAngle(buf);
         if (symA){ lam = SymExpr.phaseAtom(symA); }          // φ simbólico (θ, 2πθ…) → e^{iφ}
@@ -3507,7 +3562,8 @@ const UI = (() => {
   }
   // entrada inline de ângulo: o teclado da calc digita a expressão; '=' confirma cada parâmetro
   function startAngleEntry(name, meta, seed){
-    angleEntry = { gate:name, meta, params:[], labels:[], idx:0 };
+    const diag = (name === 'P' || name === 'Rz');                               // v28b: só diagonais têm caminho simbólico
+    angleEntry = { gate:name, meta, params:[], labels:[], idx:0, defaultSym: diag ? freshPhaseSym(History.current()) : null };
     Parser.clearExpr(); calcBuf = seed || ''; calcResult = '';
     applySheet(true); refresh();   // v15: gaveta sobe; o prompt do ângulo aparece no #display
   }
@@ -3749,9 +3805,9 @@ const UI = (() => {
       if (badge) badge.classList.toggle('show', /≈/.test(calcResult));
       if (!status.classList.contains('err')){
         status.textContent = lambdaEntry
-          ? `${lambdaEntry.gate}|${lambdaEntry.label}⟩ = λ|${lambdaEntry.label}⟩   ·   type the angle, = → e^{iθ}, ESC → cancel`
+          ? `${lambdaEntry.gate}|${lambdaEntry.label}⟩ = λ|${lambdaEntry.label}⟩   ·   type the angle, = → e^{i${lambdaEntry.defaultSym || 'θ'}}, ESC → cancel`
           : angleEntry
-          ? `${angleEntry.gate} · ${angleEntry.meta.params[angleEntry.idx]} = ?`
+          ? `${angleEntry.gate} · ${angleEntry.meta.params[angleEntry.idx]} = ?${angleEntry.defaultSym ? `   ·   = → ${angleEntry.defaultSym}` : ''}`   // v28b: revela o símbolo fresco (toque, sem teclado)
           : calcResult;
       }
       $('historyOut').textContent = History.labels().join('\n') || '(empty)';
@@ -3894,8 +3950,34 @@ const UI = (() => {
       norm: () => Algebra.fromNumber(Math.sqrt(Ops.n2Value(Ops.norm(s)))),
     };
   }
+  // v28: face curta do ângulo simbólico p/ rótulo de histórico/porta (ex.: 'θ', '2πθ', '−θ')
+  function symAngleFace(d){
+    const n = Math.abs(d.coefN), coef = n === 1 ? '' : String(n);
+    return (d.coefN < 0 ? '−' : '') + coef + (d.hasPi ? 'π' : '') + d.sym;
+  }
   function doEval(){
     if (angleEntry){                                   // confirma um parâmetro de ângulo
+      // v28: ângulo SIMBÓLICO livre (θ, 2πθ, …) ou '=' vazio → fase SIMBÓLICA, só p/ portas DIAGONAIS P/Rz.
+      // Número/π cai no caminho numérico ℤ[ζ₁₆] abaixo, INTOCADO. Whitelist diagonal = guarda C1 (na FSM).
+      const DIAG_SYM = new Set(['P', 'Rz']);
+      const symBuf = calcBuf.trim();
+      const symA = symBuf ? (parsePhaseAngle(symBuf) || parsePhaseLambda(symBuf))
+                          : (DIAG_SYM.has(angleEntry.gate) ? { coefN:1, coefD:1, hasPi:false, sym: angleEntry.defaultSym || 'θ' } : null);   // v28b: '=' vazio → símbolo FRESCO (θ, θ₂…)
+      if (symA){
+        if (!DIAG_SYM.has(angleEntry.gate)){           // Rx/Ry/U + símbolo → erro guiado (sem trig simbólica); entrada segue aberta p/ corrigir
+          showError('symbolic angle only for diagonal phase gates (P, Rz)'); return;
+        }
+        const ae = angleEntry; angleEntry = null;
+        const rc = Parser.applyGate(ae.gate);          // monta alvos/controles (consome o Parser); params ignorados — fase é simbólica
+        if (rc.error){ showError(rc.error); applySheet(false); renderKeypad(); refresh(); return; }
+        const c = rc.command, cur = History.current();
+        const targets  = c.kind === 'applyAll' ? Array.from({ length:cur.n }, (_, i) => i) : (c.targets || []);
+        const controls = c.controls || [];
+        try { execute({ kind:'applyDiagSym', gate:ae.gate, targets, controls, desc:symA, paramLabels:[symAngleFace(symA)] }); }
+        catch (e){ showError(e.message); }
+        applySheet(false); renderKeypad(); refresh();  // gaveta desce + reconstrói o teclado (auto-return)
+        return;
+      }
       const r = Calc.evaluate(calcBuf.trim() || '0', null);
       if (r.error){ calcResult = '⚠ ' + r.error; refresh(); return; }
       const rawAng = r.isPi ? r.piNum : Algebra.toComplex(r.value).re;
@@ -4519,7 +4601,7 @@ const UI = (() => {
       if (angleEntry || lambdaEntry || ampEntry){                       // v13/v22-3: entrada inline de ângulo/λ/amplitude (mesmo pad)
         if (/^[0-9.]$/.test(k)) onCalc(k);
         else if ('+-*/^()'.includes(k)) onCalc(k);
-        else if (lambdaEntry && /^[a-zA-Zλμθφψχπ{}]$/.test(k)) onCalc(k);   // v4: símbolo livre / fase estruturada de λ (ex.: λ, t, e^{2πiθ})
+        else if ((lambdaEntry || angleEntry) && /^[a-zA-Zλμθφψχπ{}]$/.test(k)) onCalc(k);   // v4: símbolo livre / fase estruturada de λ (ex.: λ, t, e^{2πiθ}); v28: idem na gaveta de ângulo concreta (P/Rz simbólico)
         else if (k === 'Enter'){ e.preventDefault(); ampEntry ? doAmpEval() : lambdaEntry ? doLambda(false) : doEval(); }
         else if (k === 'Backspace'){ e.preventDefault(); calcBuf = calcBuf.slice(0,-1); calcResult=''; refresh(); }
         else if (k === 'Escape'){ if (ampEntry) cancelAmp(); else if (lambdaEntry) doLambda(true); else if (angleEntry) cancelAngle(); }

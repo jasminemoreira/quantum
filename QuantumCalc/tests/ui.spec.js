@@ -363,7 +363,7 @@ test('REG v4: porta em |ψ⟩ pede o ângulo TODA vez (regra não é reaplicada 
   await act(page,'eval');
   // 2ª aplicação → DEVE reabrir o prompt (antes reusava a regra em silêncio, sem deixar digitar)
   await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'gate:Rz');
-  await expect(page.locator('#statusLine')).toContainText('e^{iθ}');     // prompt reabriu → ângulo PODE ser digitado
+  await expect(page.locator('#statusLine')).toContainText('e^{iθ₂}');    // v28b: prompt reabriu COM SÍMBOLO FRESCO (θ₂ — o estado já tem θ) → ângulo independente PODE ser digitado
   await expect(page.locator('[data-action="eval"]')).toBeVisible();
   await act(page,'calc:π'); await act(page,'calc:/'); await act(page,'calc:2'); await act(page,'eval');  // digita um novo ângulo π/2
   expect(await dirac(page)).toContain('|ψ⟩');                            // aplicou sem travar
@@ -1359,4 +1359,85 @@ test('v26 badge: estado exato no anel (Bell) — sem badge, sem "exact decimal"'
   for (const a of ['key:2','key:Q','key:SET','key:0','key:Q','gate:H','key:0','key:CTRL','key:1','key:Q','gate:X']) await act(page,a);
   expect(await badgeShown(page)).toBe(false);
   expect(await selText(page)).not.toContain('exact decimal');
+});
+
+// ===== cycle 28 — SYMBOLIC angle on CONCRETE states via diagonal phase gates (P/Rz + controlled) =====
+test('v28 P(θ) symbolic on a CONCRETE |+⟩: 0 Q P = (empty) → e^{iθ} on |1⟩', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'key:SET');                            // |+⟩ concreto
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P');    // P em Q0 → gaveta de ângulo
+  await act(page,'eval');                                                        // = vazio → e^{iθ} (simbólico)
+  const d = await dirac(page);
+  expect(d).toContain('e^{iθ}'); expect(d).toContain('|1⟩'); expect(d).not.toContain('|+⟩');
+});
+
+test('v28 CP(θ) ANCHOR: |++⟩ + 0 CTRL 1 Q P = → e^{iθ} só no |11⟩ (fase controlada da QFT/QPE)', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'ket:+'); await act(page,'key:SET');   // |++⟩
+  await act(page,'key:0'); await act(page,'key:CTRL'); await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:P');
+  await act(page,'eval');                                                        // = vazio → e^{iθ}
+  const d = await dirac(page);
+  expect(d).toContain('e^{iθ}'); expect(d).toContain('|11⟩');
+  expect(d).toContain('|00⟩'); expect(d).toContain('|01⟩'); expect(d).toContain('|10⟩');   // os outros 3 ficam sem fase
+});
+
+test('v28 NÃO-REGRESSÃO: ângulo CONCRETO segue numérico — 0 Q P π = em |+⟩ → fase numérica, sem θ', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'key:SET');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P');
+  await act(page,'calc:π'); await act(page,'eval');                              // P(π) numérico → e^{iπ}=−1 → |−⟩
+  const d = await dirac(page);
+  expect(d).not.toContain('θ');                                                  // caminho ℤ[ζ₁₆], não simbólico
+});
+
+test('v28 GUARD: porta NÃO-diagonal + símbolo → erro guiado, estado intocado', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'key:SET');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:Rx');   // Rx (não-diagonal)
+  await page.keyboard.type('t');                                                 // símbolo livre
+  await act(page,'eval');
+  await expect(page.locator('#statusLine')).toContainText('diagonal phase gates');   // erro guiado
+  await page.keyboard.press('Escape');                                          // cancela a entrada (segue aberta após o erro)
+  expect(await dirac(page)).toContain('|+⟩');                                   // estado NÃO mudou (nenhum θ vazou)
+});
+
+test('v28 Rz(θ) simbólico em |+⟩: display do meio-ângulo e^{-iθ/2} / e^{iθ/2} (inline, não (1/2)iθ)', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'key:SET');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:Rz');
+  await act(page,'eval');                                                        // = vazio → e^{∓iθ/2}
+  const d = await dirac(page);
+  expect(d).toContain('e^{-iθ/2}'); expect(d).toContain('e^{iθ/2}');
+  expect(d).not.toContain('(1/2)i');                                             // nunca o coeficiente parentetizado feio
+});
+
+// ===== v28b — distinct free-symbol allocation in the FSM (the human-AV fix) =====
+test('v28b P(θ) on Q0 then Rz on Q1 → DISTINCT symbols θ and θ₂ (not both θ)', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');   // |00⟩ (2 qubits)
+  await act(page,'key:0'); await act(page,'gate:H'); await act(page,'key:1'); await act(page,'gate:H');   // |++⟩
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P');  await act(page,'eval');     // P(θ) em Q0
+  await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:Rz'); await act(page,'eval');     // Rz em Q1 → símbolo fresco
+  const d = await dirac(page);
+  expect(d).toContain('θ₂');                                                    // segundo gate ganhou θ₂
+  expect(d).toMatch(/(^|[^₀-₉])θ([^₀-₉]|$)/);                                    // o primeiro segue como θ puro (não θ₂)
+});
+
+test('v28b reuso INTENCIONAL: digitar o MESMO símbolo (t) nos 2 gates casa o mesmo parâmetro', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'key:2'); await act(page,'key:Q'); await act(page,'key:SET');
+  await act(page,'key:0'); await act(page,'gate:H'); await act(page,'key:1'); await act(page,'gate:H');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P'); await page.keyboard.type('t'); await act(page,'eval');   // P(t) em Q0
+  await act(page,'key:1'); await act(page,'key:Q'); await act(page,'gate:P'); await page.keyboard.type('t'); await act(page,'eval');   // P(t) em Q1 — MESMO símbolo digitado
+  const d = await dirac(page);
+  expect(d).toContain('e^{it}');                                                // os dois usam t (digitado explicitamente)
+  expect(d).not.toContain('t₂'); expect(d).not.toContain('θ');                  // nenhum símbolo fresco — reuso deliberado
+});
+
+test('v28b prompt REVELA o símbolo fresco (transparência no toque)', async ({ page }) => {
+  await page.goto(URL);
+  await act(page,'ket:+'); await act(page,'key:SET');
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:P'); await act(page,'eval');      // aplica θ
+  await act(page,'key:0'); await act(page,'key:Q'); await act(page,'gate:Rz');                             // 2º gate → prompt deve revelar θ₂
+  await expect(page.locator('#statusLine')).toContainText('θ₂');
 });

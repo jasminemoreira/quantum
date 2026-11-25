@@ -1,0 +1,21 @@
+# QuantumCalc — Índice cumulativo de lições
+
+Lições detalhadas por ciclo ficam em `specs/technical/NN-vXX-lessons.md`. Este arquivo é o
+registro persistente que alimenta o próximo ciclo.
+
+| Ciclo | Versão | Arquivo | Resumo |
+|---|---|---|---|
+| 22 | v21 | `40-v21-lessons.md` | Part III E1–E5; oráculos como portas literais |
+| 23 | v22 | `43-v22-lessons.md` | Teclas de input pág.2; expand sem pulo |
+| 25 | v24 | `47-v24-lessons.md` | Controle generalizado + potência 2ʲ |
+| 26 | v25 | `48-v25-lessons.md` | Gramática unificada CTRL+base |
+| 27 | v26 | `49-v26-lessons.md` | Teclado único + 2nd; CSS dvh+flex no PWA |
+| 28 | v28 | `51-v28-lessons.md` | Ângulo simbólico em P/Rz; símbolo fresco por gate |
+
+## Ciclo 28 — destaques para levar adiante
+
+- Reusar um nome de símbolo afirma igualdade → default = símbolo fresco (`θ`, `θ₂`, …).
+- Contadores derivados do estado (não globais) ganham reset/undo de graça.
+- Delta aditivo + whitelist + asserção no motor = zero regressão no caminho exato.
+- Mudança de formato atrás de condição que hoje nunca ocorre = risco zero no display existente.
+- Human-AV pega erros semânticos que a suíte automática não pega.
